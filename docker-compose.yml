@@ -186,6 +186,8 @@ services:
       ES_URL: http://elasticsearch:9200
       KAFKA_BOOTSTRAP: kafka:9092
       PYTHONPATH: /app/src
+      DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
+      DRIVE_RAKUTEN_ID: ${DRIVE_RAKUTEN_ID}
     volumes:
       - ./src:/app/src
       - ./scripts:/app/scripts
