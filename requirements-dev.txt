@@ -1,0 +1,3 @@
+# DataFlow360 — outils de développement, absents de l'exécution
+pytest>=8.0
+ruff>=0.4          # analyse statique et formatage, un seul outil pour les deux
