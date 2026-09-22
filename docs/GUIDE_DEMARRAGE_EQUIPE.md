@@ -283,8 +283,8 @@ Chaque membre transmet sa ligne au Scrum Master.
 | Ndeye Penda SARR | Windows | ✅ | ✅ | ✅ | ✅ | ✅ | 5433 | 3,1 Go |
 | Seydina WADE | Linux | | | | | | | |
 | Bachir DEME | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | |
-| Mouhameth DIOP | | | | | | | | |
-| Aissata DIALLO |✅  | ✅ | ✅ | ✅ | ✅ | ✅ |5432 |3,1GO |
+| Mouhameth DIOP |Linux| ✅ | ✅ | ✅ | ✅ | ✅ |5432 |3,1GO |
+| Aissata DIALLO |Linux| ✅ | ✅ | ✅ | ✅ | ✅ |5432 |3,1GO |
 
 **Le Sprint 0 est terminé quand les cinq lignes sont complètes.** Ce jour-là : une PR `develop → main` intitulée `[S0] Fin du Sprint 0`, et une étiquette `v0.1` pour marquer l'étape.
 
