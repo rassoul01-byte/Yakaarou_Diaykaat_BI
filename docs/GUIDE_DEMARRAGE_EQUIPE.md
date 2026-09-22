@@ -282,7 +282,7 @@ Chaque membre transmet sa ligne au Scrum Master.
 |---|---|---|---|---|---|---|---|---|
 | Ndeye Penda SARR | Windows | ✅ | ✅ | ✅ | ✅ | ✅ | 5433 | 3,1 Go |
 | Seydina WADE | Linux | ✅ | ✅ | ✅ |  ✅| ✅ |5433,27018|3.1 Go|
-| Bachir DEME | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | |
+| Bachir DEME | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | 3.1 Go|
 | Mouhameth DIOP |Linux| ✅ | ✅ | ✅ | ✅ | ✅ | - |3,1GO |
 | Aissata DIALLO |Linux| ✅ | ✅ | ✅ | ✅ | ✅ | -  |3,1GO |
 
