@@ -294,8 +294,8 @@ Nommage des branches, messages de commit, demandes de fusion et définition de t
 
 | Sprint | Objectif | État |
 |---|---|---|
-| Sprint 0 | Organisation et préparation | En cours — la plateforme démarre et les données sont récupérées |
-| Sprint 1 | Acquisition et stockage brut | À venir |
+| Sprint 0 | Organisation et préparation | Terminer |
+| Sprint 1 | Acquisition et stockage brut | En cours |
 | Sprint 2 | Qualité et transformation | À venir |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | À venir |
 | Sprint 4 | Temps réel, recherche et supervision | À venir |
