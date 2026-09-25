@@ -1,31 +1,43 @@
 # Mettre son poste à jour et faire tourner la plateforme
 
-**GROUPE 2 · DataFlow360 · Sprint 0**
-**État du dépôt au 21 septembre, fin de journée**
+**GROUPE 2 · DataFlow360**
+**Sprint 0 clôturé — étiquette `v0.1` · Sprint 1 en cours**
 
-Ce guide sert à deux choses : remettre chaque poste au niveau des modifications du jour, et réaliser la **vérification croisée** qui clôt le Sprint 0. Le Sprint 0 est terminé quand les cinq membres obtiennent le même résultat, chacun sur sa propre machine.
+Ce guide sert à deux choses : remettre un poste au niveau de `develop`, et réaliser la **vérification croisée** de fin de sprint. Un sprint n'est terminé que lorsque les cinq membres obtiennent le même résultat, chacun sur sa propre machine.
+
+Il est mis à jour à chaque sprint : la section 1 dit ce que contient `develop`, la section 10 garde la trace des vérifications.
 
 ---
 
-## 1. Ce qui a changé aujourd'hui
+## 1. Ce que contient `develop`
 
-Tout se trouve sur la branche **`develop`**. `main` n'a pas bougé et c'est normal : elle ne recevra `develop` qu'à la fin du sprint.
+Tout le travail en cours est sur **`develop`**, qui est la branche par défaut du dépôt. `main` ne reçoit `develop` qu'à la clôture d'un sprint, avec une étiquette de version.
+
+### Sprint 0 — organisation et préparation, étiquette `v0.1`
 
 | Élément | Où | Apporté par |
 |---|---|---|
 | Exclusion du dossier `data/` | `.gitignore` | Seydina |
-| Socle Python : dépendances, configuration des tests, premiers tests | `requirements*.txt`, `pyproject.toml`, `src/common/`, `tests/`, `dags/` | Ndeye Penda |
+| Conventions de travail | `CONVENTIONS.md` | Seydina |
+| Socle Python : dépendances, configuration des tests, premiers tests | `requirements*.txt`, `pyproject.toml`, `src/common/`, `tests/` | Ndeye Penda |
 | Image du conteneur de travail | `docker/app/Dockerfile` | Ndeye Penda |
 | Composition des six services | `docker-compose.yml`, `.env.example` | Bachir |
 | Création des bases et des schémas | `docker/postgres/init/01-databases.sql` | Bachir |
-| Script de récupération des données | `scripts/download_data.py`, `tests/scripts/` | Bachir |
+| Script de récupération des données | `scripts/download_data.py` | Bachir |
 | Rôles, schéma d'architecture, ce guide | `docs/` | Ndeye Penda |
+| Description du projet | `README.md` | Aissata |
 
-Deux règles sont désormais **appliquées par GitHub**, et non plus seulement écrites :
-- personne ne peut pousser directement sur `main` ni sur `develop` ;
-- toute demande de fusion exige l'approbation d'un autre membre.
+### Sprint 1 — acquisition et stockage brut, en cours
 
-Les branches fusionnées aujourd'hui ont toutes été supprimées : sur GitHub, il ne reste que `main` et `develop`.
+| Élément | Où | Apporté par |
+|---|---|---|
+| Contrat d'événement et bus Kafka | `docs/contrats/evenements.md`, `src/common/`, `scripts/creer_sujets.py`, `scripts/etat_bus.py` | Ndeye Penda |
+| Générateur d'événements de navigation | `src/generateur/` | Bachir |
+| Zone brute : archivage, vérification, rejeu | `docs/contrats/zone_brute.md`, `src/zone_brute/` | Aissata |
+| Zones de stockage et migrations SQL | `docs/contrats/zones_stockage.md`, `sql/`, `scripts/appliquer_sql.py` | Seydina |
+| Chargement par lots des commandes et du catalogue | `src/acquisition/` | Mouhameth |
+
+Deux règles sont **appliquées par GitHub**, et non plus seulement écrites : personne ne pousse directement sur `main` ni sur `develop`, et toute demande de fusion exige l'approbation d'un autre membre.
 
 ---
 
@@ -78,7 +90,7 @@ cd Yakaarou_Diaykaat_BI
 git checkout develop
 ```
 
-⚠️ **La commande `git checkout develop` est indispensable.** Tant que `develop` n'est pas la branche par défaut du dépôt, un clone s'ouvre sur `main`, qui ne contient presque rien. Seydina va changer ce réglage ; en attendant, ne sautez pas cette ligne.
+`develop` étant la branche par défaut du dépôt, un clone s'ouvre directement dessus : la dernière commande ne fait que le confirmer.
 
 Si un dossier du même nom existe déjà, ajoute un nom à la fin de la première commande, par exemple `… .git dataflow360`, puis `cd dataflow360`.
 
@@ -88,7 +100,7 @@ Si un dossier du même nom existe déjà, ajoute un nom à la fin de la premièr
 git log --oneline -5
 ```
 
-✅ Les derniers commits parlent du socle Python, de la composition des services, du script de récupération et de la documentation.
+✅ Les derniers commits correspondent aux demandes de fusion les plus récentes du sprint en cours.
 
 ---
 
@@ -169,13 +181,19 @@ docker compose exec postgres psql -U dataflow -d dataflow360 -c "\l"
 docker compose exec postgres psql -U dataflow -d dataflow360 -c "\dn"
 ```
 
-✅ La première liste contient une base **`airflow`**. La seconde montre les schémas `dwh`, `raw_quarantine` et `staging`.
+✅ La première liste contient une base **`airflow`**. La seconde montre les schémas du projet : la zone intermédiaire, l'entrepôt et la quarantaine.
 
 ```bash
 docker compose exec app python -m pytest
 ```
 
-✅ **22 passed** : les 15 tests du socle et les 7 du script de récupération.
+✅ **Aucun échec.** Le nombre de tests augmente à chaque sprint : note-le au moment de ta vérification, il fait partie de ta ligne du tableau.
+
+Les tests qui ont besoin des services démarrés sont ignorés par défaut. Pour les lancer :
+
+```bash
+docker compose exec app python -m pytest -m integration
+```
 
 Dans ton navigateur, en adaptant le port si tu l'as changé :
 - http://localhost:9200 → Elasticsearch affiche son numéro de version ;
@@ -201,7 +219,7 @@ git status
 
 ✅ **`data/` ne doit pas apparaître.** C'est la preuve que les 174 Mo de données ne partiront jamais sur GitHub.
 
-Et pour relever la mémoire consommée, à reporter dans le tableau de la section 10 :
+Et pour relever la mémoire consommée, à reporter dans le tableau de la section 11 :
 
 ```bash
 docker stats --no-stream
@@ -209,7 +227,24 @@ docker stats --no-stream
 
 ---
 
-## 8. Les pannes rencontrées aujourd'hui, et leur solution
+## 8. Les commandes ajoutées par le Sprint 1
+
+Une fois la plateforme démarrée et les données récupérées, ces commandes mettent en marche ce que le Sprint 1 a construit. Les options exactes de chacune sont décrites dans les contrats et les README de `docs/` et de `src/`.
+
+| Étape | Commande | Ce qu'elle fait | À lire |
+|---|---|---|---|
+| Préparer les zones de stockage | `docker compose exec app python scripts/appliquer_sql.py` | Applique les migrations qui n'ont pas encore été passées, sans effacer les données | `docs/contrats/zones_stockage.md` |
+| Créer les sujets du bus | `docker compose exec app python scripts/creer_sujets.py` | Crée les sujets Kafka du contrat ; sans effet s'ils existent déjà | `docs/contrats/evenements.md` |
+| Produire des événements | `docker compose exec app python -m generateur …` | Simule le trafic du site et publie sur le bus | `src/generateur/README.md` |
+| Regarder le bus | `docker compose exec app python scripts/etat_bus.py` | Sujets, nombre de messages, retard de chaque lecteur | `docs/contrats/evenements.md` |
+| Alimenter et vérifier la zone brute | `docker compose exec app python -m zone_brute …` | Archive les événements, vérifie les empreintes, rejoue une période | `docs/contrats/zone_brute.md` |
+| Charger les fichiers sources | `docker compose exec app python -m acquisition …` | Dépose commandes et catalogue dans la zone brute, avec leur manifeste | contrat de la zone brute |
+
+⚠️ **Ces commandes s'enchaînent dans cet ordre.** Créer les sujets avant de lancer le générateur, et appliquer les migrations avant d'attendre quoi que ce soit des zones de stockage.
+
+---
+
+## 9. Les pannes rencontrées, et leur solution
 
 Toutes ces pannes sont réellement arrivées pendant la mise en place. Si l'une d'elles t'arrive, la solution est connue.
 
@@ -232,65 +267,40 @@ Docker Desktop consomme de la mémoire même quand rien ne tourne : quitte-le qu
 
 ---
 
-## 9. La situation de chacun
+## 10. Où en est le projet
 
-### Ndeye Penda — Windows, PowerShell
+| Sprint | Objectif | État |
+|---|---|---|
+| Sprint 0 | Organisation et préparation | ✅ Clôturé — étiquette `v0.1` |
+| Sprint 1 | Acquisition et stockage brut | 🔄 En cours |
+| Sprint 2 | Qualité et transformation | À venir |
+| Sprint 3 | Intégration, entrepôt et premiers indicateurs | À venir |
+| Sprint 4 | Temps réel, recherche et supervision | À venir |
+| Sprint 5 | Intelligence artificielle et finalisation | À venir |
 
-**Fait :** le socle Python, les rôles et responsabilités, le schéma d'architecture et ce guide sont dans `develop`. **Vérification croisée réussie** : la plateforme tourne sur son poste, 22 tests passés, données 10 sur 10, avec PostgreSQL sur le port 5433. Ses branches fusionnées sont supprimées.
-
-**À faire :** relire les PR d'Aissata — son premier commit, puis le README.
-
-### Seydina — Linux
-
-**Fait :** exclusion de `data/`, protection des branches, dépôt rendu public, anciennes branches supprimées.
-
-**À faire :**
-1. Dans *Settings → General* : définir **`develop` comme branche par défaut**, et cocher **« Automatically delete head branches »** dans la section *Pull Requests*, pour que chaque branche soit supprimée automatiquement après sa fusion.
-2. Pousser la correction de `CONVENTIONS.md`, branche `docs/S0-corriger-conventions`.
-3. Travailler **uniquement dans `~/yakaarou-propre`**, le seul clone correctement relié au dépôt. Les dossiers `~/Téléchargements/dataflow360-repo` et l'ancien `~/Yakaarou_Diaykaat_BI` peuvent être supprimés.
-4. Dérouler les sections 4 à 7, puis son premier commit — section 11.
-
-### Bachir — Linux
-
-**Fait :** la composition des services et le script de récupération sont fusionnés. Son poste a été le premier à faire tourner toute la plateforme.
-
-**À noter :** dans son `.env`, les ports sont `POSTGRES_PORT=5433` et `MONGO_PORT=27018`.
-
-**À faire :** compléter sa ligne du tableau de la section 10, puis son premier commit — section 11.
-
-### Mouhameth — Scrum Master
-
-**À faire :**
-1. **Cas A**, puis sections 4 à 7, puis son premier commit — section 11.
-2. Recueillir les résultats de la vérification croisée des cinq membres — tableau de la section 10 — et mettre Trello à jour.
-
-### Aissata — README
-
-**Demain :** le **cas B, clone neuf**, même si le dépôt est déjà sur son poste. Elle déroule les sections 3 à 7 et s'assure que tout fonctionne **avant** de créer le README. C'est la vérification exigée pour ce livrable : *une personne doit pouvoir démarrer la plateforme en suivant uniquement le README*. Elle note chaque étape qui bloque ou qui n'est pas claire, et s'en sert pour corriger le brouillon du README avant de le proposer en PR.
-
-La section 8 de ce guide contient toute la matière de la partie *Problèmes fréquents* du README.
-
-Puis son premier commit — section 11.
+Le détail de la répartition et des livrables de chaque sprint est dans les documents de répartition, et le suivi au jour le jour sur Trello, tenu par le Product Owner.
 
 ---
 
-## 10. Vérification croisée — à remplir par chacun
+## 11. Vérification croisée du Sprint 0
 
-Chaque membre transmet sa ligne au Scrum Master.
+Chaque membre transmet sa ligne au Scrum Master, qui suit l'avancement ; le Product Owner met les cartes Trello à jour.
 
-| Membre | Système | Dépôt à jour | Services démarrés | 22 tests | Données 10/10 | `data/` absent de `git status` | Ports modifiés | Mémoire relevée |
+| Membre | Système | Dépôt à jour | Services démarrés | Tests | Données 10/10 | `data/` absent de `git status` | Ports modifiés | Mémoire relevée |
 |---|---|---|---|---|---|---|---|---|
 | Ndeye Penda SARR | Windows | ✅ | ✅ | ✅ | ✅ | ✅ | 5433 | 3,1 Go |
-| Seydina WADE | Linux | ✅ | ✅ | ✅ |  ✅| ✅ |5433,27018|3.1 Go|
-| Bachir DEME | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | 3.1 Go|
-| Mouhameth DIOP |Linux| ✅ | ✅ | ✅ | ✅ | ✅ | - |3,1GO |
-| Aissata DIALLO |Linux| ✅ | ✅ | ✅ | ✅ | ✅ | -  |3,1GO |
+| Seydina WADE | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | 3,1 Go |
+| Bachir DEME | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | 5433, 27018 | 3,1 Go |
+| Mouhameth DIOP | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | aucun | 3,1 Go |
+| Aissata DIALLO | Linux | ✅ | ✅ | ✅ | ✅ | ✅ | aucun | 3,1 Go |
 
-**Le Sprint 0 est terminé quand les cinq lignes sont complètes.** Ce jour-là : une PR `develop → main` intitulée `[S0] Fin du Sprint 0`, et une étiquette `v0.1` pour marquer l'étape.
+**Les cinq lignes sont complètes : la vérification croisée du Sprint 0 est réussie**, sous Linux comme sous Windows, pour environ 3,1 Go de mémoire.
+
+À la fin de chaque sprint suivant, un nouveau tableau est ajouté ici, et la clôture se fait de la même façon : une PR `develop → main` intitulée `[Sx] Fin du Sprint x`, puis une étiquette de version.
 
 ---
 
-## 11. Le premier commit de chacun
+## 12. Le premier commit de chacun
 
 Une fois la plateforme en marche chez toi, fais ton **premier commit** en suivant `docs/PREMIER_COMMIT.md` : créer le dossier de ton périmètre dans `src/`, avec son README, par une branche et une demande de fusion.
 
