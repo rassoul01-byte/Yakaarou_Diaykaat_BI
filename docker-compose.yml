@@ -188,6 +188,8 @@ services:
       PYTHONPATH: /app/src
       DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
       DRIVE_RAKUTEN_ID: ${DRIVE_RAKUTEN_ID}
+      CATALOGUE_RAKUTEN: ${CATALOGUE_RAKUTEN:-data/sources/rakuten/rakuten_catalogue_produits.csv}
+      CLIENTS_OLIST: ${CLIENTS_OLIST:-data/sources/olist/olist_customers_dataset.csv}
     volumes:
       - ./src:/app/src
       - ./scripts:/app/scripts
