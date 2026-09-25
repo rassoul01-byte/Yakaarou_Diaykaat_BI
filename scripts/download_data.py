@@ -89,12 +89,12 @@ def dossier_donnees() -> Path:
 
 
 def chemin_de(data_dir: Path, attendu: FichierAttendu) -> Path:
-    return data_dir / "raw" / attendu.source / attendu.nom
+    return data_dir / "sources" / attendu.source / attendu.nom
 
 
 def preparer_dossiers(data_dir: Path) -> None:
     """Crée l'arborescence de la zone de données, absente après un clonage."""
-    for sous_dossier in ("raw/olist", "raw/rakuten", "quarantine", "models"):
+    for sous_dossier in ("sources/olist", "sources/rakuten", "raw", "quarantine", "models"):
         (data_dir / sous_dossier).mkdir(parents=True, exist_ok=True)
 
 
@@ -197,15 +197,15 @@ def recuperer(data_dir: Path, sources: set[str], identifiants: dict[str, str]) -
             print("Téléchargement du jeu de commandes Olist…")
             archive = temporaire / "Dataset-Olist.zip"
             telecharger(identifiants["olist"], archive)
-            extraits = extraire_csv(archive, data_dir / "raw" / "olist")
-            print(f"  {len(extraits)} fichier(s) CSV extrait(s) dans raw/olist/")
+            extraits = extraire_csv(archive, data_dir / "sources" / "olist")
+            print(f"  {len(extraits)} fichier(s) CSV extrait(s) dans sources/olist/")
 
         if "rakuten" in sources:
             print("Téléchargement du catalogue Rakuten…")
             fichier = temporaire / "rakuten_catalogue_produits.csv"
             telecharger(identifiants["rakuten"], fichier)
-            shutil.move(str(fichier), data_dir / "raw" / "rakuten" / fichier.name)
-            print("  catalogue placé dans raw/rakuten/")
+            shutil.move(str(fichier), data_dir / "sources" / "rakuten" / fichier.name)
+            print("  catalogue placé dans sources/rakuten/")
 
 
 # --------------------------------------------------------------------------- #
