@@ -207,7 +207,7 @@ Dans ton navigateur, en adaptant le port si tu l'as changé :
 docker compose exec app python scripts/download_data.py
 ```
 
-✅ Le téléchargement de l'archive Olist et du catalogue Rakuten, puis **« 10 fichier(s) sur 10 conforme(s) »**. Les fichiers apparaissent dans `data/raw/` sur ton poste.
+✅ Le téléchargement de l'archive Olist et du catalogue Rakuten, puis **« 10 fichier(s) sur 10 conforme(s) »**. Les fichiers apparaissent dans `data/sources/` sur ton poste.
 
 Relance la commande une seconde fois : ✅ *« rien à télécharger »*.
 
