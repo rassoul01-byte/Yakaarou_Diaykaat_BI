@@ -10,7 +10,6 @@ import psycopg2
 
 from common.config import load_settings
 
-
 RACINE_PROJET = Path(__file__).resolve().parents[1]
 DOSSIER_SQL = RACINE_PROJET / "sql"
 

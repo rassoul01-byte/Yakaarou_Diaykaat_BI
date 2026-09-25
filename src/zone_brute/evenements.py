@@ -7,12 +7,13 @@ CLI (voir __main__.py) qui fait le lien avec common.bus (Livrable 3,
 Ndeye Penda). Cette séparation permet de tester l'archivage et le
 rejeu sans avoir besoin de Kafka.
 """
+
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from collections.abc import Callable, Iterable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Tuple
 
 from .manifeste import compter_lignes, ecrire_manifeste, sha256_fichier
 
@@ -29,17 +30,17 @@ def _chemin_manifeste(dossier_jour: Path, heure: str) -> Path:
     return dossier_jour / f"heure={heure}.manifeste.json"
 
 
-def _decouper_horodatage(horodatage_iso: str) -> Tuple[str, str]:
+def _decouper_horodatage(horodatage_iso: str) -> tuple[str, str]:
     """Retourne (date, heure) au format AAAA-MM-JJ et HH à partir d'un
     horodatage ISO 8601 d'événement, en UTC."""
-    dt = datetime.fromisoformat(horodatage_iso.replace("Z", "+00:00")).astimezone(timezone.utc)
+    dt = datetime.fromisoformat(horodatage_iso.replace("Z", "+00:00")).astimezone(UTC)
     return dt.strftime("%Y-%m-%d"), dt.strftime("%H")
 
 
 def archiver_evenements(
     evenements: Iterable[dict],
     racine: Path = RACINE_EVENEMENTS_DEFAUT,
-) -> List[Path]:
+) -> list[Path]:
     """Ajoute chaque événement à la tranche horaire correspondant à son
     horodatage (data/raw/evenements/.../date=.../heure=HH.jsonl), puis
     réécrit le manifeste de chaque tranche touchée.
@@ -50,7 +51,7 @@ def archiver_evenements(
 
     Retourne la liste des manifestes écrits ou mis à jour.
     """
-    tranches_touchees: Dict[Tuple[str, str], Path] = {}
+    tranches_touchees: dict[tuple[str, str], Path] = {}
     for evenement in evenements:
         date, heure = _decouper_horodatage(evenement["horodatage"])
         dossier_jour = racine / f"date={date}"
@@ -100,7 +101,7 @@ def rejouer_tranche(
             f"Aucune tranche archivée pour date={date} heure={heure} : {chemin}"
         )
     compte = 0
-    with open(chemin, "r", encoding="utf-8") as f:
+    with open(chemin, encoding="utf-8") as f:
         for ligne in f:
             ligne = ligne.strip()
             if not ligne:
