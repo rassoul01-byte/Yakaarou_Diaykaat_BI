@@ -3,19 +3,29 @@
 import re
 import uuid
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from itertools import islice
 
 import pytest
 
 from generateur import Generateur, Parametres, Statistiques, est_invalide
 from generateur.__main__ import analyser_arguments
-from generateur.simulateur import DEFAUTS_INVALIDES, DEFAUTS_VALIDES, mots_de_designation
+from generateur.simulateur import (
+    DEFAUTS_INVALIDES,
+    DEFAUTS_VALIDES,
+    mots_de_designation,
+)
 
-MAINTENANT = datetime(2026, 9, 24, 12, 0, tzinfo=timezone.utc)
+MAINTENANT = datetime(2026, 9, 24, 12, 0, tzinfo=UTC)
 CHAMPS = {
-    "version_contrat", "id_evenement", "type", "horodatage",
-    "id_session", "customer_unique_id", "id_produit", "requete",
+    "version_contrat",
+    "id_evenement",
+    "type",
+    "horodatage",
+    "id_session",
+    "customer_unique_id",
+    "id_produit",
+    "requete",
 }
 HEX32 = re.compile(r"^[0-9a-f]{32}$")
 
@@ -57,7 +67,7 @@ def erreurs_contrat(e: dict) -> list[str]:
         h = datetime.fromisoformat(e["horodatage"].replace("Z", "+00:00"))
         if h.tzinfo is None:
             err.append("horodatage sans fuseau")
-        elif h < datetime(2016, 1, 1, tzinfo=timezone.utc):
+        elif h < datetime(2016, 1, 1, tzinfo=UTC):
             err.append("horodatage trop ancien")
         elif h > MAINTENANT + timedelta(hours=24):
             err.append("horodatage dans le futur")
@@ -80,10 +90,16 @@ def erreurs_contrat(e: dict) -> list[str]:
 
 def flux(n, **kw):
     graine = kw.pop("graine", 42)
-    return list(islice(Generateur(PRODUITS, CLIENTS, Parametres(graine=graine, **kw)).evenements(), n))
+    return list(
+        islice(
+            Generateur(PRODUITS, CLIENTS, Parametres(graine=graine, **kw)).evenements(),
+            n,
+        )
+    )
 
 
 # --------------------------------------------------------------- reproductibilité
+
 
 def test_meme_graine_memes_evenements():
     assert flux(3000, graine=42, taux_defauts=0.1) == flux(3000, graine=42, taux_defauts=0.1)
@@ -95,6 +111,7 @@ def test_graines_differentes_evenements_differents():
 
 # ------------------------------------------------------------- conformité au contrat
 
+
 def test_evenements_sans_defaut_conformes():
     for evt in flux(5000, taux_defauts=0):
         assert evt.defaut is None
@@ -104,7 +121,9 @@ def test_evenements_sans_defaut_conformes():
 def test_defauts_valides_restent_conformes_et_invalides_sont_detectes():
     evenements = flux(20_000, taux_defauts=0.3)
     vus = Counter(e.defaut for e in evenements)
-    assert set(vus) - {None} == set(DEFAUTS_VALIDES) | set(DEFAUTS_INVALIDES)  # tous les défauts apparaissent
+    assert set(vus) - {None} == set(DEFAUTS_VALIDES) | set(
+        DEFAUTS_INVALIDES
+    )  # tous les défauts apparaissent
     for evt in evenements:
         if est_invalide(evt.defaut):
             assert erreurs_contrat(evt.contenu), (evt.defaut, evt.contenu)
@@ -119,6 +138,7 @@ def test_achat_toujours_avec_client_identifie():
 
 # ----------------------------------------------------------------- données crédibles
 
+
 def test_identifiants_et_clients_viennent_des_donnees():
     ids = {pid for pid, _ in PRODUITS}
     for evt in flux(5000, taux_defauts=0):
@@ -129,7 +149,9 @@ def test_identifiants_et_clients_viennent_des_donnees():
 
 def test_requetes_construites_depuis_les_designations():
     vocabulaire = {m for _, d in PRODUITS for m in mots_de_designation(d)}
-    recherches = [e.contenu["requete"] for e in flux(5000, taux_defauts=0) if e.contenu["type"] == "recherche"]
+    recherches = [
+        e.contenu["requete"] for e in flux(5000, taux_defauts=0) if e.contenu["type"] == "recherche"
+    ]
     assert recherches
     for requete in recherches:
         assert set(requete.split()) <= vocabulaire
@@ -143,6 +165,7 @@ def test_fautes_de_frappe_changent_la_requete():
 
 
 # ------------------------------------------------------------------ taux réglables
+
 
 def test_taux_de_defauts_respecte():
     evenements = flux(20_000, taux_defauts=0.10)
@@ -160,10 +183,13 @@ def test_proportions_des_types_respectees():
 
 # ------------------------------------------------------------------------- volume
 
+
 @pytest.mark.parametrize("par_jour", [10_000, 30_000, 50_000])
 def test_une_journee_simulee_correspond_au_volume_vise(par_jour):
     evenements = flux(par_jour, evenements_par_jour=par_jour, taux_defauts=0)
-    horodatages = [datetime.fromisoformat(e.contenu["horodatage"].replace("Z", "+00:00")) for e in evenements]
+    horodatages = [
+        datetime.fromisoformat(e.contenu["horodatage"].replace("Z", "+00:00")) for e in evenements
+    ]
     assert horodatages == sorted(horodatages)
     duree = horodatages[-1] - horodatages[0]
     assert timedelta(hours=22) < duree < timedelta(hours=26)
@@ -176,6 +202,7 @@ def test_cinquante_mille_evenements_conformes():
 
 
 # --------------------------------------------------------------------- divers
+
 
 def test_parametres_invalides_refuses():
     with pytest.raises(ValueError):

@@ -13,14 +13,20 @@ import re
 import string
 import uuid
 from collections import Counter
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from random import Random
-from typing import Iterator, NamedTuple, Sequence
+from typing import NamedTuple
 
 VERSION_CONTRAT = 1
 TYPES = ("page_vue", "recherche", "ajout_panier", "achat")
-PROPORTIONS_DEFAUT = {"page_vue": 0.50, "recherche": 0.30, "ajout_panier": 0.15, "achat": 0.05}
+PROPORTIONS_DEFAUT = {
+    "page_vue": 0.50,
+    "recherche": 0.30,
+    "ajout_panier": 0.15,
+    "achat": 0.05,
+}
 
 # Défauts qui restent des événements VALIDES au sens du contrat : ils servent à
 # éprouver la recherche (Sprint 4). Le bus doit les laisser passer.
@@ -56,7 +62,7 @@ class Parametres:
     # Date de début FIXE par défaut (et non « maintenant ») : sinon deux lancements
     # à des jours différents ne produiraient pas les mêmes événements. Elle doit
     # rester passée : le contrat refuse plus de 24 h dans le futur.
-    debut: datetime = datetime(2026, 9, 1, tzinfo=timezone.utc)
+    debut: datetime = datetime(2026, 9, 1, tzinfo=UTC)
     evenements_par_jour: int = 30_000  # cible du dossier : 10 000 à 50 000
     proportions: dict[str, float] = field(default_factory=lambda: dict(PROPORTIONS_DEFAUT))
     taux_defauts: float = 0.05  # part des événements qui portent un défaut
@@ -74,14 +80,19 @@ class Parametres:
             raise ValueError(f"types inconnus dans les proportions : {sorted(inconnus)}")
         if any(p < 0 for p in self.proportions.values()) or sum(self.proportions.values()) <= 0:
             raise ValueError("les proportions doivent être positives, de somme non nulle")
-        for nom in ("taux_defauts", "part_clients_connus", "proba_nouvelle_session", "proba_fin_session"):
+        for nom in (
+            "taux_defauts",
+            "part_clients_connus",
+            "proba_nouvelle_session",
+            "proba_fin_session",
+        ):
             if not 0 <= getattr(self, nom) <= 1:
                 raise ValueError(f"{nom} doit être compris entre 0 et 1")
 
 
 class Evenement(NamedTuple):
-    contenu: dict        # ce qui part sur le bus
-    defaut: str | None   # défaut volontaire injecté, ou None (information de test, hors contrat)
+    contenu: dict  # ce qui part sur le bus
+    defaut: str | None  # défaut volontaire injecté, ou None (information de test, hors contrat)
 
 
 @dataclass
@@ -91,7 +102,7 @@ class Statistiques:
     par_defaut: Counter = field(default_factory=Counter)
     acceptes: int = 0
     rebutes: int = 0
-    rebutes_a_tort: int = 0   # valide selon nous, mais refusé par le bus
+    rebutes_a_tort: int = 0  # valide selon nous, mais refusé par le bus
     acceptes_a_tort: int = 0  # invalide selon nous, mais accepté par le bus
 
     def enregistrer(self, evt: Evenement, accepte: bool | None = None) -> None:
@@ -114,7 +125,7 @@ class Statistiques:
 
 
 class _Session:
-    __slots__ = ("id", "client", "dernier_produit", "panier")
+    __slots__ = ("client", "dernier_produit", "id", "panier")
 
     def __init__(self, id_session: str, client: str | None) -> None:
         self.id = id_session
@@ -125,7 +136,7 @@ class _Session:
 
 def _iso(t: datetime) -> str:
     """Format du contrat : UTC, suffixe Z, millisecondes."""
-    return t.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    return t.astimezone(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 def mots_de_designation(designation: str) -> tuple[str, ...]:
@@ -214,7 +225,9 @@ class Generateur:
         rng = self._rng
         if not self._actives or rng.random() < self.p.proba_nouvelle_session:
             self._compteur_sessions += 1
-            client = rng.choice(self._clients) if rng.random() < self.p.part_clients_connus else None
+            client = (
+                rng.choice(self._clients) if rng.random() < self.p.part_clients_connus else None
+            )
             session = _Session(f"s-{self._compteur_sessions:06d}", client)
             self._actives.append(session)
             return session
@@ -261,7 +274,7 @@ class Generateur:
             # Toujours dans le futur RÉEL, quelle que soit la date de début simulée.
             evt["horodatage"] = _iso(self._t + timedelta(days=rng.randint(18_000, 36_000)))
         elif defaut == "horodatage_ancien":
-            avant_2016 = datetime(2015, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+            avant_2016 = datetime(2015, 12, 31, 23, 59, 59, tzinfo=UTC)
             evt["horodatage"] = _iso(avant_2016 - timedelta(days=rng.randint(0, 3_000)))
         else:  # horodatage_illisible
             evt["horodatage"] = self._t.strftime("%d/%m/%Y %H:%M")

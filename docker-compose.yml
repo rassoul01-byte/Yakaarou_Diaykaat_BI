@@ -193,6 +193,7 @@ services:
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./tests:/app/tests
+      - ./pyproject.toml:/app/pyproject.toml:ro
     depends_on:
       postgres: { condition: service_healthy }
       mongodb: { condition: service_healthy }
