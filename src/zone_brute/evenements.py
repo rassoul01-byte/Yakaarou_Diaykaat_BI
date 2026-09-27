@@ -87,27 +87,40 @@ def rejouer_tranche(
     publieur: Callable[[str, str, dict], None],
     racine: Path = RACINE_EVENEMENTS_DEFAUT,
 ) -> int:
-    """Relit la tranche archivée date=<date>/heure=<heure> et republie
-    chaque événement sur navigation.rejeu via `publieur(sujet, cle,
-    message)`. Un sujet à part évite que les événements rejoués soient
-    comptés deux fois par les consommateurs du flux normal.
+    """Relit une tranche et republie ses événements dans l'ordre chronologique.
+
+    Les événements sont triés selon leur `horodatage` avant publication
+    sur `navigation.rejeu`.
 
     Retourne le nombre d'événements republiés. Lève FileNotFoundError
     si la tranche n'existe pas.
     """
     chemin = _chemin_tranche(racine / f"date={date}", heure)
+
     if not chemin.exists():
         raise FileNotFoundError(
             f"Aucune tranche archivée pour date={date} heure={heure} : {chemin}"
         )
-    compte = 0
+
+    evenements = []
+
     with open(chemin, encoding="utf-8") as f:
         for ligne in f:
             ligne = ligne.strip()
             if not ligne:
                 continue
+
             evenement = json.loads(ligne)
-            cle = evenement.get("id_session") or evenement.get("id_evenement")
-            publieur(SUJET_REJEU, cle, evenement)
-            compte += 1
-    return compte
+            evenements.append(evenement)
+
+    evenements.sort(
+        key=lambda evenement: datetime.fromisoformat(
+            evenement["horodatage"].replace("Z", "+00:00")
+        ).astimezone(UTC)
+    )
+
+    for evenement in evenements:
+        cle = evenement.get("id_session") or evenement.get("id_evenement")
+        publieur(SUJET_REJEU, cle, evenement)
+
+    return len(evenements)
