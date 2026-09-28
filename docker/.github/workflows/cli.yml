@@ -1,0 +1,51 @@
+name: CI
+
+# Déclenchée à chaque envoi sur une branche et à chaque demande de fusion vers develop.
+# Contrôle de forme (mêmes réglages que le projet : pyproject.toml), puis tests
+# qui n'ont besoin d'aucun service. Les tests « integration » restent locaux
+# (voir la section CI/CD du dossier de conception ; à revoir au Sprint 4).
+on:
+  push:
+  pull_request:
+    branches: [develop]
+
+# Un nouvel envoi sur la même branche annule l'exécution précédente encore en cours.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # Même version de Python que le Dockerfile (python:3.11-slim).
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      # Mêmes fichiers de dépendances que le Dockerfile.
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # Étapes rapides d'abord : on échoue avant de lancer les tests.
+      - name: Formatage (ruff format)
+        run: ruff format --check .
+
+      - name: Analyse statique (ruff check)
+        run: ruff check .
+
+      # -m "not integration" écarte les tests qui exigent les services.
+      - name: Tests
+        run: pytest -m "not integration"
