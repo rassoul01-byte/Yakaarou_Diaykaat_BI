@@ -189,10 +189,12 @@ services:
       DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
       DRIVE_RAKUTEN_ID: ${DRIVE_RAKUTEN_ID}
     volumes:
+
       - ./src:/app/src
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./tests:/app/tests
+
     depends_on:
       postgres: { condition: service_healthy }
       mongodb: { condition: service_healthy }
