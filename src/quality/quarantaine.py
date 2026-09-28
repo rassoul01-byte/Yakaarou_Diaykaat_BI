@@ -35,8 +35,7 @@ def _normaliser_rejet(rejet: Mapping[str, Any]) -> tuple:
     gravite = str(rejet["gravite"])
     if gravite not in GRAVITES_AUTORISEES:
         raise ValueError(
-            f"Gravité invalide : {gravite!r}. "
-            f"Valeurs autorisées : {sorted(GRAVITES_AUTORISEES)}"
+            f"Gravité invalide : {gravite!r}. Valeurs autorisées : {sorted(GRAVITES_AUTORISEES)}"
         )
 
     return (
@@ -151,9 +150,7 @@ def lister_rejets(
             lignes = curseur.fetchall()
             colonnes = [colonne.name for colonne in curseur.description]
 
-        return [
-            dict(zip(colonnes, ligne, strict=True))
-            for ligne in lignes]
+        return [dict(zip(colonnes, ligne, strict=True)) for ligne in lignes]
 
     finally:
         if connexion_locale:
@@ -192,13 +189,12 @@ def afficher_rejets(
 
     return len(rejets)
 
+
 if __name__ == "__main__":
     import argparse
     import sys
 
-    parser = argparse.ArgumentParser(
-        description="Consulter les rejets de qualité."
-    )
+    parser = argparse.ArgumentParser(description="Consulter les rejets de qualité.")
     parser.add_argument(
         "--source",
         help="Filtrer par source, par exemple olist ou rakuten.",

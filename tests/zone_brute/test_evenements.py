@@ -70,6 +70,7 @@ def test_rejouer_tranche_absente_leve_une_erreur(tmp_path):
     with pytest.raises(FileNotFoundError):
         rejouer_tranche("2026-09-22", "23", lambda s, c, m: None, racine=tmp_path)
 
+
 def test_rejouer_est_chronologique(tmp_path):
     archiver_evenements(
         [
