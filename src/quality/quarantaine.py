@@ -151,7 +151,9 @@ def lister_rejets(
             lignes = curseur.fetchall()
             colonnes = [colonne.name for colonne in curseur.description]
 
-        return [dict(zip(colonnes, ligne)) for ligne in lignes]
+        return [
+            dict(zip(colonnes, ligne, strict=True))
+            for ligne in lignes]
 
     finally:
         if connexion_locale:
@@ -192,6 +194,7 @@ def afficher_rejets(
 
 if __name__ == "__main__":
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser(
         description="Consulter les rejets de qualité."
@@ -213,8 +216,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    afficher_rejets(
-        source=args.source,
-        regle=args.regle,
-        limite=args.limite,
-    )
+    try:
+        afficher_rejets(
+            source=args.source,
+            regle=args.regle,
+            limite=args.limite,
+        )
+    except psycopg2.Error:
+        print(
+            "ERREUR : impossible de contacter la base PostgreSQL.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from None
