@@ -195,6 +195,7 @@ services:
       - ./scripts:/app/scripts
       - ./data:/app/data
       - ./tests:/app/tests
+      - ./sql:/app/sql
       - ./pyproject.toml:/app/pyproject.toml:ro
     depends_on:
       postgres: { condition: service_healthy }
