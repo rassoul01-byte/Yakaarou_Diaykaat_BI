@@ -22,10 +22,67 @@ from src.quality.sorties import ecrire_staging, ecrire_quarantaine, ecrire_execu
 
 
 # ---------------------------------------------------------------------------
-# Chemins des données RAW
+# Chemins des données RAW / zone brute
 # ---------------------------------------------------------------------------
 
 RAW_DIR = Path("data/raw")
+
+# Le catalogue F1.5 utilise "olist" comme source métier.
+# L'acquisition SQL du Sprint 1 dépose physiquement les fichiers
+# dans data/raw/lots/boutique/ingestion=<horodatage>/.
+INGESTION_DIR = None
+
+
+def chemin_olist(nom_fichier):
+    """Retourne le chemin d'un fichier Olist dans l'ingestion sélectionnée."""
+    if INGESTION_DIR is None:
+        raise RuntimeError(
+            "Aucune ingestion Olist sélectionnée. "
+            "Utilisez --ingestion AAAAMMJJTHHMMSS."
+        )
+
+    chemin = INGESTION_DIR / nom_fichier
+
+    if not chemin.exists():
+        raise FileNotFoundError(
+            f"Fichier absent de l'ingestion : {chemin}"
+        )
+
+    return chemin
+
+
+def resoudre_ingestion(source, ingestion):
+    """Résout explicitement le dossier d'une ingestion.
+
+    Pour Olist, les données proviennent de la source SQL 'boutique'.
+    Le paramètre --ingestion évite de sélectionner implicitement
+    la dernière ingestion.
+    """
+    if not ingestion:
+        raise ValueError(
+            "--ingestion est obligatoire pour contrôler une source par lot."
+        )
+
+    if source == "olist":
+        source_physique = "boutique"
+    else:
+        source_physique = source
+
+    dossier = RAW_DIR / "lots" / source_physique / f"ingestion={ingestion}"
+
+    if not dossier.is_dir():
+        raise FileNotFoundError(
+            f"Ingestion introuvable : {dossier}"
+        )
+
+    manifeste = dossier / "manifeste.json"
+
+    if not manifeste.is_file():
+        raise FileNotFoundError(
+            f"Manifeste absent : {manifeste}"
+        )
+
+    return dossier
 
 
 def valider_avec_pandera(df, schema, nom_schema):
@@ -626,7 +683,7 @@ def controler_olist_geolocation():
     # Contrôle 1 : doublons stricts de géolocalisation
     # ---------------------------------------------------------------
 
-    chemin_geo = RAW_DIR / "olist" / "olist_geolocation_dataset.csv"
+    chemin_geo = chemin_olist("geolocation.csv")
 
     df_geo = lire_csv(chemin_geo)
 
@@ -641,7 +698,7 @@ def controler_olist_geolocation():
     # Contrôle 2 : review_id dupliqués
     # ---------------------------------------------------------------
 
-    chemin_reviews = RAW_DIR / "olist" / "olist_order_reviews_dataset.csv"
+    chemin_reviews = chemin_olist("order_reviews.csv")
 
     df_reviews = lire_csv(chemin_reviews)
 
@@ -687,8 +744,8 @@ def controler_olist_geolocation():
     # Contrôle 4 : commandes sans ligne d'article
     # ---------------------------------------------------------------
 
-    chemin_orders = RAW_DIR / "olist" / "olist_orders_dataset.csv"
-    chemin_items = RAW_DIR / "olist" / "olist_order_items_dataset.csv"
+    chemin_orders = chemin_olist("orders.csv")
+    chemin_items = chemin_olist("order_items.csv")
 
     df_orders = lire_csv(chemin_orders)
     df_items = lire_csv(chemin_items)
@@ -708,7 +765,7 @@ def controler_olist_geolocation():
     # ---------------------------------------------------------------
 
     chemin_payments = (
-        RAW_DIR / "olist" / "olist_order_payments_dataset.csv"
+        chemin_olist("order_payments.csv")
     )
 
     df_payments = lire_csv(chemin_payments)
@@ -727,7 +784,7 @@ def controler_olist_geolocation():
     # ---------------------------------------------------------------
 
     chemin_products = (
-        RAW_DIR / "olist" / "olist_products_dataset.csv"
+        chemin_olist("products.csv")
     )
 
     df_products = lire_csv(chemin_products)
@@ -772,7 +829,7 @@ def controler_olist_geolocation():
     # ---------------------------------------------------------------
 
     chemin_customers = (
-        RAW_DIR / "olist" / "olist_customers_dataset.csv"
+        chemin_olist("customers.csv")
     )
 
     df_customers = lire_csv(chemin_customers)
@@ -1015,6 +1072,14 @@ def main():
         help="Afficher uniquement le catalogue des règles",
     )
 
+    parser.add_argument(
+        "--ingestion",
+        help=(
+            "Identifiant explicite de l'ingestion à contrôler "
+            "(format AAAAMMJJTHHMMSS)"
+        ),
+    )
+
     args = parser.parse_args()
 
     if args.catalogue:
@@ -1022,6 +1087,17 @@ def main():
         return
 
     if args.source == "olist":
+        global INGESTION_DIR
+
+        INGESTION_DIR = resoudre_ingestion(
+            args.source,
+            args.ingestion,
+        )
+
+        print(
+            f"\nIngestion sélectionnée : {INGESTION_DIR}"
+        )
+
         resultat = controler_olist_geolocation()
 
         print("\n" + "=" * 70)

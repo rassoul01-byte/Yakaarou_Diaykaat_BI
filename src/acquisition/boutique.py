@@ -27,6 +27,7 @@ TABLES = (
     "sellers",
     "geolocation",
     "category_translation",
+    "order_reviews",
 )
 
 # Colonne de date utilisée par l'extraction incrémentale. Les tables absentes
