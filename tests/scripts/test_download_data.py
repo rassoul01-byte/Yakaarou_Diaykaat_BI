@@ -86,8 +86,8 @@ def test_poste_vierge_tout_est_telecharge_range_et_verifie(environnement):
 
     assert dd.main([]) == 0
     assert len(appels) == 2
-    assert (data_dir / "raw" / "olist" / "olist_orders_dataset.csv").exists()
-    assert (data_dir / "raw" / "rakuten" / "rakuten_catalogue_produits.csv").exists()
+    assert (data_dir / "sources" / "olist" / "olist_orders_dataset.csv").exists()
+    assert (data_dir / "sources" / "rakuten" / "rakuten_catalogue_produits.csv").exists()
     assert (data_dir / "quarantine").is_dir() and (data_dir / "models").is_dir()
 
 
@@ -104,7 +104,7 @@ def test_seule_la_source_defaillante_est_retelechargee(environnement):
     data_dir, appels = environnement
     dd.main([])
     appels.clear()
-    (data_dir / "raw" / "rakuten" / "rakuten_catalogue_produits.csv").unlink()
+    (data_dir / "sources" / "rakuten" / "rakuten_catalogue_produits.csv").unlink()
 
     assert dd.main([]) == 0
     assert appels == [dd.DRIVE_IDS_PAR_DEFAUT["rakuten"]]
@@ -113,7 +113,7 @@ def test_seule_la_source_defaillante_est_retelechargee(environnement):
 def test_un_fichier_tronque_est_detecte(environnement):
     data_dir, _ = environnement
     dd.main([])
-    _ecrire_csv(data_dir / "raw" / "olist" / "olist_orders_dataset.csv", 1, 2)
+    _ecrire_csv(data_dir / "sources" / "olist" / "olist_orders_dataset.csv", 1, 2)
 
     assert dd.main(["--verifier"]) == 1
 

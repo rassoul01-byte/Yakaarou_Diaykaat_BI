@@ -40,6 +40,7 @@ Cette règle sert la contribution de chacun plutôt qu'elle ne la limite : si to
 
 - Détient le backlog : il en fixe les priorités et les fait évoluer.
 - Décide de ce qui entre et de ce qui sort d'un sprint.
+- Tient le tableau Trello : contenu des cartes, priorités et affectations. Il en a la charge depuis le Sprint 1.
 - En fin de sprint, accepte ou refuse chaque fonctionnalité livrée : une fonctionnalité qui fonctionne mais ne répond pas au besoin auquel elle est rattachée n'est pas acceptée.
 - Décide de l'abandon d'une tâche de priorité P3 lorsque le calendrier se tend.
 
@@ -53,13 +54,13 @@ Cette règle sert la contribution de chacun plutôt qu'elle ne la limite : si to
 **Ce qu'il fait**
 
 - Anime les réunions d'ouverture et de clôture de sprint, ainsi que le point à mi-parcours.
-- Tient le tableau Trello à jour à chaque réunion et avant tout point avec le coach.
+- Veille à ce que le tableau reflète l'avancement réel, et alerte le Product Owner dès qu'une carte est en retard sur la réalité.
 - Suit les enchaînements de tâches et alerte dès qu'un retard menace la suite.
 - Lève les blocages ou les fait remonter à l'équipe.
 
 **Ce qu'il ne fait pas**
 
-- Il ne décide pas des priorités : c'est le Product Owner.
+- Il ne décide pas des priorités ni du contenu du tableau : c'est le Product Owner.
 - Il n'est pas responsable de l'avancement des autres : chacun répond de ses propres tâches.
 
 ### Conception et documentation — Ndeye Penda SARR

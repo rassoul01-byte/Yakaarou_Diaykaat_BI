@@ -69,3 +69,32 @@ def test_rejouer_republie_chaque_evenement(tmp_path):
 def test_rejouer_tranche_absente_leve_une_erreur(tmp_path):
     with pytest.raises(FileNotFoundError):
         rejouer_tranche("2026-09-22", "23", lambda s, c, m: None, racine=tmp_path)
+
+
+def test_rejouer_est_chronologique(tmp_path):
+    archiver_evenements(
+        [
+            _evenement("e2", "2026-09-22T10:05:00Z"),
+            _evenement("e1", "2026-09-22T10:01:00Z"),
+            _evenement("e3", "2026-09-22T10:10:00Z"),
+        ],
+        racine=tmp_path,
+    )
+
+    publies = []
+
+    def faux_publieur(sujet, cle, message):
+        publies.append(message)
+
+    rejouer_tranche(
+        "2026-09-22",
+        "10",
+        faux_publieur,
+        racine=tmp_path,
+    )
+
+    assert [event["id_evenement"] for event in publies] == [
+        "e1",
+        "e2",
+        "e3",
+    ]

@@ -4,8 +4,8 @@ Vérifient que les trois zones existent avec la structure attendue.
 Nécessitent une base PostgreSQL démarrée : marqués `integration`.
 """
 
-import pytest
 import psycopg2
+import pytest
 
 from common.config import load_settings
 

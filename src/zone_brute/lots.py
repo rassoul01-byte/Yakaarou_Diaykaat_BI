@@ -5,11 +5,11 @@ Ce module ne crée pas d'ingestions — c'est le rôle du Livrable 1
 data/raw/lots/ et vérifie que rien n'a été altéré depuis, en
 recalculant les empreintes enregistrées dans chaque manifeste.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 from .manifeste import lire_manifeste, sha256_fichier
 
@@ -24,10 +24,10 @@ class Ingestion:
     manifeste: dict
 
 
-def lister_ingestions(racine: Path = RACINE_LOTS_DEFAUT) -> List[Ingestion]:
+def lister_ingestions(racine: Path = RACINE_LOTS_DEFAUT) -> list[Ingestion]:
     """Retourne toutes les ingestions trouvées sous
     data/raw/lots/<source>/ingestion=<horodatage>/."""
-    ingestions: List[Ingestion] = []
+    ingestions: list[Ingestion] = []
     if not racine.exists():
         return ingestions
     for dossier_source in sorted(racine.iterdir()):
@@ -55,14 +55,14 @@ class Anomalie:
     ingestion: Ingestion
     fichier: str
     attendu: str
-    trouve: Optional[str]
+    trouve: str | None
 
 
-def verifier_ingestions(racine: Path = RACINE_LOTS_DEFAUT) -> List[Anomalie]:
+def verifier_ingestions(racine: Path = RACINE_LOTS_DEFAUT) -> list[Anomalie]:
     """Recalcule l'empreinte de chaque fichier listé dans chaque
     manifeste et la compare au SHA-256 enregistré. Toute différence, ou
     tout fichier manquant, est remontée comme anomalie."""
-    anomalies: List[Anomalie] = []
+    anomalies: list[Anomalie] = []
     for ingestion in lister_ingestions(racine):
         for entree in ingestion.manifeste.get("fichiers", []):
             chemin_fichier = ingestion.dossier / entree["nom"]

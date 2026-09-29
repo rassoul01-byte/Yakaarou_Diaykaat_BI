@@ -15,6 +15,7 @@ Branchement au bus (common.bus, Livrable 3, Ndeye Penda) :
   navigation.rejeu au lieu de navigation.evenements — les événements passent
   donc par la même validation de contrat qu'à la publication normale.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -104,19 +105,21 @@ def construire_analyseur() -> argparse.ArgumentParser:
     analyseur = argparse.ArgumentParser(prog="zone_brute")
     sous = analyseur.add_subparsers(dest="commande", required=True)
 
-    sous.add_parser(
-        "lister", help="Lister les ingestions par lots de la zone brute."
-    ).set_defaults(func=_commande_lister)
+    sous.add_parser("lister", help="Lister les ingestions par lots de la zone brute.").set_defaults(
+        func=_commande_lister
+    )
 
-    sous.add_parser(
-        "verifier", help="Vérifier l'intégrité des ingestions par lots."
-    ).set_defaults(func=_commande_verifier)
+    sous.add_parser("verifier", help="Vérifier l'intégrité des ingestions par lots.").set_defaults(
+        func=_commande_verifier
+    )
 
     p_archiver = sous.add_parser(
         "archiver", help="Archiver les événements du bus par tranche horaire."
     )
     p_archiver.add_argument(
-        "--inactivite", type=float, default=5.0,
+        "--inactivite",
+        type=float,
+        default=5.0,
         help="Arrêt après ce nombre de secondes sans nouveau message (défaut : 5).",
     )
     p_archiver.set_defaults(func=_commande_archiver)

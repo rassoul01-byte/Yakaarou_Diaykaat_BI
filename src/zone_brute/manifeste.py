@@ -5,13 +5,14 @@ brute, leur nom, leur nombre de lignes, leur taille en octets et leur
 empreinte SHA-256. Il sert à vérifier plus tard qu'aucun fichier n'a
 été altéré. Voir docs/contrats/zone_brute.md.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Iterable
 
 
 def sha256_fichier(chemin: Path, taille_bloc: int = 1024 * 1024) -> str:
@@ -38,7 +39,7 @@ class EntreeFichier:
     sha256: str
 
     @classmethod
-    def depuis_fichier(cls, chemin: Path) -> "EntreeFichier":
+    def depuis_fichier(cls, chemin: Path) -> EntreeFichier:
         return cls(
             nom=chemin.name,
             lignes=compter_lignes(chemin),
@@ -67,5 +68,5 @@ def ecrire_manifeste(manifeste: dict, chemin: Path) -> None:
 
 
 def lire_manifeste(chemin: Path) -> dict:
-    with open(chemin, "r", encoding="utf-8") as f:
+    with open(chemin, encoding="utf-8") as f:
         return json.load(f)
