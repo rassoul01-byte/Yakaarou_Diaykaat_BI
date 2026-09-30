@@ -87,6 +87,16 @@ CREATE TABLE IF NOT EXISTS category_translation (
     product_category_name_english text
 );
 
+CREATE TABLE IF NOT EXISTS order_reviews (
+    review_id                text,
+    order_id                 text,
+    review_score             integer,
+    review_comment_title     text,
+    review_comment_message   text,
+    review_creation_date     timestamp,
+    review_answer_timestamp  timestamp
+);
+
 -- L'index qui rend l'extraction incrémentale rapide : c'est sur cette colonne
 -- que porte le filtre --depuis.
 CREATE INDEX IF NOT EXISTS idx_orders_achat ON orders (order_purchase_timestamp);
