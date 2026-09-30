@@ -33,3 +33,4 @@ gdown>=5.1,<7
 # NE PAS ajouter apache-airflow ici : Airflow tourne dans sa propre image,
 # et ses contraintes de versions entreraient en conflit avec ce fichier.
 pandera
+langdetect
