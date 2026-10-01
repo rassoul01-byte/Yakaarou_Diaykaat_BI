@@ -30,7 +30,6 @@ pandera>=0.24,<1              # SW · validation des avis (quality.schemas)
 langdetect>=1.0.9,<2          # AD · détection de langue du catalogue (transformation.langue)
 
 # --- À ajouter par leur responsable, au sprint indiqué -----------------------
-# great-expectations         SW · Sprint 2 · version à choisir selon pandas
 # scikit-learn               BD · Sprint 5 · modèle de ré-achat
 # imbalanced-learn           BD · Sprint 5 · rééquilibrage des classes
 #

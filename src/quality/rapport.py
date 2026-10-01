@@ -7,10 +7,16 @@ Les définitions sont dans docs/dictionnaire_indicateurs.md, le calcul dans
 sql/005_vues_taux_de_rejet.sql. Ce module ne calcule rien lui-même : il lit les
 vues et met en forme. Le seuil, lui, est une décision — elle est ici.
 
+Il complète le taux de rejet par trois mesures : les lignes marquées par les règles
+non bloquantes, les lignes supprimées en silence, et l'évolution du taux d'une
+exécution à l'autre. Ces lignes ne comptent pas dans le taux de rejet : elles ne
+sont pas en quarantaine.
+
 Usage :
     docker compose exec app python -m quality.rapport
     docker compose exec app python -m quality.rapport --seuil 5
     docker compose exec app python -m quality.rapport --source olist
+    docker compose exec app python -m quality.rapport --historique 10
 
 Code de sortie : 0 si tout est sous le seuil, 1 si une source le dépasse ou si
 la base est injoignable. C'est ce code qu'Airflow lira au Sprint 3 pour
@@ -20,6 +26,7 @@ interrompre la chaîne quotidienne.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from dataclasses import dataclass
 
@@ -53,6 +60,27 @@ _PAR_GRAVITE = """
     WHERE (%(source)s IS NULL OR source = %(source)s)
     ORDER BY source, rejets DESC
 """
+
+# Le journal de qualité garde, dans sa colonne message, le détail règle par règle de la
+# dernière exécution de chaque source : c'est là que sont comptées les lignes marquées
+# et supprimées, qui n'ont pas d'entrée en quarantaine.
+_DERNIER_JOURNAL = """
+    SELECT DISTINCT ON (source) source, message
+    FROM staging.execution_log
+    WHERE pipeline = 'qualite'
+      AND (%(source)s IS NULL OR source = %(source)s)
+    ORDER BY source, demarre_a DESC, id DESC
+"""
+
+_HISTORIQUE = """
+    SELECT execution_id, source, demarre_a, lignes_lues, lignes_rejetees, taux_rejet_pourcent
+    FROM quarantaine.v_taux_rejet_par_execution
+    WHERE (%(source)s IS NULL OR source = %(source)s)
+    ORDER BY source, demarre_a, execution_id
+"""
+
+# Nombre d'exécutions affichées par source dans l'évolution du taux.
+HISTORIQUE_PAR_DEFAUT = 5
 
 
 @dataclass(frozen=True)
@@ -97,6 +125,68 @@ def sources_sans_mesure(lignes: list[dict]) -> list[str]:
     return [ligne["source"] for ligne in lignes if ligne.get("taux_rejet_pourcent") is None]
 
 
+def extraire_mesures(source: str, message: str | None) -> list[dict]:
+    """Lignes marquées et lignes supprimées, règle par règle, d'après le journal.
+
+    - marquées : conservées mais signalées par la règle (clé « anomalies ») ;
+    - supprimées : retirées du flux sans rejet (doublons stricts).
+
+    Les règles qui n'ont rien signalé ni supprimé ne sont pas listées. Un message
+    absent ou illisible donne une liste vide : le rapport n'échoue pas pour ça.
+    """
+    try:
+        detail = json.loads(message) if message else {}
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(detail, dict):
+        return []
+
+    mesures = []
+    for controle in detail.get("controles") or []:
+        marquees = int(controle.get("anomalies") or 0)
+        supprimees = int(controle.get("lignes_supprimees") or 0)
+        if marquees or supprimees:
+            mesures.append(
+                {
+                    "source": source,
+                    "regle": controle.get("regle", "?"),
+                    "gravite": controle.get("gravite", ""),
+                    "lignes_marquees": marquees,
+                    "lignes_supprimees": supprimees,
+                }
+            )
+    return sorted(
+        mesures, key=lambda m: (m["source"], -(m["lignes_marquees"] + m["lignes_supprimees"]))
+    )
+
+
+def evolution(executions: list[dict], limite: int = HISTORIQUE_PAR_DEFAUT) -> list[dict]:
+    """Les dernières exécutions de chaque source, avec la variation du taux de l'une à l'autre.
+
+    `executions` est trié par source puis par date. La variation d'une exécution se
+    calcule par rapport à la précédente, même si celle-ci sort de la fenêtre affichée.
+    Elle est absente (None) pour la première exécution d'une source ou quand l'une
+    des deux n'a pas de taux.
+    """
+    par_source: dict[str, list[dict]] = {}
+    for ligne in executions:
+        par_source.setdefault(ligne["source"], []).append(ligne)
+
+    resultat = []
+    for source, lignes in par_source.items():
+        suivies = []
+        precedent = None
+        for numero, ligne in enumerate(lignes, start=1):
+            taux = ligne.get("taux_rejet_pourcent")
+            variation = None
+            if taux is not None and precedent is not None:
+                variation = round(float(taux) - float(precedent), 2)
+            suivies.append({**ligne, "source": source, "numero": numero, "variation": variation})
+            precedent = taux
+        resultat.extend(suivies[-limite:] if limite > 0 else [])
+    return resultat
+
+
 # --------------------------------------------------------------------------- #
 # Lecture
 # --------------------------------------------------------------------------- #
@@ -115,6 +205,19 @@ def collecter(source: str | None = None, limite: int = 10) -> tuple[list, list, 
         par_regle = _lire(curseur, _PAR_REGLE, source=source, limite=limite)
         par_gravite = _lire(curseur, _PAR_GRAVITE, source=source)
     return par_source, par_regle, par_gravite
+
+
+def collecter_complements(
+    source: str | None = None, historique: int = HISTORIQUE_PAR_DEFAUT
+) -> tuple[list[dict], list[dict]]:
+    """Lit les lignes marquées/supprimées de la dernière exécution et l'évolution du taux."""
+    with psycopg2.connect(load_settings().postgres_dsn) as connexion, connexion.cursor() as curseur:
+        journaux = _lire(curseur, _DERNIER_JOURNAL, source=source)
+        executions = _lire(curseur, _HISTORIQUE, source=source)
+    mesures = []
+    for journal in journaux:
+        mesures.extend(extraire_mesures(journal["source"], journal["message"]))
+    return mesures, evolution(executions, historique)
 
 
 # --------------------------------------------------------------------------- #
@@ -164,6 +267,39 @@ def afficher(par_source: list[dict], par_regle: list[dict], par_gravite: list[di
     print()
 
 
+def _variation(valeur) -> str:
+    return "         —" if valeur is None else f"{float(valeur):>+7.2f} pt"
+
+
+def afficher_complements(mesures: list[dict], historique: list[dict]) -> None:
+    if mesures:
+        print("Lignes marquées ou supprimées — dernière exécution de chaque source\n")
+        print(f"  {'Source':<12}{'Règle':<28}{'Gravité':<16}{'Marquées':>10}{'Supprimées':>12}")
+        for ligne in mesures:
+            print(
+                f"  {ligne['source']:<12}{ligne['regle']:<28}{ligne['gravite']:<16}"
+                f"{ligne['lignes_marquees']:>10}{ligne['lignes_supprimees']:>12}"
+            )
+        print(
+            "\n  Marquées : conservées, mais signalées par la règle."
+            "\n  Supprimées : retirées du flux sans rejet. Aucune des deux n'est dans le taux de rejet.\n"
+        )
+
+    if historique:
+        print("Évolution du taux de rejet — dernières exécutions\n")
+        print(
+            f"  {'Source':<12}{'N°':>4}  {'Date':<17}{'Lues':>11}{'Rejetées':>10}{'Taux':>10}{'Variation':>12}"
+        )
+        for ligne in historique:
+            date = ligne["demarre_a"].strftime("%Y-%m-%d %H:%M") if ligne.get("demarre_a") else "—"
+            print(
+                f"  {ligne['source']:<12}{ligne['numero']:>4}  {date:<17}"
+                f"{ligne['lignes_lues']:>11}{ligne['lignes_rejetees']:>10}"
+                f"{_pourcent(ligne['taux_rejet_pourcent']):>10}{_variation(ligne['variation']):>12}"
+            )
+        print()
+
+
 def main(argv: list[str] | None = None) -> int:
     analyseur = argparse.ArgumentParser(description="Taux de rejet du contrôle de qualité.")
     analyseur.add_argument("--source", help="n'examiner qu'une source, par exemple olist")
@@ -176,10 +312,17 @@ def main(argv: list[str] | None = None) -> int:
     analyseur.add_argument(
         "--limite", type=int, default=10, help="nombre de règles affichées (défaut : 10)"
     )
+    analyseur.add_argument(
+        "--historique",
+        type=int,
+        default=HISTORIQUE_PAR_DEFAUT,
+        help=f"exécutions affichées par source (défaut : {HISTORIQUE_PAR_DEFAUT})",
+    )
     arguments = analyseur.parse_args(argv)
 
     try:
         par_source, par_regle, par_gravite = collecter(arguments.source, arguments.limite)
+        mesures, historique = collecter_complements(arguments.source, arguments.historique)
     except psycopg2.Error as erreur:
         premiere_ligne = str(erreur).strip().splitlines()[0]
         print(f"ERREUR : impossible de lire les indicateurs ({premiere_ligne})", file=sys.stderr)
@@ -190,6 +333,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     afficher(par_source, par_regle, par_gravite)
+    if par_source:
+        afficher_complements(mesures, historique)
 
     for source in sources_sans_mesure(par_source):
         print(f"  ATTENTION : aucune ligne lue pour {source}, le taux n'a pas de sens.")
