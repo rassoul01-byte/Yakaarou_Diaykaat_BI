@@ -863,7 +863,7 @@ def controler_olist(dossier, ingestion=None):
 def controler_rakuten(dossier, ingestion=None):
     """Applique les règles Rakuten à une ingestion de la zone brute.
 
-    Les quatre règles Rakuten sont non bloquantes ou silencieuses : aucune
+    Les quatre règles Rakuten sont non bloquantes : aucune
     fiche n'est rejetée, les anomalies sont comptées. Le texte chargé en
     staging est celui de la zone brute : le décodage du HTML et la détection
     de langue appartiennent à la transformation (F1.7), qui les applique en

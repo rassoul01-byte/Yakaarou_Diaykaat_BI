@@ -154,7 +154,7 @@ RULES = [
             "Une désignation identique sur plusieurs produits ne doit "
             "pas entraîner leur déduplication."
         ),
-        "gravite": "silencieuse",
+        "gravite": "non bloquante",
         "commentaire": (
             "Deux produits différents peuvent avoir le même libellé. "
             "Les identifiants produits restent la référence d'unicité."
