@@ -28,6 +28,15 @@ importante** : c'est elle qui évite qu'un chiffre soit lu pour ce qu'il n'est p
 | **Seuil d'alerte** | **5 %**. Au-delà, le chargement du jour est interrompu et examiné |
 | **Consultation** | `python -m quality.rapport --seuil 5` |
 
+**Ce que comptent les volumes.** Pour le pipeline `qualite`, une ligne du
+journal par exécution de `quality.controle` : `lignes_lues` = tous les
+enregistrements des fichiers de l'ingestion contrôlée, `lignes_rejetees` = les
+lignes envoyées en quarantaine par les règles bloquantes, `lignes_ecrites` =
+les lignes chargées en staging. Les lignes supprimées silencieusement (doublons
+stricts) ne sont ni rejetées ni écrites : leur compte est dans la colonne
+`message` (JSON, détail par règle). Relancer une ingestion ajoute une exécution,
+qui entre dans le taux cumulé.
+
 **Ce qu'il ne dit pas.** Un taux de rejet élevé ne signifie pas que les données
 se sont dégradées : il signale aussi bien une **règle trop stricte** qu'une
 source qui a changé de format. C'est un signal à examiner, jamais un verdict.

@@ -76,3 +76,21 @@ def test_enregistrer_rejets_accepte_un_lot(monkeypatch):
 
 def test_enregistrer_rejets_vide():
     assert enregistrer_rejets([]) == 0
+
+
+def test_enregistrer_rejets_sans_validation_laisse_la_transaction_a_l_appelant(monkeypatch):
+    connexion = FausseConnexion()
+    monkeypatch.setattr("quality.quarantaine.execute_values", lambda *args, **kwargs: None)
+
+    rejet = {
+        "source": "olist",
+        "ingestion": "20260930T120000",
+        "regle": "OLIST_COMMANDES_02",
+        "gravite": "bloquante",
+        "donnees_brutes": {"order_id": "abc"},
+    }
+
+    assert enregistrer_rejets([rejet], connexion=connexion, valider=False) == 1
+    assert connexion.commit_effectue is False
+    assert connexion.rollback_effectue is False
+    assert connexion.fermee is False

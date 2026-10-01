@@ -158,7 +158,7 @@ from common.evenements import nouvel_evenement
 
 with Publieur() as publieur:
     evt = nouvel_evenement("recherche", id_session="s-000123", requete="lampe de chevet")
-    publieur.publier(evt)   # renvoie False et part au rebut si l'événement est invalide
+    publieur.publier(evt)  # renvoie False et part au rebut si l'événement est invalide
 ```
 
 Lire, depuis l'archivage :
@@ -168,7 +168,7 @@ from common.bus import consommer
 from common.evenements import SUJET_EVENEMENTS
 
 for message in consommer(SUJET_EVENEMENTS, groupe="archivage-zone-brute"):
-    traiter(message.valeur)   # un dictionnaire conforme au contrat
+    traiter(message.valeur)  # un dictionnaire conforme au contrat
 ```
 
 Republier sur le sujet de rejeu :

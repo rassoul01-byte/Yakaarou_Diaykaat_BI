@@ -16,5 +16,6 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt requirements-dev.txt ./
-RUN pip install -r requirements.txt -r requirements-dev.txt
+# requirements.lock fige les versions exactes (contrainte, pas liste de besoins).
+COPY requirements.txt requirements-dev.txt requirements.lock ./
+RUN pip install -r requirements.txt -r requirements-dev.txt -c requirements.lock

@@ -56,8 +56,7 @@ RULES = [
         "source": "olist",
         "colonne": "order_id",
         "condition": (
-            "Les paiements d'une même commande doivent être agrégés "
-            "avant toute jointure."
+            "Les paiements d'une même commande doivent être agrégés avant toute jointure."
         ),
         "gravite": "non bloquante",
         "commentaire": (
@@ -98,10 +97,7 @@ RULES = [
         "identifiant": "OLIST_AVIS_03",
         "source": "olist",
         "colonne": "review_comment_message",
-        "condition": (
-            "L'absence de commentaire textuel ne doit pas entraîner "
-            "le rejet de l'avis."
-        ),
+        "condition": ("L'absence de commentaire textuel ne doit pas entraîner le rejet de l'avis."),
         "gravite": "non bloquante",
         "commentaire": (
             "Un avis peut ne contenir aucun commentaire. La note reste "
@@ -142,8 +138,7 @@ RULES = [
         "source": "rakuten",
         "colonne": "description",
         "condition": (
-            "Une description absente ne doit pas entraîner le rejet "
-            "de la fiche produit."
+            "Une description absente ne doit pas entraîner le rejet de la fiche produit."
         ),
         "gravite": "non bloquante",
         "commentaire": (
@@ -199,11 +194,7 @@ def get_rules(source=None):
     if source is None:
         return RULES
 
-    return [
-        rule
-        for rule in RULES
-        if rule["source"].lower() == source.lower()
-    ]
+    return [rule for rule in RULES if rule["source"].lower() == source.lower()]
 
 
 def get_rule(rule_id):

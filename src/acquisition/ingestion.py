@@ -76,8 +76,12 @@ def empreintes(manifeste: dict) -> dict:
 
 
 def lignes_totales(manifeste: dict) -> int:
-    """Nombre de lignes de données, en-têtes CSV déduits."""
-    return sum(max(f.get("lignes", 0) - 1, 0) for f in manifeste.get("fichiers", []))
+    """Nombre de lignes de données de l'ingestion.
+
+    Le champ `lignes` du manifeste compte déjà des lignes de données, en-tête
+    CSV exclu (voir zone_brute.manifeste.compter_enregistrements).
+    """
+    return sum(f.get("lignes", 0) for f in manifeste.get("fichiers", []))
 
 
 def acquerir(
@@ -101,28 +105,64 @@ def acquerir(
         with connexion() as cnx, cnx.cursor() as curseur:
             for table in tables:
                 extraire_table(curseur, table, brouillon / f"{table}.csv", depuis)
+        return _deposer(brouillon, destination, source, debut)
 
-        fichiers = sorted(brouillon.glob("*.csv"))
-        identifiant = horodatage_ingestion(debut)
-        manifeste = construire_manifeste(source, identifiant, fichiers)
-        lignes = lignes_totales(manifeste)
 
-        precedente = derniere_ingestion(destination)
-        if precedente and empreintes(lire_manifeste(precedente / NOM_MANIFESTE)) == empreintes(
-            manifeste
-        ):
-            _journaliser(source, debut, lignes, 0, "inchange", f"identique a {precedente.name}")
-            return Resultat(
-                source, None, lignes, len(fichiers), "aucun changement depuis la dernière ingestion"
-            )
+def acquerir_fichiers(
+    source: str,
+    dossier_sources: Path | None = None,
+    racine_donnees: Path = Path("data"),
+) -> Resultat:
+    """Dépose dans la zone brute les fichiers livrés par une source fichier.
 
-        identifiant = identifiant_libre(destination, identifiant)
-        manifeste["ingestion"] = identifiant
-        dossier = destination / f"ingestion={identifiant}"
-        dossier.mkdir()
-        for fichier in fichiers:
-            shutil.move(str(fichier), dossier / fichier.name)
-        ecrire_manifeste(manifeste, dossier / NOM_MANIFESTE)
+    Utilisé pour le catalogue Rakuten, livré en CSV dans data/sources/rakuten/.
+    Les fichiers sont copiés à l'identique (contrat de la zone brute, §3), puis
+    suivent le même chemin que l'extraction SQL : comparaison à la dernière
+    ingestion, manifeste, journal.
+    """
+    debut = datetime.now(UTC)
+    dossier_sources = dossier_sources or racine_donnees / "sources" / source
+    livres = sorted(dossier_sources.glob("*.csv"))
+    if not livres:
+        raise FileNotFoundError(f"aucun fichier CSV dans {dossier_sources}")
+
+    destination = racine_lots(racine_donnees, source)
+    destination.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory(dir=destination) as brouillon:
+        brouillon = Path(brouillon)
+        for fichier in livres:
+            shutil.copyfile(fichier, brouillon / fichier.name)
+        return _deposer(brouillon, destination, source, debut)
+
+
+def _deposer(brouillon: Path, destination: Path, source: str, debut: datetime) -> Resultat:
+    """Range les fichiers préparés dans une nouvelle ingestion, s'ils sont nouveaux.
+
+    Rien n'est écrit dans la zone brute si les fichiers sont identiques à ceux
+    de la dernière ingestion de la source.
+    """
+    fichiers = sorted(brouillon.glob("*.csv"))
+    identifiant = horodatage_ingestion(debut)
+    manifeste = construire_manifeste(source, identifiant, fichiers)
+    lignes = lignes_totales(manifeste)
+
+    precedente = derniere_ingestion(destination)
+    if precedente and empreintes(lire_manifeste(precedente / NOM_MANIFESTE)) == empreintes(
+        manifeste
+    ):
+        _journaliser(source, debut, lignes, 0, "inchange", f"identique a {precedente.name}")
+        return Resultat(
+            source, None, lignes, len(fichiers), "aucun changement depuis la dernière ingestion"
+        )
+
+    identifiant = identifiant_libre(destination, identifiant)
+    manifeste["ingestion"] = identifiant
+    dossier = destination / f"ingestion={identifiant}"
+    dossier.mkdir()
+    for fichier in fichiers:
+        shutil.move(str(fichier), dossier / fichier.name)
+    ecrire_manifeste(manifeste, dossier / NOM_MANIFESTE)
 
     _journaliser(source, debut, lignes, lignes, "succes", f"ingestion {identifiant}")
     return Resultat(source, identifiant, lignes, len(fichiers), f"ingestion {identifiant} créée")

@@ -163,3 +163,26 @@ def test_journaliser_une_panne_ne_leve_pas(monkeypatch):
 
     resultat = ResultatTransformation("test", 10, 10, 0, "ok")
     journaliser(resultat, "olist")  # ne doit lever aucune exception
+
+
+def test_le_compte_des_lignes_modifiees_couvre_toutes_les_pages(monkeypatch):
+    # Régression : execute_values découpe en pages de 100 et rowcount ne
+    # gardait que la dernière (16 fiches annoncées sur 84 916).
+    curseur = FauxCurseur()
+
+    def faux_execute_values(curseur, requete, valeurs):
+        curseur.appels.append(("execute_values", requete, valeurs))
+        curseur.rowcount = len(valeurs)
+
+    monkeypatch.setattr("transformation.pipeline.execute_values", faux_execute_values)
+    monkeypatch.setattr(
+        "transformation.pipeline.pd.read_sql",
+        lambda *_args, **_kwargs: pd.DataFrame(
+            {"product_id": [f"p{i}" for i in range(250)], "product_category_name": ["Beleza"] * 250}
+        ),
+    )
+
+    resultat = transformer_categories(FausseConnexion(curseur))
+
+    assert resultat.lignes_ecrites == 250
+    assert [len(appel[2]) for appel in curseur.appels] == [100, 100, 50]

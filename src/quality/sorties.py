@@ -1,78 +1,50 @@
-"""
-Gestion des sorties du contrôle qualité DataFlow360.
+"""Copie d'audit en CSV du contrôle qualité DataFlow360.
 
-F1.5 :
-- lignes valides -> staging
-- lignes rejetées -> quarantine
+Ces fichiers ne sont PAS la zone intermédiaire : la seule vérité est
+PostgreSQL (staging.<tables>, quarantaine.rejets, staging.execution_log),
+alimentée par quality.chargement. Cette copie sert à relire un contrôle
+sans base de données (débogage, revue de règle). Elle n'est écrite qu'à la
+demande (--export-csv) et n'est lue par aucun traitement.
+
+Arborescence, une par ingestion contrôlée :
+
+    data/audit_qualite/<source>/ingestion=<id>/
+    ├── valides/<table>.csv
+    ├── rejets/<table>_<regle>.csv
+    └── execution_log.csv
 """
 
 from pathlib import Path
 
 import pandas as pd
 
-
-STAGING_DIR = Path("data/staging")
-QUARANTINE_DIR = Path("data/quarantine")
+from common.config import load_settings
 
 
-def ecrire_staging(df, source, table):
-    """
-    Écrit les lignes validées dans la zone staging.
-    """
-    STAGING_DIR.mkdir(parents=True, exist_ok=True)
-
-    chemin = STAGING_DIR / source
-    chemin.mkdir(parents=True, exist_ok=True)
-
-    fichier = chemin / f"{table}.csv"
-
-    df.to_csv(fichier, index=False)
-
-    print(f"\nSTAGING")
-    print("Fichier :", fichier)
-    print("Lignes écrites :", len(df))
-
-    return fichier
+def dossier_audit(source, ingestion, racine=None):
+    """Dossier d'audit d'une ingestion contrôlée."""
+    racine = Path(racine) if racine else load_settings().data_dir / "audit_qualite"
+    return racine / source / f"ingestion={ingestion}"
 
 
-def ecrire_quarantaine(df, source, table, rule_id):
-    """
-    Écrit les lignes rejetées dans la zone quarantine.
-    """
-    QUARANTINE_DIR.mkdir(parents=True, exist_ok=True)
+def exporter_audit(resultat, racine=None):
+    """Écrit la copie d'audit d'un ResultatControle et renvoie son dossier."""
+    dossier = dossier_audit(resultat.source, resultat.ingestion, racine)
+    (dossier / "valides").mkdir(parents=True, exist_ok=True)
+    (dossier / "rejets").mkdir(parents=True, exist_ok=True)
 
-    chemin = QUARANTINE_DIR / source
-    chemin.mkdir(parents=True, exist_ok=True)
+    for table, df in resultat.valides.items():
+        df.to_csv(dossier / "valides" / f"{table}.csv", index=False)
 
-    fichier = chemin / f"{table}_{rule_id}.csv"
+    for lot in resultat.rejets:
+        fichier = dossier / "rejets" / f"{lot.table}_{lot.regle['identifiant']}.csv"
+        lot.lignes.to_csv(fichier, index=False)
 
-    df.to_csv(fichier, index=False)
+    df_log = pd.DataFrame(resultat.controles)
+    df_log.insert(0, "source", resultat.source)
+    df_log.to_csv(dossier / "execution_log.csv", index=False)
 
-    print(f"\nQUARANTAINE")
-    print("Règle :", rule_id)
-    print("Fichier :", fichier)
-    print("Lignes rejetées :", len(df))
+    print("\nCOPIE D'AUDIT CSV")
+    print("Dossier :", dossier)
 
-    return fichier
-
-
-def ecrire_execution_log(resultats, source):
-    """
-    Enregistre le résultat de chaque règle dans un journal CSV.
-    F1.5 - traçabilité des contrôles qualité.
-    """
-    log_dir = STAGING_DIR
-    log_dir.mkdir(parents=True, exist_ok=True)
-
-    fichier = log_dir / "execution_log.csv"
-
-    df_log = pd.DataFrame(resultats)
-    df_log.insert(0, "source", source)
-
-    df_log.to_csv(fichier, index=False)
-
-    print("\nEXECUTION LOG")
-    print("Fichier :", fichier)
-    print("Contrôles enregistrés :", len(df_log))
-
-    return fichier
+    return dossier
