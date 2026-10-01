@@ -15,6 +15,14 @@ Les deux jeux de données ne partagent pas d'identifiant produit commun. La corr
 
 Aucun produit vendu ne doit être supprimé à cause d'une absence de correspondance.
 
+> **Portée de ce rattachement.** Faute d'identifiant commun, la fiche affectée à
+> un produit vendu est choisie **arbitrairement à l'intérieur d'une catégorie
+> compatible**. Le lien entre un produit précis et une fiche précise n'a donc
+> aucune valeur métier : il permet d'illustrer la chaîne d'enrichissement du
+> catalogue, et rien de plus. **Seule la correspondance de catégorie est
+> significative**, et aucun constat ne sera tiré du couple produit-fiche
+> lui-même. Cette limite est reprise dans `docs/dictionnaire_indicateurs.md`.
+
 ## 2. Résultat attendu
 
 La table produite contient **une ligne par produit vendu**.
@@ -28,10 +36,10 @@ Les produits qui ne disposent d'aucune catégorie compatible sont rattachés à 
 | Champ | Type logique | Contenu |
 |---|---|---|
 | `id_produit` | texte | Identifiant du produit vendu tel qu'il figure dans la boutique |
-| `id_fiche` | texte / vide | Identifiant de la fiche du catalogue affectée ; vide si le produit n'est pas apparié |
+| `id_fiche` | texte / vide | Identifiant de la fiche du catalogue affectée ; vide si le produit n'est rattaché à aucune |
 | `categorie_boutique` | texte | Catégorie du produit vendu, après normalisation |
 | `categorie_catalogue` | texte | Code de catégorie du catalogue mis en relation, ou `inconnu` |
-| `apparie` | booléen | `true` si le produit est rattaché à une fiche, sinon `false` |
+| `rattache` | booléen | `true` si le produit est rattaché à une fiche, sinon `false` |
 
 ## 4. Principe de construction
 
@@ -71,8 +79,8 @@ Aucun produit vendu n'est supprimé par la correspondance.
 
 Un produit peut donc produire :
 
-- une ligne appariée avec `apparie = true` et une `id_fiche` renseignée ;
-- une ligne non appariée avec `apparie = false`, `id_fiche` vide et `categorie_catalogue = inconnu`.
+- une ligne rattachée avec `rattache = true` et une `id_fiche` renseignée ;
+- une ligne non rattachée avec `rattache = false`, `id_fiche` vide et `categorie_catalogue = inconnu`.
 
 Toute fiche référencée dans `id_fiche` doit exister dans le catalogue Rakuten nettoyé.
 
@@ -86,7 +94,7 @@ Si une catégorie du catalogue est absente de la table de correspondance, la com
 2. ne produit pas une correspondance partielle silencieuse ;
 3. se termine avec le code de sortie `1`.
 
-Le taux d'appariement et le nombre de produits `inconnu` sont calculés à chaque construction.
+Le **taux de rattachement par catégorie** et le nombre de produits `inconnu` sont calculés à chaque construction. Sa définition complète figure dans `docs/dictionnaire_indicateurs.md`.
 
 Ces informations sont affichées en ligne de commande et enregistrées dans `staging.execution_log`.
 
@@ -118,7 +126,7 @@ Le livrable est considéré comme terminé lorsque :
 - les produits sans catégorie compatible sont conservés sous `inconnu` ;
 - le nombre de produits `inconnu` est cohérent avec les **610 produits sans catégorie** ;
 - chaque `id_fiche` renseignée existe dans le catalogue nettoyé ;
-- le taux d'appariement est affiché et journalisé ;
+- le taux de rattachement par catégorie est affiché et journalisé ;
 - deux exécutions successives donnent la même table ;
 - les tests couvrent les cas nominaux et les erreurs prévues ;
 - la commande se termine avec un code de sortie explicite.

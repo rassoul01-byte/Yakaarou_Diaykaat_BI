@@ -132,6 +132,26 @@ signale un incident récent plutôt qu'un défaut de fond.
 
 ---
 
+## Indicateurs d'intégration — Sprint 3
+
+### Taux de rattachement par catégorie
+
+| | |
+|---|---|
+| **Définition** | Part des produits vendus dont la catégorie a trouvé une catégorie compatible dans le catalogue |
+| **Formule** | `produits rattachés ÷ produits vendus × 100` |
+| **Granularité** | Global, et par catégorie de la boutique |
+| **Source des données** | Table de correspondance — voir `docs/contrats/correspondance.md` |
+| **Seuil d'alerte** | Aucun |
+
+**Ce qu'il ne dit pas.** Il ne mesure **pas** la qualité d'un rapprochement
+produit par produit. Les deux jeux de données ne partagent aucun identifiant :
+la fiche affectée à un produit est choisie arbitrairement à l'intérieur de sa
+catégorie. Un taux de 100 % signifierait que toutes les catégories ont trouvé
+une correspondance, **jamais** que les bons produits ont été reconnus.
+
+---
+
 ## Comment ajouter un indicateur
 
 1. L'écrire **ici d'abord**, avec les six rubriques, avant d'écrire la moindre requête.
