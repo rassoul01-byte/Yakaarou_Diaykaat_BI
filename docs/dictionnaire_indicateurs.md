@@ -82,6 +82,41 @@ doublons stricts — n'apparaissent pas ici : elles ne sont pas rejetées mais
 
 ---
 
+### Lignes marquées et lignes supprimées
+
+| | |
+|---|---|
+| **Définition** | Lignes **marquées** : conservées mais signalées par une règle non bloquante. Lignes **supprimées** : retirées du flux par une règle silencieuse (doublons stricts). Dans les deux cas, la ligne n'est pas rejetée |
+| **Granularité** | Par source et par règle, pour la dernière exécution |
+| **Source des données** | `staging.execution_log`, colonne `message` (JSON, clé `controles` : `anomalies` pour les marquées, `lignes_supprimees` pour les supprimées) |
+| **Affichage** | `python -m quality.rapport` |
+| **Seuil d'alerte** | Aucun |
+
+**Ce qu'il ne dit pas.** Ces lignes ne comptent **pas** dans le taux de rejet : une
+commande sans article est conservée, un doublon de géolocalisation est supprimé
+sans être rejeté. Un taux de rejet de 0,07 % avec 261 831 lignes supprimées n'est pas
+une source « presque parfaite » : les deux chiffres se lisent ensemble.
+
+---
+
+### Évolution du taux de rejet
+
+| | |
+|---|---|
+| **Définition** | Écart, en points de pourcentage, entre le taux de rejet d'une exécution et celui de l'exécution précédente de la même source |
+| **Formule** | `taux(exécution n) − taux(exécution n−1)` |
+| **Granularité** | Par source et par exécution |
+| **Source des données** | `quarantaine.v_taux_rejet_par_execution` |
+| **Affichage** | `python -m quality.rapport` (option `--historique N`, 5 par défaut) |
+| **Seuil d'alerte** | Aucun |
+
+**Ce qu'il ne dit pas.** Une variation nulle entre deux exécutions de la **même
+ingestion** est normale : rejouer un contrôle donne le même taux. Une hausse
+brutale signale plus souvent une source qui a changé qu'une donnée devenue mauvaise.
+Sans taux (aucune ligne lue), il n'y a pas de variation.
+
+---
+
 ### Taux de rejet cumulé
 
 | | |

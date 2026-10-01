@@ -54,7 +54,7 @@ Chaque commit doit représenter une unité logique de travail cohérente et resp
    ```
 
    Le `fetch` n'est pas facultatif : sans lui, on fusionne une version périmée de `develop` et les conflits réapparaissent au moment de la PR.
-3. **Titre de la PR :** Commencer obligatoirement par le code du backlog (ex. : `[F1.5] Mise en place des règles Great Expectations`), ou par `[S0]` pour une tâche du Sprint 0.
+3. **Titre de la PR :** Commencer obligatoirement par le code du backlog (ex. : `[F1.5] Mise en place des règles de qualité (Pandera)`), ou par `[S0]` pour une tâche du Sprint 0.
 4. **Description obligatoire :** Indiquer brièvement :
    * Ce qui a été réalisé.
    * La commande pour tester en local.

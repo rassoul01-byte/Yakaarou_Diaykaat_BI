@@ -1,5 +1,7 @@
 # Yakaarou Diaykaat BI — DataFlow360
 
+[![CI](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/cli.yml/badge.svg?branch=develop)](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/cli.yml)
+
 **Plateforme data d'un e-commerçant en croissance**
 GROUPE 2 · Formation Développement Data, promotion 8 · Orange Digital Center
 
@@ -41,7 +43,7 @@ La donnée suit **trois circuits** :
 | Collecte par lots | Python, pandas |
 | Bus d'événements | Kafka |
 | Zone brute | Volume Docker partagé |
-| Contrôle qualité | Great Expectations |
+| Contrôle qualité | Pandera |
 | Entrepôt analytique | PostgreSQL |
 | Base documentaire | MongoDB |
 | Recherche lexicale et vectorielle | Elasticsearch |
