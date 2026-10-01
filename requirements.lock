@@ -1,0 +1,54 @@
+# DataFlow360 — versions exactes, figées pour reproduire l'environnement
+#
+# Généré dans l'image de l'application (python:3.11-slim, Python 3.11.16) :
+#   docker run --rm -v "$PWD:/r:ro" python:3.11-slim sh -c \
+#     "pip install -q -r /r/requirements.txt -r /r/requirements-dev.txt \
+#      && pip freeze --exclude pip --exclude setuptools --exclude wheel"
+#
+# Ce fichier n'est pas une liste de besoins : il s'applique comme contrainte
+# (pip install -r requirements.txt -r requirements-dev.txt -c requirements.lock),
+# dans le Dockerfile et dans la CI. Une dépendance entre toujours par
+# requirements.txt ; le lock est régénéré dans la même demande de fusion.
+annotated-types==0.8.0
+beautifulsoup4==4.15.0
+certifi==2026.7.22
+charset-normalizer==3.5.2
+confluent-kafka==2.15.1
+dnspython==2.8.0
+elastic-transport==8.19.0
+elasticsearch==8.19.3
+Faker==40.40.0
+filelock==4.0.7
+gdown==6.4.1
+idna==3.20
+iniconfig==2.3.0
+langdetect==1.0.9
+mypy_extensions==1.1.0
+numpy==2.4.6
+packaging==26.3
+pandas==2.3.3
+pandera==0.33.1
+pluggy==1.6.0
+psycopg2-binary==2.9.13
+pydantic==2.13.5
+pydantic_core==2.46.5
+Pygments==2.21.0
+pymongo==4.18.2
+PySocks==1.7.1
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.3
+pytz==2026.4
+PyYAML==6.0.3
+requests==2.34.2
+ruff==0.16.9
+six==1.17.0
+soupsieve==2.10
+SQLAlchemy==2.1.1
+tqdm==4.70.1
+typeguard==4.6.0
+typing-inspect==0.9.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+tzdata==2026.4
+urllib3==2.8.0

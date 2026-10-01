@@ -1,0 +1,25 @@
+[project]
+name = "dataflow360"
+version = "0.1.0"
+description = "Plateforme data d'un e-commerçant — GROUPE 2, ODC Développement Data"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: nécessite les services démarrés (bases, bus d'événements)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
