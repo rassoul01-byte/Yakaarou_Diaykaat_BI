@@ -6,7 +6,6 @@ F1.5 - Catalogue des règles de validation.
 
 import pandera.pandas as pa
 
-
 # ===============================================================
 # OLIST_AVIS_01
 # Un review_id doit être unique et non nul.

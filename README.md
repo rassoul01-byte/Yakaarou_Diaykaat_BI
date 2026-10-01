@@ -54,6 +54,52 @@ La donnée suit **trois circuits** :
 
 Chaque choix est justifié, et chaque alternative écartée est expliquée, dans le dossier de conception.
 
+Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante.
+
+---
+
+## État actuel
+
+Seul le circuit **par lots** fonctionne de bout en bout, jusqu'à la zone intermédiaire :
+
+```
+data/sources/  ──python -m acquisition [--source rakuten]──▶  data/raw/lots/<source>/ingestion=<id>/   (zone brute + manifeste)
+                                                                        │
+                                                   python -m quality.controle --source <olist|rakuten> --ingestion <id>
+                                                                        │
+                                              ┌─────────────────────────┴──────────────────────────┐
+                                    lignes valides                                           lignes rejetées (règles bloquantes)
+                                              ▼                                                    ▼
+                                 PostgreSQL staging.<tables>                          PostgreSQL quarantaine.rejets
+                                              │                                                    │
+                                              │               staging.execution_log ◀──────────────┘  (une ligne par exécution)
+                                              │                          │
+                               python -m transformation                python -m quality.rapport --seuil 5
+                                 (écrit en place dans staging)
+```
+
+- Staging, quarantaine et journal sont écrits **dans une seule transaction** (`src/quality/chargement.py`) : un échec ne laisse rien à moitié chargé.
+- Relancer le contrôle d'une même ingestion **écrase** staging, **n'ajoute pas** une seconde fois les mêmes rejets à la quarantaine (append-only), et **ajoute** une ligne au journal.
+- La seule vérité est PostgreSQL. `--export-csv` écrit en plus une copie d'audit dans `data/audit_qualite/`, que rien ne relit.
+- La transformation se relance **après** chaque contrôle : le rechargement de staging remet ses colonnes à NULL.
+
+Enchaînement complet, dans le conteneur `app` :
+
+```bash
+python scripts/appliquer_sql.py                 # migrations (PYTHONPATH=src hors conteneur)
+python scripts/charger_boutique.py              # une fois : remplit la base source « boutique »
+python -m acquisition                           # Olist → data/raw/lots/boutique/ingestion=<id>
+python -m acquisition --source rakuten          # Rakuten → data/raw/lots/rakuten/ingestion=<id>
+python -m zone_brute verifier                   # empreintes SHA-256 des ingestions
+python -m quality.controle --source olist   --ingestion <id>
+python -m quality.controle --source rakuten --ingestion <id>
+python -m quality.rapport --seuil 5
+python -m transformation --source olist
+python -m transformation --source rakuten
+```
+
+**Pas encore implémenté** : entrepôt `dwh` (Sprint 3), workflows Airflow (aucun DAG), consommation métier du flux d'événements et compteurs du jour, recherche Elasticsearch, modèles de Machine Learning, assistant, restitution Power BI. Le générateur d'événements, le bus Kafka et l'archivage des événements dans la zone brute existent, sans traitement en aval.
+
 ---
 
 ## L'équipe
@@ -74,10 +120,12 @@ Qui fait quoi, qui décide quoi et qui supplée qui : voir [`docs/ROLES.md`](doc
 
 ```
 Yakaarou_Diaykaat_BI/
-├── dags/                    workflows Airflow
+├── .github/workflows/       intégration continue (ruff + pytest)
+├── dags/                    workflows Airflow (aucun pour l'instant)
 ├── data/                    données locales — jamais versionnées
-│   ├── raw/                 zone brute, donnée telle que reçue
-│   ├── quarantine/          enregistrements rejetés par le contrôle qualité
+│   ├── sources/             fichiers livrés par les sources (Olist, Rakuten)
+│   ├── raw/                 zone brute, donnée telle que reçue, jamais modifiée
+│   ├── audit_qualite/       copie CSV facultative d'un contrôle (--export-csv)
 │   └── models/              modèles entraînés
 ├── docker/
 │   ├── app/Dockerfile       image du conteneur de travail
@@ -87,13 +135,13 @@ Yakaarou_Diaykaat_BI/
 │   ├── ROLES.md             rôles et responsabilités
 │   ├── PREMIER_COMMIT.md    guide du premier commit
 │   └── GUIDE_DEMARRAGE_EQUIPE.md
-├── scripts/
-│   └── download_data.py     récupération et vérification des données
+├── scripts/                 récupération des données, base source, migrations
+├── sql/                     migrations des zones PostgreSQL (quarantaine, staging)
 ├── src/
 │   ├── common/              configuration partagée
 │   ├── acquisition/         chargement par lots, générateur d'événements
 │   ├── streaming/           consommateur du flux, compteurs du jour
-│   ├── quality/              règles de validation, quarantaine
+│   ├── quality/             règles, contrôle, chargement staging/quarantaine, rapport
 │   ├── transformation/      normalisation, déduplication, décodage du texte
 │   ├── integration/         correspondance des produits, schéma en étoile
 │   ├── search/               moteur de recherche
@@ -104,7 +152,8 @@ Yakaarou_Diaykaat_BI/
 ├── docker-compose.yml       les six services de la plateforme
 ├── pyproject.toml
 ├── requirements.txt
-└── requirements-dev.txt
+├── requirements-dev.txt
+└── requirements.lock        versions exactes, appliquées comme contrainte
 ```
 
 Le dossier `data/` n'existe pas après un clonage : il est exclu du dépôt, et créé par le script de récupération des données.
@@ -212,7 +261,7 @@ Le bilan doit se terminer par **« 10 fichier(s) sur 10 conforme(s) »**. Relanc
 docker compose exec app python -m pytest
 ```
 
-Les **22 tests** doivent passer.
+Tous les tests doivent passer. Les tests marqués `integration` sont ignorés par défaut ; ils exigent PostgreSQL migré (`python scripts/appliquer_sql.py`) et se lancent avec `python -m pytest -m integration`.
 
 ### Accès aux services
 
@@ -294,9 +343,9 @@ Nommage des branches, messages de commit, demandes de fusion et définition de t
 
 | Sprint | Objectif | État |
 |---|---|---|
-| Sprint 0 | Organisation et préparation | Terminer |
-| Sprint 1 | Acquisition et stockage brut | En cours |
-| Sprint 2 | Qualité et transformation | À venir |
+| Sprint 0 | Organisation et préparation | Terminé |
+| Sprint 1 | Acquisition et stockage brut | Réalisé |
+| Sprint 2 | Qualité et transformation | En cours — contrôle, quarantaine, staging et transformation branchés ; voir « État actuel » |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | À venir |
 | Sprint 4 | Temps réel, recherche et supervision | À venir |
 | Sprint 5 | Intelligence artificielle et finalisation | À venir |

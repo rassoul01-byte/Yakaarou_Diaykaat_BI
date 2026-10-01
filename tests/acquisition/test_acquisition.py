@@ -5,6 +5,7 @@ construction des requêtes, la connexion déduite et la comparaison de deux
 extractions. Les tests marqués « integration » utilisent une vraie base.
 """
 
+import csv
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -14,6 +15,7 @@ import pytest
 from acquisition.boutique import TABLES, dsn_boutique, requete_extraction
 from acquisition.ingestion import (
     acquerir,
+    acquerir_fichiers,
     derniere_ingestion,
     empreintes,
     horodatage_ingestion,
@@ -68,9 +70,19 @@ def test_une_table_inconnue_est_refusee_et_non_concatenee():
         requete_extraction("customers; DROP TABLE orders")
 
 
-def test_les_huit_tables_de_la_boutique_sont_declarees():
-    assert len(TABLES) == 8
+def test_les_neuf_tables_de_la_boutique_sont_declarees():
+    assert len(TABLES) == 9
     assert "orders" in TABLES and "geolocation" in TABLES
+
+
+def test_les_avis_font_partie_de_l_extraction():
+    # Ajoutés au Sprint 2 : sans eux, le contrôle des avis (OLIST_AVIS_01/02/03)
+    # ne trouverait aucun fichier dans l'ingestion.
+    assert "order_reviews" in TABLES
+
+
+def test_chaque_table_est_declaree_une_seule_fois():
+    assert len(set(TABLES)) == len(TABLES)
 
 
 # --- L'ingestion -------------------------------------------------------------
@@ -92,10 +104,11 @@ def test_deux_extractions_identiques_ont_les_memes_empreintes():
     assert empreintes(manifeste) == {"orders.csv": "abc"}
 
 
-def test_le_compte_de_lignes_deduit_les_entetes_csv():
-    manifeste = {"fichiers": [{"lignes": 100}, {"lignes": 51}]}
+def test_le_compte_de_lignes_additionne_les_lignes_de_donnees_du_manifeste():
+    # Le manifeste compte déjà des lignes de données, en-tête exclu.
+    manifeste = {"fichiers": [{"lignes": 99}, {"lignes": 50}]}
 
-    assert lignes_totales(manifeste) == 149  # 99 + 50
+    assert lignes_totales(manifeste) == 149
 
 
 def test_sans_ingestion_precedente_il_n_y_a_rien_a_comparer(tmp_path):
@@ -115,6 +128,52 @@ def test_un_dossier_sans_manifeste_est_ignore(tmp_path):
     (tmp_path / "ingestion=20260925T140307").mkdir()
 
     assert derniere_ingestion(tmp_path) is None
+
+
+# --- Une source fichier (catalogue Rakuten) ---------------------------------
+
+
+@pytest.fixture
+def sans_journal(monkeypatch):
+    monkeypatch.setattr("acquisition.ingestion._journaliser", lambda *args, **kwargs: None)
+
+
+def test_une_source_fichier_est_copiee_a_l_identique_avec_son_manifeste(tmp_path, sans_journal):
+    livres = tmp_path / "sources" / "rakuten"
+    livres.mkdir(parents=True)
+    contenu = 'source_index,designation,description\n0,Stylo,"ligne 1\nligne 2"\n1,Cahier,\n'
+    (livres / "catalogue.csv").write_text(contenu, encoding="utf-8")
+
+    resultat = acquerir_fichiers("rakuten", racine_donnees=tmp_path)
+
+    dossier = racine_lots(tmp_path, "rakuten") / f"ingestion={resultat.ingestion}"
+    assert (dossier / "catalogue.csv").read_text(encoding="utf-8") == contenu
+    manifeste = json.loads((dossier / "manifeste.json").read_text(encoding="utf-8"))
+    assert manifeste["source"] == "rakuten"
+    assert (
+        manifeste["fichiers"][0]["lignes"] == 2
+    )  # description sur deux lignes : un seul enregistrement
+    assert resultat.lignes == 2
+
+
+def test_une_source_fichier_inchangee_ne_cree_pas_de_seconde_ingestion(tmp_path, sans_journal):
+    livres = tmp_path / "sources" / "rakuten"
+    livres.mkdir(parents=True)
+    (livres / "catalogue.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+
+    premier = acquerir_fichiers("rakuten", racine_donnees=tmp_path)
+    second = acquerir_fichiers("rakuten", racine_donnees=tmp_path)
+
+    assert premier.ingestion is not None
+    assert second.ingestion is None
+    assert len(list(racine_lots(tmp_path, "rakuten").glob("ingestion=*"))) == 1
+
+
+def test_une_source_fichier_vide_est_refusee(tmp_path, sans_journal):
+    (tmp_path / "sources" / "rakuten").mkdir(parents=True)
+
+    with pytest.raises(FileNotFoundError):
+        acquerir_fichiers("rakuten", racine_donnees=tmp_path)
 
 
 # --- Avec une vraie base -----------------------------------------------------
@@ -160,4 +219,4 @@ def test_l_extraction_incrementale_ne_ramene_que_les_commandes_recentes(tmp_path
 
 def _lignes(racine: Path, ingestion: str, nom: str) -> int:
     chemin = racine_lots(racine, "boutique") / f"ingestion={ingestion}" / nom
-    return sum(1 for _ in chemin.open(encoding="utf-8")) - 1
+    return sum(1 for _ in csv.reader(chemin.open(encoding="utf-8", newline=""))) - 1

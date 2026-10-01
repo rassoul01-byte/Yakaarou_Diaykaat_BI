@@ -4,10 +4,15 @@ Un manifeste décrit, pour un ensemble de fichiers immuables de la zone
 brute, leur nom, leur nombre de lignes, leur taille en octets et leur
 empreinte SHA-256. Il sert à vérifier plus tard qu'aucun fichier n'a
 été altéré. Voir docs/contrats/zone_brute.md.
+
+Le champ `lignes` compte des lignes de données, pas des lignes physiques :
+l'en-tête d'un CSV n'est pas compté, et un enregistrement dont un champ
+contient un saut de ligne (commentaires d'avis) compte pour un.
 """
 
 from __future__ import annotations
 
+import csv
 import hashlib
 import json
 from collections.abc import Iterable
@@ -26,9 +31,22 @@ def sha256_fichier(chemin: Path, taille_bloc: int = 1024 * 1024) -> str:
 
 
 def compter_lignes(chemin: Path) -> int:
-    """Compte les lignes d'un fichier texte (CSV ou JSONL)."""
+    """Compte les lignes physiques d'un fichier texte (CSV ou JSONL)."""
     with open(chemin, "rb") as f:
         return sum(1 for _ in f)
+
+
+def compter_enregistrements(chemin: Path) -> int:
+    """Compte les lignes de données d'un fichier, valeur du champ `lignes`.
+
+    CSV : enregistrements hors en-tête, lus par le module csv pour qu'un
+    champ entre guillemets sur plusieurs lignes ne soit compté qu'une fois.
+    Autres formats (JSONL) : un enregistrement par ligne physique.
+    """
+    if chemin.suffix.lower() != ".csv":
+        return compter_lignes(chemin)
+    with open(chemin, encoding="utf-8", newline="") as f:
+        return max(sum(1 for _ in csv.reader(f)) - 1, 0)
 
 
 @dataclass
@@ -42,7 +60,7 @@ class EntreeFichier:
     def depuis_fichier(cls, chemin: Path) -> EntreeFichier:
         return cls(
             nom=chemin.name,
-            lignes=compter_lignes(chemin),
+            lignes=compter_enregistrements(chemin),
             octets=chemin.stat().st_size,
             sha256=sha256_fichier(chemin),
         )

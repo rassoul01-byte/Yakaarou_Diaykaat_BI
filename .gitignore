@@ -219,3 +219,7 @@ __marimo__/
 
 # Donnees du projet - jamais versionnees
 data/
+
+# Copies de sauvegarde des éditeurs (nano, etc.)
+*.save
+*~

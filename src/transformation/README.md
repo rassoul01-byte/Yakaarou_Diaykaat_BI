@@ -34,7 +34,7 @@ PYTHONPATH=src python3 -m pytest tests/transformation
   modifiée.
 - `transformer_rakuten` — décode `designation` et `description`, écrit
   `staging.rakuten_produits.langue` (nouvelle colonne, même migration).
-  Les 2 651 désignations strictement identiques sur des produits différents
+  Les 2 651 doublons de désignation sur des produits différents
   sont **comptées et signalées dans le message, jamais supprimées** — c'est
   ce que dit le dossier de conception (section 3.3) : les identifiants
   produits sont uniques, seul le libellé se répète.
@@ -70,13 +70,18 @@ directement dans `pipeline.py`, aux deux endroits concernés.
      — aucune ligne à NULL, une proportion de `fr` proche de 62 %.
    - Une fiche connue pour contenir `id&eacute;es` ou une balise : vérifier
      qu'elle ressort décodée.
-4. **Point à trancher avec Seydina, non résolu ici** : son moteur de qualité
-   (F1.5, gravité « silencieuse ») peut déjà dédupliquer les doublons stricts
-   de géolocalisation avant que `staging` ne les reçoive. Si c'est le cas,
-   `transformer_geolocation` ne trouvera plus rien à supprimer chez elle —
-   ce n'est pas un bug (la fonction est sans risque à relancer), mais il faut
-   décider ensemble qui compte les 261 831 lignes dans le journal, pour ne
-   pas les compter deux fois ni nulle part.
+4. **Doublons stricts de géolocalisation — constaté le 30/09/2026** : le
+   contrôle qualité (OLIST_GEOLOCALISATION_01, gravité « silencieuse ») les
+   retire avant `staging` et compte les 261 831 lignes dans son journal
+   (`message`, champ `lignes_supprimees`). `transformer_geolocation` trouve
+   donc 0 doublon : ce n'est pas un bug, c'est une sécurité sans risque à
+   relancer, et les lignes ne sont comptées qu'une fois.
+
+Vérifié contre un vrai PostgreSQL 16 le 30/09/2026 (chaîne complète sur
+l'ingestion Olist réelle) : deux corrections ont suivi — la suppression des
+doublons de géolocalisation (`NOT IN` sur `ctid`, plus de dix minutes,
+remplacé par `ROW_NUMBER()`) et le compte des lignes modifiées, qui ne
+gardait que la dernière page d'`execute_values`.
 5. Ajouter `langdetect` à `requirements.txt` (pas encore fait dans ce paquet,
    à faire dans la PR).
 

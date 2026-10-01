@@ -51,7 +51,8 @@ data/raw/lots/<source>/ingestion=<horodatage>/
 └── manifeste.json
 ```
 
-- `<source>` : `olist`, `rakuten`, ...
+- `<source>` : `boutique` (Olist, extrait de la base SQL de la boutique),
+  `rakuten`, ...
 - `<horodatage>` : format `AAAAMMJJTHHMMSS`, heure de l'ingestion.
 - Les fichiers sont des copies **à l'identique** des fichiers de
   `data/sources/<source>/`.
@@ -102,6 +103,17 @@ Un objet JSON unique, commun aux lots et aux tranches d'événements :
   tranche d'événements.
 - `fichiers` : un objet par fichier du dossier, avec son nom, son
   nombre de lignes, sa taille en octets et son empreinte SHA-256.
+- `lignes` : nombre de **lignes de données**, pas de lignes physiques.
+  L'en-tête d'un CSV n'est pas compté, et un enregistrement dont un champ
+  entre guillemets contient un saut de ligne (commentaires d'avis) compte
+  pour un. `orders.csv` vaut donc 99 441, comme le nombre de commandes,
+  et non 99 442. Pour un fichier JSONL, une ligne est un événement.
+  Calcul : `zone_brute.manifeste.compter_enregistrements`.
+
+Les ingestions antérieures au 30/09/2026 (`boutique/ingestion=20260926T…`)
+comptaient les lignes physiques, en-tête compris. Elles ne sont pas
+réécrites (§1) : seul leur champ `lignes` diffère, leurs empreintes
+restent vérifiables.
 
 ## 6. Vérification
 

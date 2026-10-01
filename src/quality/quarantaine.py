@@ -52,8 +52,13 @@ def _normaliser_rejet(rejet: Mapping[str, Any]) -> tuple:
 def enregistrer_rejets(
     rejets: Iterable[Mapping[str, Any]],
     connexion=None,
+    valider: bool = True,
 ) -> int:
     """Enregistre plusieurs rejets en une seule opération par lots.
+
+    `valider=False` laisse la transaction ouverte : c'est l'appelant qui
+    valide ou annule, pour charger staging, quarantaine et journal d'un seul
+    tenant (voir quality.chargement).
 
     Retourne le nombre de rejets enregistrés.
     """
@@ -85,11 +90,13 @@ def enregistrer_rejets(
                 page_size=500,
             )
 
-        connexion.commit()
+        if valider:
+            connexion.commit()
         return len(lignes)
 
     except Exception:
-        connexion.rollback()
+        if valider:
+            connexion.rollback()
         raise
 
     finally:

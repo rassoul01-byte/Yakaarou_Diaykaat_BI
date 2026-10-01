@@ -13,14 +13,20 @@ remplie une fois par `scripts/charger_boutique.py`. Sa structure est dans
 `sql/boutique/schema.sql`. Ce script **ne fait pas partie du pipeline** : il
 simule l'existence du système de la boutique.
 
-**L'acquisition** — `python -m acquisition` extrait les huit tables par
-requêtes SQL et écrit le résultat dans
+**L'acquisition** — `python -m acquisition` extrait les neuf tables par
+requêtes SQL (avis clients `order_reviews` compris) et écrit le résultat dans
 `data/raw/lots/boutique/ingestion=<horodatage>/`, avec son manifeste.
+
+**Les sources fichier** — `python -m acquisition --source rakuten` copie à
+l'identique les CSV livrés dans `data/sources/rakuten/` vers
+`data/raw/lots/rakuten/ingestion=<horodatage>/`, par le même chemin
+(comparaison à la dernière ingestion, manifeste, journal).
 
 ```bash
 docker compose exec app python scripts/charger_boutique.py   # une seule fois
 docker compose exec app python -m acquisition
 docker compose exec app python -m acquisition --depuis 2018-01-01
+docker compose exec app python -m acquisition --source rakuten
 ```
 
 ## Ce qu'il faut savoir
@@ -38,4 +44,5 @@ docker compose exec app python -m acquisition --depuis 2018-01-01
 
 Aucun contrôle de qualité, aucune transformation, aucun chargement dans la zone
 intermédiaire : la zone brute reçoit la donnée **telle qu'elle est dans la
-boutique**. Le contrôle arrive au Sprint 2.
+boutique**. Le contrôle est fait ensuite par `python -m quality.controle`, sur
+une ingestion désignée explicitement.

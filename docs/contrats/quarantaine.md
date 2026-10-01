@@ -50,6 +50,25 @@ avec plusieurs rejets à la fois.
 Le module utilise une insertion PostgreSQL par lots afin d'éviter un
 INSERT séparé pour chaque ligne rejetée.
 
+## Alimentation par le contrôle qualité
+
+`quality.chargement.charger()` traduit les lignes rejetées par les règles
+**bloquantes** du catalogue au format ci-dessus :
+
+- `fichier` : nom du fichier dans l'ingestion (ex. `orders.csv`) ;
+- `ligne_origine` : position de l'enregistrement dans ce fichier, à partir
+  de 1, en-tête exclu ;
+- `donnees_brutes` : l'enregistrement tel que lu dans la zone brute, une
+  cellule vide devenant `null`.
+
+L'insertion se fait dans la même transaction que le chargement de staging
+et du journal (`enregistrer_rejets(..., valider=False)`).
+
+**Relancer une ingestion** : la quarantaine étant append-only, rien n'est
+supprimé ; les rejets d'une règle déjà enregistrés pour la même source et
+la même ingestion ne sont pas réinsérés. Le journal de l'exécution compte
+malgré tout les rejets détectés, pour que son taux de rejet reste exact.
+
 ## Consultation
 
 Exemples :

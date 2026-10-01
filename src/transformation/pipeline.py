@@ -39,6 +39,25 @@ def connexion() -> psycopg2.extensions.connection:
     return psycopg2.connect(load_settings().postgres_dsn)
 
 
+# Taille de page par défaut d'execute_values : un appel = une requête.
+TAILLE_PAGE = 100
+
+
+def _mettre_a_jour(curseur, requete: str, lignes: list) -> int:
+    """UPDATE ... FROM (VALUES %s) par pages, et nombre total de lignes modifiées.
+
+    execute_values découpe lui-même en pages de 100, mais curseur.rowcount ne
+    garde alors que le compte de la dernière page (16 au lieu de 84 916 sur le
+    catalogue Rakuten). En envoyant une page par appel, chaque rowcount est
+    celui d'une requête complète, et leur somme est exacte.
+    """
+    total = 0
+    for debut in range(0, len(lignes), TAILLE_PAGE):
+        execute_values(curseur, requete, lignes[debut : debut + TAILLE_PAGE])
+        total += curseur.rowcount
+    return total
+
+
 # --------------------------------------------------------------------------- #
 # Olist : déduplication de la géolocalisation
 # --------------------------------------------------------------------------- #
@@ -52,6 +71,11 @@ def transformer_geolocation(cnx) -> ResultatTransformation:
     mémoire : la table n'a pas de clé primaire, un doublon strict y est une
     ligne entière répétée.
 
+    Les doublons sont repérés par ROW_NUMBER() puis supprimés par leur ctid
+    (Tid Scan). La forme `ctid NOT IN (SELECT MIN(ctid) ...)` est à proscrire :
+    dès que la sous-requête dépasse work_mem, PostgreSQL la relit pour chaque
+    ligne — plus de dix minutes sur 738 332 lignes, quelques secondes ici.
+
     Relancer deux fois de suite ne supprime rien la seconde fois : c'est ce
     qui rend la transformation reproductible (critère de réussite F1.7/F1.8).
     """
@@ -61,12 +85,20 @@ def transformer_geolocation(cnx) -> ResultatTransformation:
         curseur.execute(
             """
             DELETE FROM staging.olist_geolocation
-            WHERE ctid NOT IN (
-                SELECT MIN(ctid)
-                FROM staging.olist_geolocation
-                GROUP BY geolocation_zip_code_prefix, geolocation_lat,
-                         geolocation_lng, geolocation_city, geolocation_state
-            )
+            WHERE ctid = ANY(ARRAY(
+                SELECT ctid
+                FROM (
+                    SELECT ctid,
+                           ROW_NUMBER() OVER (
+                               PARTITION BY geolocation_zip_code_prefix, geolocation_lat,
+                                            geolocation_lng, geolocation_city,
+                                            geolocation_state
+                               ORDER BY ctid
+                           ) AS rang
+                    FROM staging.olist_geolocation
+                ) AS lignes
+                WHERE rang > 1
+            ))
             """
         )
         supprimees = curseur.rowcount
@@ -106,7 +138,7 @@ def transformer_categories(cnx) -> ResultatTransformation:
     a_ecrire = list(zip(lignes["product_id"], normalisees, strict=True))
 
     with cnx.cursor() as curseur:
-        execute_values(
+        ecrites = _mettre_a_jour(
             curseur,
             """
             UPDATE staging.olist_products AS p
@@ -116,7 +148,6 @@ def transformer_categories(cnx) -> ResultatTransformation:
             """,
             a_ecrire,
         )
-        ecrites = curseur.rowcount
     cnx.commit()
     return ResultatTransformation(
         etape="olist_categories",
@@ -138,7 +169,7 @@ def transformer_rakuten(cnx) -> ResultatTransformation:
     Défauts mesurés : 63,6 % des descriptions contiennent des entités HTML,
     28,4 % des balises ; le catalogue n'est francophone qu'à 62 %.
 
-    Les 2 651 désignations strictement identiques sur des produits différents
+    Les 2 651 doublons de désignation sur des produits différents
     (défaut mesuré, section 3.3 du dossier de conception) ne sont PAS
     supprimées — les identifiants produits sont uniques, seul le libellé se
     répète — elles sont seulement comptées et rapportées, comme le prévoit la
@@ -163,7 +194,7 @@ def transformer_rakuten(cnx) -> ResultatTransformation:
         zip(lignes["jeu"], lignes["index_ligne"], designations, descriptions, langues, strict=True)
     )
     with cnx.cursor() as curseur:
-        execute_values(
+        ecrites = _mettre_a_jour(
             curseur,
             """
             UPDATE staging.rakuten_produits AS r
@@ -175,7 +206,6 @@ def transformer_rakuten(cnx) -> ResultatTransformation:
             """,
             a_ecrire,
         )
-        ecrites = curseur.rowcount
     cnx.commit()
     return ResultatTransformation(
         etape="rakuten_catalogue",

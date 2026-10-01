@@ -33,8 +33,9 @@ flux d'événements), y prend la même forme :
 | `fichier` | Nom du fichier d'origine, quand il y en a un |
 | `ligne_origine` | Numéro de ligne ou position dans la source |
 | `regle_violee` | Identifiant de la règle de qualité enfreinte (catalogue de règles, F1.5) |
-| `gravite` | `bloquant` ou `avertissement` |
+| `gravite` | `bloquante` ou `non bloquante` (seules les règles bloquantes y envoient des lignes) |
 | `enregistrement` | L'enregistrement rejeté tel quel, en JSON |
+| `ingestion` | Ingestion de la zone brute dont vient l'enregistrement (migration 004) |
 | `horodatage` | Quand le rejet a eu lieu |
 
 ### Pourquoi une table générique plutôt qu'une table par source
@@ -97,6 +98,15 @@ passage, pas un historique des passages précédents. Concrètement, le
 chargement videra chaque table avant d'y écrire les lignes validées de
 l'exécution en cours — pas de fusion, pas d'ajout incrémental à ce
 niveau.
+
+C'est `quality.chargement` qui l'applique, dans une seule transaction :
+vidage des tables de la source, copie des lignes valides, insertion des
+rejets en quarantaine, ligne de journal — puis validation, ou annulation
+complète au moindre échec.
+
+Les colonnes ajoutées par la transformation (`product_category_name_norm`,
+`langue`) repartent donc à NULL à chaque contrôle : la transformation se
+relance après lui.
 
 Aucune clé étrangère ne relie les tables entre elles ici : les
 contraintes référentielles strictes sont réservées à l'entrepôt

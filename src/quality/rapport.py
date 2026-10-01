@@ -130,7 +130,10 @@ def afficher(par_source: list[dict], par_regle: list[dict], par_gravite: list[di
     print("\nTaux de rejet par source — dernière exécution\n")
     if not par_source:
         print("  Aucun contrôle de qualité n'a encore été exécuté.")
-        print("  Lancer d'abord : python -m quality.controle --source olist\n")
+        print(
+            "  Lancer d'abord : python -m quality.controle --source olist "
+            "--ingestion AAAAMMJJTHHMMSS\n"
+        )
         return
 
     print(f"  {'Source':<16}{'Lues':>12}{'Rejetées':>12}{'Taux':>10}{'Cumulé':>10}  Exéc.")
