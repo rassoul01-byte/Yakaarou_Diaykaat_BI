@@ -4,6 +4,7 @@ Chaque tâche lance sa commande par un BashOperator. Une tâche est « factice �
 (elle réussit toujours) tant que son nom n'est pas dans REELLES : on la
 remplace une à une au fil des fusions, sans toucher au reste du DAG.
 """
+
 from datetime import datetime, timedelta
 
 from airflow import DAG
