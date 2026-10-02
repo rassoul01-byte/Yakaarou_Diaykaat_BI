@@ -6,10 +6,13 @@ une seule transaction : le chargement réussit en entier ou ne change rien.
 
 Le contrat (tables, grains, clés, règles) est docs/contrats/entrepot.md.
 
-Étape 1 du contrat (§10) : chargement simple. Les dimensions sont rechargées
-sans historisation — toute ligne est une version courante — et les faits sont
-vidés puis rechargés. Le résultat est identique à chaque lancement : le
-chargement est idempotent.
+Étape 2 du contrat (§10) : historisation de type 2 des dimensions client,
+produit et vendeur (§5). Quand un attribut suivi change, la version courante se
+ferme, une nouvelle s'ouvre, l'ancienne reste consultable ; quand rien ne change,
+rien ne se passe. Les faits, eux, n'ont qu'une version : ils sont vidés puis
+rechargés, et pointent vers la version courante de chaque dimension. Un second
+lancement sans nouvelle donnée laisse donc l'entrepôt strictement identique :
+le chargement est idempotent.
 
 Usage :
     docker compose exec app python -m integration.chargement
@@ -192,6 +195,8 @@ class ResultatChargement:
     lignes_lues: int
     lignes_ecrites: int
     comptages: dict[str, int] = field(default_factory=dict)
+    versions_ouvertes: dict[str, int] = field(default_factory=dict)
+    versions_fermees: dict[str, int] = field(default_factory=dict)
     message: str = ""
 
 
@@ -279,30 +284,59 @@ def vider_faits(curseur) -> None:
     curseur.execute("TRUNCATE dwh.fait_ligne_commande, dwh.fait_commande")
 
 
-def recharger_dimension(curseur, dimension: Dimension, aujourdhui: date) -> int:
-    """Étape 1 : repart d'une dimension vide (hors ligne « inconnu »), tout est courant.
+def fusionner_dimension(curseur, dimension: Dimension, aujourdhui: date) -> tuple[int, int]:
+    """Fusion SCD2 d'une dimension : ferme les versions modifiées, ouvre les nouvelles.
 
-    La clé de substitution repart de 1 et l'ordre est celui de l'identifiant
-    métier : deux lancements donnent exactement les mêmes clés.
+    Retourne (versions ouvertes, versions fermées). La comparaison porte sur les
+    attributs suivis uniquement — jamais sur la clé de substitution ni sur les
+    colonnes de validité. Une version identique n'est pas touchée, c'est ce qui
+    garantit qu'un rechargement sans changement de source est sans effet.
     """
-    curseur.execute(f"DELETE FROM dwh.{dimension.nom} WHERE {dimension.cle} <> 0")
-    curseur.execute(
-        "SELECT setval(pg_get_serial_sequence(%s, %s), 1, false)",
-        (f"dwh.{dimension.nom}", dimension.cle),
-    )
+    entrants = f"entrants_{dimension.nom}"
+    suivis = ", ".join(dimension.suivis)
+    suivis_entrants = ", ".join(f"e.{colonne}" for colonne in dimension.suivis)
+    suivis_courants = ", ".join(f"d.{colonne}" for colonne in dimension.suivis)
 
-    colonnes = ", ".join((dimension.metier, *dimension.suivis))
+    # Ce que la zone intermédiaire dit aujourd'hui, figé une fois pour les deux ordres.
+    # L'index unique fait échouer bruyamment une source qui répéterait un identifiant.
+    curseur.execute(f"CREATE TEMP TABLE {entrants} ON COMMIT DROP AS {dimension.entrants}")
+    curseur.execute(f"CREATE UNIQUE INDEX ON {entrants} ({dimension.metier})")
+
+    # 1. Une version courante dont un attribut suivi a changé se ferme.
+    #    La ligne 0 ne se ferme jamais : ce n'est pas une entité qui peut changer.
     curseur.execute(
         f"""
-        INSERT INTO dwh.{dimension.nom}
-            ({colonnes}, valide_du, valide_au, est_courante)
-        SELECT {colonnes}, %(aujourdhui)s, NULL, TRUE
-        FROM ({dimension.entrants}) AS entrants
-        ORDER BY {dimension.metier}
+        UPDATE dwh.{dimension.nom} AS d
+        SET valide_au = %(aujourdhui)s, est_courante = FALSE
+        FROM {entrants} AS e
+        WHERE d.{dimension.metier} = e.{dimension.metier}
+          AND d.est_courante
+          AND d.{dimension.cle} <> 0
+          AND ({suivis_courants}) IS DISTINCT FROM ({suivis_entrants})
         """,
         {"aujourdhui": aujourdhui},
     )
-    return curseur.rowcount
+    fermees = curseur.rowcount
+
+    # 2. Tout identifiant sans version courante en reçoit une : un identifiant
+    #    jamais vu, ou celui dont la version vient d'être fermée.
+    curseur.execute(
+        f"""
+        INSERT INTO dwh.{dimension.nom}
+            ({dimension.metier}, {suivis}, valide_du, valide_au, est_courante)
+        SELECT e.{dimension.metier}, {suivis_entrants}, %(aujourdhui)s, NULL, TRUE
+        FROM {entrants} AS e
+        WHERE NOT EXISTS (
+            SELECT 1 FROM dwh.{dimension.nom} AS d
+            WHERE d.{dimension.metier} = e.{dimension.metier} AND d.est_courante
+        )
+        ORDER BY e.{dimension.metier}
+        """,
+        {"aujourdhui": aujourdhui},
+    )
+    ouvertes = curseur.rowcount
+
+    return ouvertes, fermees
 
 
 def charger_fait_commande(curseur) -> int:
@@ -418,10 +452,15 @@ def charger(cnx, aujourdhui: date | None = None) -> ResultatChargement:
 
             charger_dim_date(curseur)
 
-            # Les faits d'abord : ils référencent les dimensions, qu'on va recharger.
+            # Les dimensions se fusionnent sans rien supprimer ; les faits, qui n'ont
+            # qu'une version, se rechargent entièrement vers les versions courantes.
             vider_faits(curseur)
+            ouvertes: dict[str, int] = {}
+            fermees: dict[str, int] = {}
             for dimension in DIMENSIONS:
-                recharger_dimension(curseur, dimension, aujourdhui)
+                ouvertes[dimension.nom], fermees[dimension.nom] = fusionner_dimension(
+                    curseur, dimension, aujourdhui
+                )
 
             charger_fait_commande(curseur)
             charger_fait_ligne_commande(curseur)
@@ -435,11 +474,16 @@ def charger(cnx, aujourdhui: date | None = None) -> ResultatChargement:
 
     lignes_ecrites = comptages["fait_commande"] + comptages["fait_ligne_commande"]
     message = " ; ".join(f"{nom}={valeur}" for nom, valeur in comptages.items())
+    message += " ; versions ouvertes/fermees : " + ", ".join(
+        f"{nom}={ouvertes[nom]}/{fermees[nom]}" for nom in ouvertes
+    )
 
     return ResultatChargement(
         lignes_lues=lignes_lues,
         lignes_ecrites=lignes_ecrites,
         comptages=comptages,
+        versions_ouvertes=ouvertes,
+        versions_fermees=fermees,
         message=message,
     )
 
@@ -476,6 +520,9 @@ def afficher(resultat: ResultatChargement) -> None:
     print("=== F1.10 — Chargement de l'entrepôt ===")
     for nom, valeur in resultat.comptages.items():
         print(f"  {nom:<22} {valeur:>10}")
+    print("\nHistorisation (versions ouvertes / fermées) :")
+    for nom, ouvertes in resultat.versions_ouvertes.items():
+        print(f"  {nom:<22} {ouvertes:>5} / {resultat.versions_fermees[nom]:<5}")
 
 
 def executer() -> ResultatChargement:
