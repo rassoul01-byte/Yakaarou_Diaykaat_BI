@@ -63,6 +63,10 @@ Les tables de faits portent leur grain comme clé naturelle
 | `annee`, `trimestre`, `mois`, `semaine_iso`, `jour` | INTEGER | |
 | `nom_jour`, `nom_mois` | TEXT | en français |
 
+La dimension couvre **toutes les dates manipulées par l'entrepôt**, pas
+seulement les dates d'achat : une commande passée en octobre 2018 peut être
+livrée en novembre, et cette date doit exister. Voir §6.
+
 `dim_date` n'est **pas historisée** (pas de `valide_du`/`valide_au`) :
 un jour calendaire ne change jamais de définition — le 15 mars 2017
 reste le 15 mars 2017. L'historisation (§5) ne s'applique qu'aux
@@ -258,8 +262,12 @@ et la table de correspondance (F1.9) — **jamais la zone brute**.
 Ordre de chargement, dans une seule transaction (`BEGIN ... COMMIT`,
 `ROLLBACK` au moindre échec) :
 
-1. `dim_date` — généré par calcul (pas de table source), de la date la
-   plus ancienne à la plus récente de `staging.olist_orders`.
+1. `dim_date` — généré par calcul (pas de table source), **du minimum au
+   maximum de toutes les dates chargées** : achat, approbation, remise au
+   transporteur, livraison et livraison estimée, plus un mois de marge de
+   part et d'autre. Se limiter aux dates d'achat laisserait sans ligne les
+   livraisons postérieures à la dernière commande, et toute jointure sur
+   ces dates échouerait.
 2. `dim_client`, `dim_produit`, `dim_vendeur` — par la fusion SCD2 du
    §5 (fermer les versions modifiées, ouvrir les nouvelles, ne rien
    faire sur les identiques), depuis `staging.*` et la table de
@@ -318,3 +326,34 @@ le service référentiel est prêt.
 en étoile est un seul souci au sens de `zones_stockage.md` (« ajouter
 les tables d'une source/d'un schéma »), les sept tables étant
 interdépendantes dès la création (clés étrangères).
+
+---
+
+## 10. Ordre de construction : livrer en deux temps
+
+L'historisation du §5 est la partie la plus délicate de ce livrable, et la
+seule **invisible à la démonstration** : sur un jeu figé chargé en un bloc,
+aucune dimension ne change jamais de version. Elle produit la mécanique, pas
+le résultat.
+
+Or trois livrables attendent cet entrepôt : les vues d'indicateurs, le
+tableau de bord, et la tâche de chargement du workflow.
+
+**Le chargement se livre donc en deux demandes de fusion :**
+
+1. **D'abord le chargement simple**, fusionné dès qu'il tourne : les
+   migrations créent les tables **avec leurs colonnes de validité**, les
+   dimensions sont insérées sans fusion — tout est version courante —, les
+   faits sont vidés et rechargés. L'entrepôt est alors utilisable, et les
+   autres livrables démarrent.
+2. **Ensuite la fusion SCD2** du §5, par une seconde demande de fusion : les
+   versions se ferment et s'ouvrent, et les critères d'idempotence du sprint
+   sont vérifiés.
+
+Les colonnes `valide_du`, `valide_au` et `est_courante` existent dès la
+première migration : seul l'algorithme de fusion arrive ensuite. Aucune
+migration n'est donc à refaire.
+
+⚠️ **Si le sprint se tend, c'est l'étape 2 qui glisse**, jamais l'étape 1 :
+un entrepôt chargé sans historisation reste un entrepôt ; une mécanique
+d'historisation sans entrepôt chargé ne vaut rien.
