@@ -8,13 +8,21 @@
 name: dataflow360
 
 x-airflow-common: &airflow-common
-  image: apache/airflow:${AIRFLOW_VERSION}
+  build:
+    context: .
+    dockerfile: docker/airflow/Dockerfile
+    args:
+      AIRFLOW_VERSION: ${AIRFLOW_VERSION}
+  image: dataflow360-airflow:${AIRFLOW_VERSION}
   environment: &airflow-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
     PYTHONPATH: /opt/airflow/src
+    POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    KAFKA_BOOTSTRAP: kafka:9092
+    AIRFLOW__WEBSERVER__WORKERS: "2"
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/airflow/src
