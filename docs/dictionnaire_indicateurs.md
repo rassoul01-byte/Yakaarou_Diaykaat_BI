@@ -132,6 +132,78 @@ signale un incident récent plutôt qu'un défaut de fond.
 
 ---
 
+## Indicateurs de ventes — Sprint 3
+
+> ⚠️ **Trois décisions de périmètre, à confirmer par le Product Owner.**
+> Elles sont écrites ici et appliquées dans une seule vue SQL,
+> `dwh.v_ventes_retenues` : changer d'avis ne touche qu'un endroit.
+>
+> 1. **Les frais de port sont exclus** du chiffre d'affaires. Ils dépendent du
+>    poids et de la distance, pas de ce qui a été vendu : les inclure ferait
+>    varier le chiffre d'affaires sans qu'aucune vente ne change.
+> 2. **Les commandes annulées et indisponibles sont exclues.** Une vente qui
+>    n'a pas eu lieu n'est pas une vente.
+> 3. **Une commande sans ligne d'article pèse zéro** et n'entre pas au
+>    dénominateur du panier moyen — les 775 commandes concernées fausseraient
+>    la moyenne à la baisse.
+
+### Chiffre d'affaires
+
+| | |
+|---|---|
+| **Définition** | Somme des prix des articles vendus, sur le périmètre retenu ci-dessus |
+| **Formule** | `somme(prix des lignes d'article)` — hors frais de port |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Source des données** | `dwh.fait_ligne_commande`, filtrée par `dwh.v_ventes_retenues` |
+| **Calcul** | `dwh.v_ventes_par_jour`, `_par_semaine`, `_par_mois`, `v_ventes_totales` |
+| **Seuil d'alerte** | Aucun ici — l'alerte sur chute de ventes arrive au Sprint 4 |
+
+**Ce qu'il ne dit pas.** Ce n'est **pas** le montant encaissé : `montant_paye`
+de `fait_commande` inclut les frais de port et les commandes annulées. Les deux
+chiffres sont justes et différents — c'est pourquoi ils portent deux noms.
+
+### Nombre de commandes
+
+| | |
+|---|---|
+| **Définition** | Commandes distinctes ayant au moins une ligne d'article retenue |
+| **Formule** | `nombre de order_id distincts` sur le périmètre retenu |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Calcul** | Mêmes vues que le chiffre d'affaires |
+
+**Ce qu'il ne dit pas.** Une commande annulée existe dans l'entrepôt mais ne
+compte pas ici : le total ne correspond donc pas au nombre de lignes de
+`fait_commande`.
+
+### Panier moyen
+
+| | |
+|---|---|
+| **Définition** | Chiffre d'affaires rapporté au nombre de commandes |
+| **Formule** | `chiffre d'affaires ÷ nombre de commandes` |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Calcul** | Mêmes vues |
+
+**Ce qu'il ne dit pas.** Ce n'est pas ce qu'un client dépense : une personne
+peut avoir passé plusieurs commandes. La dépense par client viendra avec
+l'historique d'achat, au Sprint 5.
+
+### Produits et catégories les plus vendus
+
+| | |
+|---|---|
+| **Définition** | Classement par chiffre d'affaires, avec le nombre d'articles et de commandes |
+| **Granularité** | Produit, et catégorie |
+| **Calcul** | `dwh.v_produits_les_plus_vendus`, `dwh.v_categories_les_plus_vendues` |
+
+**Ce qu'il ne dit pas.** Les produits sans catégorie apparaissent sous
+`inconnu`, **et c'est volontaire** : un classement qui cache ce qu'il ignore
+donne une fausse impression de complétude. La colonne « rattaché » rappelle par
+ailleurs que le lien vers une fiche du catalogue est arbitraire dans sa
+catégorie — voir le taux de rattachement ci-dessous.
+
+---
+
 ## Indicateurs d'intégration — Sprint 3
 
 ### Taux de rattachement par catégorie
