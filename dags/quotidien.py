@@ -18,14 +18,36 @@ PREFIXE = f"cd /opt/airflow && {PY}"
 #   airflow variables set seuil_rejet 0.05
 SEUIL = "{{ var.value.get('seuil_rejet', '5') }}"
 
+
+def derniere(source: str) -> str:
+    """Identifiant de l'ingestion la plus récente d'une source.
+
+    Le contrôle d'une source par lot exige --ingestion, et l'acquisition ne
+    crée pas de lot quand rien n'a changé : on lit donc les dossiers.
+    """
+    return f"$(ls data/raw/lots/{source} | sed -n 's/^ingestion=//p' | sort | tail -1)"
+
+
 # Tâches dont la vraie commande est branchée. Ajouter un nom ici quand le
 # livrable correspondant est fusionné.
-REELLES = {"rapport_rejet"}
+REELLES = {
+    "acquisition",
+    "acquisition_rakuten",
+    "controle_olist",
+    "controle_rakuten",
+    "rapport_rejet",
+    "transformation",
+}
 
 COMMANDES = {
     "acquisition": f"{PREFIXE} -m acquisition --source boutique",
-    "controle_olist": f"{PREFIXE} -m quality.controle --source olist",
-    "controle_rakuten": f"{PREFIXE} -m quality.controle --source rakuten",
+    "acquisition_rakuten": f"{PREFIXE} -m acquisition --source rakuten",
+    "controle_olist": (
+        f"{PREFIXE} -m quality.controle --source olist --ingestion {derniere('boutique')}"
+    ),
+    "controle_rakuten": (
+        f"{PREFIXE} -m quality.controle --source rakuten --ingestion {derniere('rakuten')}"
+    ),
     "rapport_rejet": f"{PREFIXE} -m quality.rapport --seuil {SEUIL}",
     "transformation": (
         f"{PREFIXE} -m transformation --source olist && "
@@ -60,6 +82,7 @@ with DAG(
     tags=["dataflow360", "sprint3"],
 ) as dag:
     acquisition = tache("acquisition")
+    acquisition_rakuten = tache("acquisition_rakuten")
     controle_olist = tache("controle_olist")
     controle_rakuten = tache("controle_rakuten")
     rapport_rejet = tache("rapport_rejet")
@@ -68,5 +91,7 @@ with DAG(
     chargement = tache("chargement")
     verification = tache("verification")
 
-    acquisition >> [controle_olist, controle_rakuten] >> rapport_rejet
+    acquisition >> controle_olist
+    acquisition_rakuten >> controle_rakuten
+    [controle_olist, controle_rakuten] >> rapport_rejet
     rapport_rejet >> transformation >> correspondance >> chargement >> verification
