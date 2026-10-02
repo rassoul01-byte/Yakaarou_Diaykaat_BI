@@ -24,10 +24,7 @@ from common.config import load_settings
 
 
 MAPPING_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "docs"
-    / "mappings"
-    / "olist_rakuten_categories.csv"
+    Path(__file__).resolve().parents[2] / "docs" / "mappings" / "olist_rakuten_categories.csv"
 )
 
 TABLE = "staging.correspondance_produits"
@@ -58,9 +55,7 @@ def connexion() -> psycopg2.extensions.connection:
 def charger_mapping(path: Path = MAPPING_PATH) -> dict[str, str]:
     """Charge le mapping Olist -> Rakuten depuis le CSV versionné."""
     if not path.exists():
-        raise CorrespondanceError(
-            f"Fichier de mapping introuvable : {path}"
-        )
+        raise CorrespondanceError(f"Fichier de mapping introuvable : {path}")
 
     with path.open("r", encoding="utf-8", newline="") as fichier:
         lecteur = csv.DictReader(fichier)
@@ -72,18 +67,13 @@ def charger_mapping(path: Path = MAPPING_PATH) -> dict[str, str]:
         }
 
         if not lecteur.fieldnames:
-            raise CorrespondanceError(
-                "Le fichier de mapping ne contient pas d'en-tête."
-            )
+            raise CorrespondanceError("Le fichier de mapping ne contient pas d'en-tête.")
 
         colonnes = set(lecteur.fieldnames)
         manquantes = colonnes_attendues - colonnes
 
         if manquantes:
-            raise CorrespondanceError(
-                "Colonnes manquantes dans le mapping : "
-                f"{sorted(manquantes)}"
-            )
+            raise CorrespondanceError(f"Colonnes manquantes dans le mapping : {sorted(manquantes)}")
 
         mapping: dict[str, str] = {}
 
@@ -92,19 +82,14 @@ def charger_mapping(path: Path = MAPPING_PATH) -> dict[str, str]:
             categorie_rakuten = (ligne["categorie_rakuten"] or "").strip()
 
             if not categorie_olist:
-                raise CorrespondanceError(
-                    f"Catégorie Olist vide à la ligne {numero}."
-                )
+                raise CorrespondanceError(f"Catégorie Olist vide à la ligne {numero}.")
 
             if not categorie_rakuten:
-                raise CorrespondanceError(
-                    f"Catégorie Rakuten vide à la ligne {numero}."
-                )
+                raise CorrespondanceError(f"Catégorie Rakuten vide à la ligne {numero}.")
 
             if categorie_olist in mapping:
                 raise CorrespondanceError(
-                    f"Catégorie Olist dupliquée dans le mapping : "
-                    f"{categorie_olist}"
+                    f"Catégorie Olist dupliquée dans le mapping : {categorie_olist}"
                 )
 
             mapping[categorie_olist] = categorie_rakuten
@@ -160,36 +145,23 @@ def verifier_mapping(
 ) -> None:
     """Vérifie les préconditions fonctionnelles du rapprochement."""
 
-    categories_produits = {
-        categorie
-        for _, categorie in produits
-    }
+    categories_produits = {categorie for _, categorie in produits}
 
-    categories_absentes = sorted(
-        categories_produits - mapping.keys()
-    )
+    categories_absentes = sorted(categories_produits - mapping.keys())
 
     if categories_absentes:
         raise CorrespondanceError(
-            "Catégorie(s) Olist absente(s) du mapping : "
-            + ", ".join(categories_absentes)
+            "Catégorie(s) Olist absente(s) du mapping : " + ", ".join(categories_absentes)
         )
 
-    codes_attendus = {
-        code
-        for code in mapping.values()
-        if code != "inconnu"
-    }
+    codes_attendus = {code for code in mapping.values() if code != "inconnu"}
 
-    codes_absents_catalogue = sorted(
-        codes_attendus - fiches.keys()
-    )
+    codes_absents_catalogue = sorted(codes_attendus - fiches.keys())
 
     if codes_absents_catalogue:
         raise CorrespondanceError(
             "Catégorie(s) Rakuten utilisée(s) par le mapping "
-            "mais absente(s) du catalogue : "
-            + ", ".join(codes_absents_catalogue)
+            "mais absente(s) du catalogue : " + ", ".join(codes_absents_catalogue)
         )
 
 
@@ -212,9 +184,7 @@ def construire_correspondance(
         pools[code] = pool
         positions[code] = 0
 
-    resultat: list[
-        tuple[str, str | None, str, str, bool]
-    ] = []
+    resultat: list[tuple[str, str | None, str, str, bool]] = []
 
     for product_id, categorie in sorted(
         produits,
@@ -237,10 +207,7 @@ def construire_correspondance(
         pool = pools.get(code, [])
 
         if not pool:
-            raise CorrespondanceError(
-                f"Aucune fiche disponible pour la catégorie Rakuten "
-                f"{code}."
-            )
+            raise CorrespondanceError(f"Aucune fiche disponible pour la catégorie Rakuten {code}.")
 
         position = positions[code]
         id_fiche = pool[position % len(pool)]
@@ -283,9 +250,7 @@ def enregistrer_correspondance(
 ) -> None:
     """Remplace le contenu de la table par le résultat courant."""
     with cnx.cursor() as curseur:
-        curseur.execute(
-            f"TRUNCATE TABLE {TABLE}"
-        )
+        curseur.execute(f"TRUNCATE TABLE {TABLE}")
 
         requete = f"""
             INSERT INTO {TABLE}
@@ -300,9 +265,7 @@ def enregistrer_correspondance(
         """
 
         for debut in range(0, len(lignes), TAILLE_PAGE):
-            page = lignes[
-                debut : debut + TAILLE_PAGE
-            ]
+            page = lignes[debut : debut + TAILLE_PAGE]
 
             execute_values(
                 curseur,
@@ -318,9 +281,7 @@ def calculer_stats(
 ) -> tuple[int, dict[str, tuple[int, int]]]:
     """Calcule le nombre d'inconnus et les taux par catégorie."""
 
-    stats: dict[str, list[int]] = defaultdict(
-        lambda: [0, 0]
-    )
+    stats: dict[str, list[int]] = defaultdict(lambda: [0, 0])
 
     inconnus = 0
 
@@ -333,9 +294,7 @@ def calculer_stats(
             inconnus += 1
 
     stats_finales = {
-        categorie: (total, rattaches)
-        for categorie, (total, rattaches)
-        in stats.items()
+        categorie: (total, rattaches) for categorie, (total, rattaches) in stats.items()
     }
 
     return inconnus, stats_finales
@@ -388,10 +347,7 @@ def journaliser(
             )
 
     except psycopg2.Error as erreur:
-        print(
-            "AVERTISSEMENT : exécution non journalisée "
-            f"({erreur.__class__.__name__})"
-        )
+        print(f"AVERTISSEMENT : exécution non journalisée ({erreur.__class__.__name__})")
 
 
 def executer(
@@ -428,15 +384,7 @@ def executer(
 
         inconnus, stats = calculer_stats(lignes)
 
-        taux_global = (
-            (
-                (len(lignes) - inconnus)
-                / len(lignes)
-                * 100
-            )
-            if lignes
-            else 0.0
-        )
+        taux_global = ((len(lignes) - inconnus) / len(lignes) * 100) if lignes else 0.0
 
         message = (
             f"{len(lignes)} produits conservés ; "
@@ -461,17 +409,9 @@ def executer(
         for categorie in sorted(stats):
             total, rattaches = stats[categorie]
 
-            taux = (
-                rattaches / total * 100
-                if total
-                else 0.0
-            )
+            taux = rattaches / total * 100 if total else 0.0
 
-            print(
-                f"  {categorie:<45} "
-                f"{rattaches:>6}/{total:<6} "
-                f"{taux:>6.2f} %"
-            )
+            print(f"  {categorie:<45} {rattaches:>6}/{total:<6} {taux:>6.2f} %")
 
         journaliser(resultat)
 
