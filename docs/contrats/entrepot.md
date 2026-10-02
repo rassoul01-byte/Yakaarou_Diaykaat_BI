@@ -391,6 +391,15 @@ Points que le contrat laissait ouverts, tranchés à l'écriture de `007_entrepo
   (un règlement en plusieurs fois n'est pas dupliqué), cohérence de `a_une_ligne_article`
   avec `fait_ligne_commande`, date d'une ligne égale à la date d'achat de sa commande, et
   présence de la ligne `0` dans chaque dimension.
-- **Étape 1 (§10)** : les dimensions sont rechargées sans historisation ; leurs clés de
-  substitution repartent de 1, dans l'ordre de l'identifiant métier, ce qui rend deux
-  lancements identiques.
+- **Étape 2 (§10) — historisation** : la fusion SCD2 du §5 s'exécute par dimension, dans
+  la même transaction que le reste. Elle ferme d'abord les versions courantes dont un
+  attribut suivi a changé (`valide_au` = date du chargement), puis ouvre une version pour
+  tout identifiant qui n'en a plus de courante (nouveau, ou tout juste fermé). La
+  comparaison est insensible aux valeurs `NULL` (`IS DISTINCT FROM`) : un attribut resté
+  vide ne compte pas comme un changement. La ligne `0` n'est jamais fermée. Le chargement
+  affiche, par dimension, le nombre de versions ouvertes et fermées.
+- **Rejeu le même jour** : fusionner deux fois avec la même date de chargement n'ouvre
+  aucune version supplémentaire, puisque la seconde fusion ne trouve plus de différence.
+- **Clés de substitution** : une clé n'est jamais réutilisée ni renumérotée. Une version
+  fermée garde la sienne ; les faits, rechargés à chaque exécution, pointent vers la clé
+  de la version courante (§5, « simplification assumée »).
