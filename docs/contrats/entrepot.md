@@ -357,3 +357,40 @@ migration n'est donc à refaire.
 ⚠️ **Si le sprint se tend, c'est l'étape 2 qui glisse**, jamais l'étape 1 :
 un entrepôt chargé sans historisation reste un entrepôt ; une mécanique
 d'historisation sans entrepôt chargé ne vaut rien.
+
+---
+
+## 11. Précisions issues de l'implémentation
+
+Points que le contrat laissait ouverts, tranchés à l'écriture de `007_entrepot.sql`,
+`chargement.py` et `verifier.py` :
+
+- **Délai de livraison** : `delai_livraison_jours` est la différence en **jours
+  calendaires** entre la date de livraison et la date d'achat (le 15 à 23 h et le
+  16 à 1 h font 1 jour). `NULL` tant que la commande n'est pas livrée.
+- **Ligne « inconnu »** : outre l'identifiant `0`, les attributs texte des dimensions
+  valent `'inconnu'` ; `dim_produit` y porte aussi `categorie` et `categorie_catalogue`
+  à `'inconnu'`, comme le fait la vue `v_categories_les_plus_vendues` pour ses regroupements.
+- **Une commande a toujours un client** : `fait_commande` porte une contrainte
+  `CHECK (client_id <> 0)`. À l'inverse, une ligne d'article dont le produit ou le vendeur
+  est absent de la zone intermédiaire est conservée et pointe vers la ligne `0`.
+- **Refus avant de charger** : le chargement s'arrête, sans rien modifier, si une
+  commande n'a pas de client, si une ligne d'article n'a pas de commande, si un produit
+  vendu manque à la table de correspondance (relancer `integration.correspondance`) ou
+  si `staging.olist_orders` est vide.
+- **Un seul chargement à la fois** : un verrou de transaction fait attendre un second
+  lancement (une reprise du workflow qui chevaucherait un lancement manuel).
+- **Journal** : chaque chargement et chaque vérification s'inscrit dans
+  `staging.execution_log` (`pipeline = 'integration'`), sans jamais compter dans le taux
+  de rejet, qui ne lit que `pipeline = 'qualite'`.
+- **Contrôle du nombre de personnes** : la vérification compare les lignes courantes de
+  chaque dimension au nombre d'identifiants **de la zone intermédiaire**, plus la ligne `0`.
+  Sur le jeu complet, cela donne les 96 096 personnes du critère de réussite, et la
+  vérification reste valable sur un échantillon.
+- **Contrôles ajoutés** à ceux du §7 : somme des frais de port, somme des montants payés
+  (un règlement en plusieurs fois n'est pas dupliqué), cohérence de `a_une_ligne_article`
+  avec `fait_ligne_commande`, date d'une ligne égale à la date d'achat de sa commande, et
+  présence de la ligne `0` dans chaque dimension.
+- **Étape 1 (§10)** : les dimensions sont rechargées sans historisation ; leurs clés de
+  substitution repartent de 1, dans l'ordre de l'identifiant métier, ce qui rend deux
+  lancements identiques.
