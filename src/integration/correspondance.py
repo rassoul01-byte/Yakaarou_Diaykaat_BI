@@ -22,7 +22,6 @@ from psycopg2.extras import execute_values
 
 from common.config import load_settings
 
-
 MAPPING_PATH = (
     Path(__file__).resolve().parents[2] / "docs" / "mappings" / "olist_rakuten_categories.csv"
 )

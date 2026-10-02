@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.integration
-
 from integration.correspondance import (
     CorrespondanceError,
     charger_mapping,
     construire_correspondance,
     verifier_mapping,
 )
+
+pytestmark = pytest.mark.integration
 
 
 def test_charger_mapping(tmp_path: Path):
