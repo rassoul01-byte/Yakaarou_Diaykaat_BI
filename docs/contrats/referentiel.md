@@ -112,8 +112,8 @@ Personne n'écrit d'appel HTTP à la main :
 from datetime import date
 from referentiel.client import jours_feries, taux_du_jour
 
-feries = jours_feries(2017)          # [date(2017, 1, 1), date(2017, 2, 28), …]
-taux = taux_du_jour(date(2017, 3, 15))   # 0.3024
+feries = jours_feries(2017)  # [date(2017, 1, 1), date(2017, 2, 28), …]
+taux = taux_du_jour(date(2017, 3, 15))  # 0.3024
 ```
 
 `jours_feries` renvoie des dates, directement utilisables pour la colonne « jour férié » de `dim_date`. L'adresse du service se règle par la variable `REFERENTIEL_URL`, dont la valeur par défaut est celle du conteneur.
