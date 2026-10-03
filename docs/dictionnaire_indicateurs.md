@@ -49,7 +49,29 @@ contrôlé. Le rapport affiche `—` et un avertissement.
 5 % n'est pas en dépassement.
 
 ---
+### Taux de rejet global
 
+| | |
+|---|---|
+| **Définition** | Part des lignes rejetées sur l'ensemble des sources, dernière exécution de chacune |
+| **Formule** | `somme(lignes rejetées) ÷ somme(lignes lues) × 100` |
+| **Granularité** | Plateforme entière |
+| **Source des données** | `quarantaine.v_taux_rejet_par_source` |
+| **Calcul** | `quarantaine.v_taux_rejet_global` |
+| **Seuil d'alerte** | **5 %**, comme le taux par source |
+
+**Pourquoi il existe.** Le tableau de bord affichait la **moyenne des taux par
+source** — 0,04 % —, qui donne le même poids à une source de 1,5 million de
+lignes et à une source de 85 000. Le taux global, lui, se calcule sur le total
+des lignes : **0,066 %**. Un taux ne se moyenne pas, il se recalcule.
+
+**Ce qu'il ne dit pas.** Il ne remplace pas le taux par source : une source
+isolée peut dépasser 5 % sans que le global bouge, parce qu'elle pèse peu. **Le
+seuil d'alerte reste celui de chaque source** ; le global sert à présenter
+l'état d'ensemble, jamais à décider d'un arrêt.
+
+
+---
 ### Taux de rejet par règle
 
 | | |
@@ -241,9 +263,8 @@ document existe pour empêcher.
 
 | Sprint | Indicateurs |
 |---|---|
-| 3 | Chiffre d'affaires, panier moyen, délai de livraison, note moyenne, taux d'appariement du catalogue |
 | 4 | Compteurs du jour, taux de conversion, qualité de la recherche |
-| 5 | Probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
+| 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
 
 Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
 **trafic simulé** : la mention devra apparaître partout où ils s'affichent.
