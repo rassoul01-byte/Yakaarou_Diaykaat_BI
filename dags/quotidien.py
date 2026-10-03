@@ -38,6 +38,9 @@ REELLES = {
     "controle_rakuten",
     "rapport_rejet",
     "transformation",
+    "correspondance",
+    "chargement",
+    "verification",
 }
 
 COMMANDES = {

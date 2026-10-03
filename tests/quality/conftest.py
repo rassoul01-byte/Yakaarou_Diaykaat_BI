@@ -27,6 +27,10 @@ NB_PRODUITS_SANS_CATEGORIE = 1  # OLIST_ARTICLES_01 — non bloquante
 NB_CLIENTS_SANS_IDENTIFIANT = 1  # OLIST_CLIENTS_01 — bloquante
 NB_GEO_DOUBLONS_STRICTS = 1  # OLIST_GEOLOCALISATION_01 — silencieuse
 
+# Les 8 commandes livrées sans date sont rejetées : leurs lignes d'article le
+# sont aussi, par cascade. Une ligne par commande dans ce jeu d'essai.
+NB_ARTICLES_SANS_COMMANDE_RETENUE = NB_LIVREES_SANS_DATE  # OLIST_ARTICLES_02 — bloquante
+
 
 def _ecrire(chemin, entetes, lignes):
     with open(chemin, "w", encoding="utf-8", newline="") as fichier:
