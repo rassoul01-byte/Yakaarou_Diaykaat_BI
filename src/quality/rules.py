@@ -80,6 +80,23 @@ RULES = [
         ),
     },
     {
+        "identifiant": "OLIST_ARTICLES_02",
+        "source": "olist",
+        "colonne": "order_id",
+        "condition": (
+            "Une ligne d'article doit se rattacher à une commande retenue "
+            "par les règles précédentes."
+        ),
+        "gravite": "bloquante",
+        "commentaire": (
+            "Rejeter une commande sans rejeter ses lignes d'article laisse "
+            "des montants rattachés à rien : le chargement de l'entrepôt les "
+            "refuse, à juste titre. Cette règle propage le rejet de la "
+            "commande à ses articles, et le trace en quarantaine plutôt que "
+            "de le découvrir au chargement."
+        ),
+    },
+    {
         "identifiant": "OLIST_COMMANDES_02",
         "source": "olist",
         "colonne": "order_delivered_customer_date",

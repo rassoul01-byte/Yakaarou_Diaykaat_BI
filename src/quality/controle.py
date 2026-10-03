@@ -438,6 +438,43 @@ def controler_date_livraison(df_orders, rule):
     return df_valides, df_quarantaine
 
 
+def controler_articles_sans_commande(df_items, df_orders_retenues, rule):
+    """
+    Contrôle le rattachement des lignes d'article à une commande retenue.
+
+    Gravité :
+        bloquante
+
+    Comportement :
+        - une ligne dont la commande a été rejetée plus haut est rejetée ;
+        - les autres lignes restent valides.
+
+    Cette règle vient après celles qui rejettent des commandes : elle propage
+    leur rejet aux articles. Sans elle, le chargement de l'entrepôt s'arrête
+    sur des faits orphelins, et la cause reste invisible en quarantaine.
+    """
+
+    commandes_retenues = set(df_orders_retenues["order_id"].dropna())
+    masque_orphelines = ~df_items["order_id"].isin(commandes_retenues)
+
+    df_quarantaine = df_items.loc[masque_orphelines].copy()
+    df_valides = df_items.loc[~masque_orphelines].copy()
+
+    print("\nContrôle :", rule["identifiant"])
+    print("Gravité :", rule["gravite"])
+    print("Condition :", rule["condition"])
+    print("Lignes d'article analysées :", len(df_items))
+    print("Lignes sans commande retenue :", len(df_quarantaine))
+    print(
+        "Commandes concernées :",
+        df_quarantaine["order_id"].nunique() if len(df_quarantaine) else 0,
+    )
+    print("Lignes conservées :", len(df_valides))
+    print("Lignes quarantaine :", len(df_quarantaine))
+
+    return df_valides, df_quarantaine
+
+
 def controler_commentaires_absents(df_reviews, rule):
     """
     Contrôle les avis sans commentaire textuel.
@@ -801,6 +838,20 @@ def controler_olist(dossier, ingestion=None):
     )
     resultat.rejeter(rule, "orders", "orders.csv", df_orders_livraison_quarantaine)
 
+    # OLIST_ARTICLES_02 — ligne d'article sans commande retenue : rejetée
+    rule = get_rule("OLIST_ARTICLES_02")
+    df_items_valides, df_items_orphelines = controler_articles_sans_commande(
+        df_items, df_orders_valides_livraison, rule
+    )
+    resultat.journaliser(
+        rule,
+        "order_items",
+        len(df_items),
+        len(df_items_valides),
+        rejetees=len(df_items_orphelines),
+    )
+    resultat.rejeter(rule, "order_items", "order_items.csv", df_items_orphelines)
+
     # OLIST_PAIEMENTS_01 — paiements multiples : détail conservé, agrégat calculé
     df_payments = lire("order_payments")
     rule = get_rule("OLIST_PAIEMENTS_01")
@@ -849,7 +900,7 @@ def controler_olist(dossier, ingestion=None):
     resultat.valides = {
         "olist_customers": df_customers_valides,
         "olist_orders": df_orders_valides_livraison,
-        "olist_order_items": df_items,
+        "olist_order_items": df_items_valides,
         "olist_order_payments": df_payments,
         "olist_products": df_products_valides,
         "olist_sellers": df_sellers,

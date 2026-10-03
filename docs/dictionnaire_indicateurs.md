@@ -49,7 +49,29 @@ contrôlé. Le rapport affiche `—` et un avertissement.
 5 % n'est pas en dépassement.
 
 ---
+### Taux de rejet global
 
+| | |
+|---|---|
+| **Définition** | Part des lignes rejetées sur l'ensemble des sources, dernière exécution de chacune |
+| **Formule** | `somme(lignes rejetées) ÷ somme(lignes lues) × 100` |
+| **Granularité** | Plateforme entière |
+| **Source des données** | `quarantaine.v_taux_rejet_par_source` |
+| **Calcul** | `quarantaine.v_taux_rejet_global` |
+| **Seuil d'alerte** | **5 %**, comme le taux par source |
+
+**Pourquoi il existe.** Le tableau de bord affichait la **moyenne des taux par
+source** — 0,04 % —, qui donne le même poids à une source de 1,5 million de
+lignes et à une source de 85 000. Le taux global, lui, se calcule sur le total
+des lignes : **0,066 %**. Un taux ne se moyenne pas, il se recalcule.
+
+**Ce qu'il ne dit pas.** Il ne remplace pas le taux par source : une source
+isolée peut dépasser 5 % sans que le global bouge, parce qu'elle pèse peu. **Le
+seuil d'alerte reste celui de chaque source** ; le global sert à présenter
+l'état d'ensemble, jamais à décider d'un arrêt.
+
+
+---
 ### Taux de rejet par règle
 
 | | |
@@ -132,6 +154,98 @@ signale un incident récent plutôt qu'un défaut de fond.
 
 ---
 
+## Indicateurs de ventes — Sprint 3
+
+> ⚠️ **Trois décisions de périmètre, à confirmer par le Product Owner.**
+> Elles sont écrites ici et appliquées dans une seule vue SQL,
+> `dwh.v_ventes_retenues` : changer d'avis ne touche qu'un endroit.
+>
+> 1. **Les frais de port sont exclus** du chiffre d'affaires. Ils dépendent du
+>    poids et de la distance, pas de ce qui a été vendu : les inclure ferait
+>    varier le chiffre d'affaires sans qu'aucune vente ne change.
+> 2. **Les commandes annulées et indisponibles sont exclues.** Une vente qui
+>    n'a pas eu lieu n'est pas une vente.
+> 3. **Une commande sans ligne d'article pèse zéro** et n'entre pas au
+>    dénominateur du panier moyen — les 775 commandes concernées fausseraient
+>    la moyenne à la baisse.
+
+### Chiffre d'affaires
+
+| | |
+|---|---|
+| **Définition** | Somme des prix des articles vendus, sur le périmètre retenu ci-dessus |
+| **Formule** | `somme(prix des lignes d'article)` — hors frais de port |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Source des données** | `dwh.fait_ligne_commande`, filtrée par `dwh.v_ventes_retenues` |
+| **Calcul** | `dwh.v_ventes_par_jour`, `_par_semaine`, `_par_mois`, `v_ventes_totales` |
+| **Seuil d'alerte** | Aucun ici — l'alerte sur chute de ventes arrive au Sprint 4 |
+
+**Ce qu'il ne dit pas.** Ce n'est **pas** le montant encaissé : `montant_paye`
+de `fait_commande` inclut les frais de port et les commandes annulées. Les deux
+chiffres sont justes et différents — c'est pourquoi ils portent deux noms.
+
+### Nombre de commandes
+
+| | |
+|---|---|
+| **Définition** | Commandes distinctes ayant au moins une ligne d'article retenue |
+| **Formule** | `nombre de order_id distincts` sur le périmètre retenu |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Calcul** | Mêmes vues que le chiffre d'affaires |
+
+**Ce qu'il ne dit pas.** Une commande annulée existe dans l'entrepôt mais ne
+compte pas ici : le total ne correspond donc pas au nombre de lignes de
+`fait_commande`.
+
+### Panier moyen
+
+| | |
+|---|---|
+| **Définition** | Chiffre d'affaires rapporté au nombre de commandes |
+| **Formule** | `chiffre d'affaires ÷ nombre de commandes` |
+| **Granularité** | Jour, semaine, mois, et total |
+| **Calcul** | Mêmes vues |
+
+**Ce qu'il ne dit pas.** Ce n'est pas ce qu'un client dépense : une personne
+peut avoir passé plusieurs commandes. La dépense par client viendra avec
+l'historique d'achat, au Sprint 5.
+
+### Produits et catégories les plus vendus
+
+| | |
+|---|---|
+| **Définition** | Classement par chiffre d'affaires, avec le nombre d'articles et de commandes |
+| **Granularité** | Produit, et catégorie |
+| **Calcul** | `dwh.v_produits_les_plus_vendus`, `dwh.v_categories_les_plus_vendues` |
+
+**Ce qu'il ne dit pas.** Les produits sans catégorie apparaissent sous
+`inconnu`, **et c'est volontaire** : un classement qui cache ce qu'il ignore
+donne une fausse impression de complétude. La colonne « rattaché » rappelle par
+ailleurs que le lien vers une fiche du catalogue est arbitraire dans sa
+catégorie — voir le taux de rattachement ci-dessous.
+
+---
+
+## Indicateurs d'intégration — Sprint 3
+
+### Taux de rattachement par catégorie
+
+| | |
+|---|---|
+| **Définition** | Part des produits vendus dont la catégorie a trouvé une catégorie compatible dans le catalogue |
+| **Formule** | `produits rattachés ÷ produits vendus × 100` |
+| **Granularité** | Global, et par catégorie de la boutique |
+| **Source des données** | Table de correspondance — voir `docs/contrats/correspondance.md` |
+| **Seuil d'alerte** | Aucun |
+
+**Ce qu'il ne dit pas.** Il ne mesure **pas** la qualité d'un rapprochement
+produit par produit. Les deux jeux de données ne partagent aucun identifiant :
+la fiche affectée à un produit est choisie arbitrairement à l'intérieur de sa
+catégorie. Un taux de 100 % signifierait que toutes les catégories ont trouvé
+une correspondance, **jamais** que les bons produits ont été reconnus.
+
+---
+
 ## Comment ajouter un indicateur
 
 1. L'écrire **ici d'abord**, avec les six rubriques, avant d'écrire la moindre requête.
@@ -149,9 +263,8 @@ document existe pour empêcher.
 
 | Sprint | Indicateurs |
 |---|---|
-| 3 | Chiffre d'affaires, panier moyen, délai de livraison, note moyenne, taux d'appariement du catalogue |
 | 4 | Compteurs du jour, taux de conversion, qualité de la recherche |
-| 5 | Probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
+| 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
 
 Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
 **trafic simulé** : la mention devra apparaître partout où ils s'affichent.
