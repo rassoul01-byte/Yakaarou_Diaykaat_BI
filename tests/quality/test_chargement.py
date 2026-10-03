@@ -134,7 +134,7 @@ def test_le_message_du_journal_detaille_chaque_regle(resultat_olist):
 
     assert message["ingestion"] == INGESTION_OLIST
     assert message["lignes_supprimees"] == 1
-    assert len(message["controles"]) == 9
+    assert len(message["controles"]) == 10  # dont OLIST_ARTICLES_02
 
 
 def test_un_resultat_incomplet_est_refuse(resultat_olist):
@@ -156,7 +156,7 @@ def test_la_transaction_vide_copie_met_en_quarantaine_journalise_puis_valide(
 
     etapes = [genre for genre, _ in connexion.journal]
     assert connexion.journal[0][1].startswith("TRUNCATE staging.olist_customers")
-    assert etapes.count("copy") == 9
+    assert etapes.count("copy") == 9  # une table par copie, inchangé
     assert etapes.index("execute_values") > max(i for i, e in enumerate(etapes) if e == "copy")
     assert "INSERT INTO staging.execution_log" in connexion.journal[-1][1]
     assert connexion.commit_effectue is True

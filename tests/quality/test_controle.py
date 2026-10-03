@@ -31,6 +31,7 @@ from quality.rules import get_rule
 from .conftest import (
     INGESTION_OLIST,
     INGESTION_RAKUTEN,
+    NB_ARTICLES_SANS_COMMANDE_RETENUE,
     NB_AVIS_EN_TROP_PAR_COMMANDE,
     NB_AVIS_SANS_COMMENTAIRE,
     NB_CLIENTS_SANS_IDENTIFIANT,
@@ -343,6 +344,7 @@ def test_seules_les_regles_bloquantes_mettent_en_quarantaine(resultat_olist):
 def test_bilan_global_olist(resultat_olist):
     rejetees = (
         NB_LIVREES_SANS_DATE
+        + NB_ARTICLES_SANS_COMMANDE_RETENUE  # OLIST_ARTICLES_02, cascade du rejet
         + NB_REVIEW_ID_DUPLIQUES
         + NB_AVIS_EN_TROP_PAR_COMMANDE
         + NB_CLIENTS_SANS_IDENTIFIANT
@@ -452,4 +454,4 @@ def test_l_export_csv_d_audit_est_range_par_ingestion(ingestion_olist, racine_br
     assert (dossier / "valides" / "olist_orders.csv").exists()
     assert (dossier / "rejets" / "orders_OLIST_COMMANDES_02.csv").exists()
     journal = pd.read_csv(dossier / "execution_log.csv")
-    assert len(journal) == 9
+    assert len(journal) == 10  # dont OLIST_ARTICLES_02
