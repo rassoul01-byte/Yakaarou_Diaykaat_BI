@@ -135,6 +135,9 @@ TABLES_PAR_SOURCE = {
         "olist_order_reviews",
     ],
     "rakuten": ["rakuten_produits"],
+    # La source documentaire alimente la même table : seule la provenance du
+    # catalogue change, pas sa place en zone intermédiaire.
+    "catalogue": ["rakuten_produits"],
 }
 
 
