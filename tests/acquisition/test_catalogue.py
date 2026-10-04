@@ -107,11 +107,24 @@ def test_un_fichier_sans_colonne_d_index_dit_ce_qu_il_a_trouve():
         document({"productid": "p1", "designation": "Lampe"})
 
 
-def test_le_jeu_vaut_train_quand_le_fichier_ne_le_precise_pas():
-    # Le fichier livré n'a pas de colonne « jeu ».
-    ligne = {"source_index": "1", "productid": "p1", "imageid": "i1", "designation": "Lampe"}
+def test_une_fiche_avec_code_categorie_appartient_au_jeu_d_entrainement():
+    # Le fichier livré n'a pas de colonne « jeu » : il se déduit de la présence
+    # du code de catégorie, comme le fait déjà le contrôle de qualité.
+    ligne = {
+        "source_index": "1",
+        "productid": "p1",
+        "imageid": "i1",
+        "designation": "Lampe",
+        "prdtypecode": "2060",
+    }
 
     assert document(ligne)["jeu"] == "train"
+
+
+def test_une_fiche_sans_code_categorie_appartient_au_jeu_de_test():
+    ligne = {"source_index": "1", "productid": "p1", "imageid": "i1", "designation": "Lampe"}
+
+    assert document(ligne)["jeu"] == "test"
 
 
 # --- La remise à plat pour la zone brute ------------------------------------

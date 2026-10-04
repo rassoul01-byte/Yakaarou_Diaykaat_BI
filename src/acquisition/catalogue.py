@@ -71,9 +71,13 @@ def document(ligne: dict) -> dict:
     vides : c'est tout l'intérêt d'une base documentaire, et c'est ce que le
     contrôle de qualité devra savoir gérer.
     """
+    code = (ligne.get("prdtypecode") or "").strip()
     doc: dict = {
         "index_ligne": _index(ligne),
-        "jeu": ligne.get("jeu") or "train",
+        # Le fichier livré réunit deux jeux : une fiche avec code de catégorie
+        # appartient à l'entraînement, une fiche sans code au jeu de test.
+        # C'est la règle qu'applique déjà le contrôle de qualité.
+        "jeu": ligne.get("jeu") or ("train" if code else "test"),
         "productid": ligne["productid"],
         "imageid": ligne.get("imageid", ""),
         "designation": ligne["designation"],
@@ -81,7 +85,6 @@ def document(ligne: dict) -> dict:
     description = (ligne.get("description") or "").strip()
     if description:
         doc["description"] = description
-    code = (ligne.get("prdtypecode") or "").strip()
     if code:
         doc["prdtypecode"] = int(code)
     return doc
