@@ -108,6 +108,36 @@ def acquerir(
         return _deposer(brouillon, destination, source, debut)
 
 
+def acquerir_catalogue(racine_donnees: Path = Path("data")) -> Resultat:
+    """Extrait le catalogue depuis la base documentaire vers la zone brute.
+
+    Même mécanique que pour la base SQL : l'extraction est préparée à l'écart,
+    comparée à la précédente, et déposée seulement si elle apporte du nouveau.
+
+    La collection est irrégulière — une fiche sans description n'a pas le champ
+    — et le fichier déposé la remet à plat, en conservant l'information dans
+    une colonne `a_description`. La zone brute reste ainsi lisible par le
+    contrôle sans perdre ce que la base documentaire portait.
+    """
+    from .catalogue import connexion as connexion_mongo
+    from .catalogue import extraire, nom_base
+
+    source = "catalogue"
+    debut = datetime.now(UTC)
+    destination = racine_lots(racine_donnees, source)
+    destination.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory(dir=destination) as brouillon:
+        brouillon = Path(brouillon)
+        client = connexion_mongo()
+        try:
+            base = client[nom_base(load_settings().mongo_uri)]
+            extraire(base, brouillon / "catalogue_produits.csv")
+        finally:
+            client.close()
+        return _deposer(brouillon, destination, source, debut)
+
+
 def acquerir_fichiers(
     source: str,
     dossier_sources: Path | None = None,
