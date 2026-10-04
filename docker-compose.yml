@@ -23,6 +23,9 @@ x-airflow-common: &airflow-common
     POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     KAFKA_BOOTSTRAP: kafka:9092
     AIRFLOW__WEBSERVER__WORKERS: "2"
+    MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+    ES_URL: http://elasticsearch:9200
+    REFERENTIEL_URL: http://referentiel:8000
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/airflow/src
