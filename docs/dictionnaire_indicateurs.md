@@ -245,6 +245,135 @@ catégorie. Un taux de 100 % signifierait que toutes les catégories ont trouvé
 une correspondance, **jamais** que les bons produits ont été reconnus.
 
 ---
+## Indicateurs temps réel et supervision — Sprint 4
+
+> ⚠️ **Les indicateurs de navigation reposent sur un trafic simulé.** Le
+> générateur produit les événements : aucune personne réelle ne visite ce site.
+> La mention doit apparaître **partout** où ces chiffres s'affichent — rapport,
+> tableau de bord, soutenance. Un indicateur de navigation présenté sans cette
+> précision est un chiffre faux.
+
+### Compteurs du jour
+
+| | |
+|---|---|
+| **Définition** | Chiffre d'affaires, nombre de commandes et panier moyen de la journée en cours, mis à jour en continu à mesure que les événements arrivent |
+| **Formule** | Mêmes formules que les indicateurs de ventes, sur les seuls événements du jour |
+| **Granularité** | Journée en cours, rafraîchie en continu |
+| **Source des données** | Le bus d'événements, sujet `navigation.evenements` |
+| **Seuil d'alerte** | Aucun en propre — ils alimentent l'alerte sur chute des ventes |
+
+**Ce qu'ils ne disent pas.** Ces compteurs **ne passent pas par l'entrepôt** :
+ce sont deux chemins différents pour deux usages différents. Le chiffre du jour
+et celui que l'entrepôt affichera demain **peuvent différer** — le premier
+répond à « que se passe-t-il maintenant », le second à « qu'avons-nous vendu ».
+Seul l'entrepôt fait foi une fois la journée close.
+
+**Un événement reçu deux fois ne compte qu'une fois** : le dédoublonnage se fait
+sur `id_evenement`. Et les événements rejoués circulent sur un sujet séparé,
+précisément pour que les compteurs ne les additionnent pas.
+
+---
+
+### Taux de conversion
+
+| | |
+|---|---|
+| **Définition** | Part des sessions de navigation qui se sont terminées par un achat |
+| **Formule** | `sessions avec au moins un événement « achat » ÷ sessions totales × 100` |
+| **Granularité** | Journée en cours, et par jour |
+| **Source des données** | Bus d'événements, clé `id_session` |
+| **Seuil d'alerte** | Aucun |
+
+**Pourquoi la session et non le visiteur.** `id_session` est la clé de
+partition du bus : tous les événements d'une même session sont lus dans
+l'ordre, par le même consommateur. Compter par session est donc exact sans
+aucune reconstitution — ce qui ne serait pas le cas d'un comptage par visiteur.
+
+**Ce qu'il ne dit pas.** Il **ne mesure pas l'efficacité commerciale** : le
+trafic est simulé, et le taux reflète les proportions choisies dans le
+générateur, pas le comportement d'acheteurs réels. Ce qu'il démontre, c'est
+**la chaîne de calcul en continu**, pas une performance de vente.
+
+Une session ouverte à cheval sur deux jours est comptée le jour de son premier
+événement.
+
+---
+
+### Retard du flux
+
+| | |
+|---|---|
+| **Définition** | Nombre de messages publiés sur un sujet qu'un groupe de lecture n'a pas encore lus |
+| **Formule** | `dernier message publié − dernier message lu`, par groupe et par sujet |
+| **Granularité** | Par groupe de lecture et par sujet, historisé à chaque relevé |
+| **Source des données** | Le bus d'événements, décalages des groupes de lecture |
+| **Consultation** | `python scripts/etat_bus.py` |
+| **Seuil d'alerte** | **Un retard qui croît sur trois relevés consécutifs** |
+
+**Pourquoi pas un seuil en nombre de messages.** Un retard de mille messages
+n'a pas le même sens selon le débit : ce qui compte, c'est qu'il **se résorbe**.
+Un retard stable signifie que le consommateur suit ; un retard qui grandit
+signale un lecteur arrêté ou trop lent — et c'est la seule chose à surveiller.
+
+**Ce qu'il ne dit pas.** Un retard nul ne signifie pas que tout va bien : un
+consommateur peut lire les messages et les traiter incorrectement. Le retard
+mesure la **circulation**, jamais la justesse du traitement.
+
+---
+
+### Durée et volume des exécutions
+
+| | |
+|---|---|
+| **Définition** | Durée, volume traité et statut de chaque étape de la chaîne |
+| **Formule** | `termine_a − demarre_a` pour la durée ; les volumes sont ceux que chaque traitement déclare |
+| **Granularité** | Par étape, par source et par exécution |
+| **Source des données** | `staging.execution_log` |
+| **Calcul** | `staging.v_executions`, `v_derniere_execution`, `v_profil_etapes` |
+| **Consultation** | `python -m supervision` |
+| **Seuil d'alerte** | Une étape **trois fois plus longue** que sa moyenne, sur au moins trois exécutions |
+
+**Pourquoi trois fois et pas deux.** Un facteur deux arrive trop souvent —
+une machine chargée, un cache froid — et une alerte qui se déclenche sans
+raison cesse d'être lue. Et en dessous de trois exécutions, il n'y a pas
+d'habitude à comparer.
+
+**Ce qu'il ne dit pas.** Une exécution rapide n'est pas une exécution réussie :
+une étape qui ne traite rien va très vite. **La durée se lit avec le volume**,
+jamais seule.
+---
+
+### Alerte sur chute des ventes
+
+| | |
+|---|---|
+| **Définition** | Signalement déclenché quand le chiffre d'affaires du jour s'écarte à la baisse de ce qu'on observe habituellement le même jour de la semaine |
+| **Formule** | `chiffre d'affaires du jour ÷ moyenne des quatre mêmes jours de semaine précédents × 100` |
+| **Granularité** | Journée en cours |
+| **Source des données** | Compteurs du jour, et entrepôt pour l'historique |
+| **Seuil d'alerte** | **En dessous de 60 % de la moyenne**, et seulement après 12 h |
+
+**Pourquoi le même jour de la semaine.** Un dimanche ne se compare pas à un
+mardi. Comparer un jour à la veille produirait une alerte chaque lundi matin —
+et une alerte qui se déclenche sans raison n'est plus lue au bout d'une semaine.
+
+**Pourquoi pas avant 12 h.** Le chiffre d'affaires d'une matinée est toujours
+inférieur à celui d'une journée entière : alerter à 9 h reviendrait à alerter
+tous les jours.
+
+**Ce qu'elle ne dit pas.** Une chute de ventes signale **aussi bien une panne de
+la chaîne qu'une baisse réelle** — un consommateur arrêté fait tomber les
+compteurs à zéro. L'alerte se lit donc toujours **avec le retard du flux** :
+c'est leur lecture conjointe qui distingue un problème technique d'un problème
+commercial.
+
+⚠️ **Sur trafic simulé, cette alerte ne détecte rien de réel.** Ce qu'elle
+démontre, c'est le dispositif : une anomalie fabriquée la déclenche, une
+journée normale ne la déclenche pas. **Les deux cas doivent être montrés en
+démonstration** — le second est le plus important.
+
+---
 
 ## Comment ajouter un indicateur
 
