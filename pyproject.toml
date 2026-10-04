@@ -11,6 +11,7 @@ addopts = "-ra --strict-markers"
 markers = [
     "integration: nécessite les services démarrés (bases, bus d'événements)",
 ]
+cache_dir = "/tmp/.pytest_cache"
 
 [tool.ruff]
 line-length = 100
