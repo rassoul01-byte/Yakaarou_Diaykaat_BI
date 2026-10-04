@@ -18,7 +18,7 @@ Une entrée par fiche du catalogue nettoyé, soit **84 916 documents**, lus dans
 
 | Champ | Type Elasticsearch | Source | Rôle |
 |---|---|---|---|
-| `product_id` | `keyword` | `productid` | Identifiant, jamais analysé |
+| `product_id` | `keyword` | `productid` | Identifiant d'origine, jamais analysé |
 | `index_ligne` | `integer` | `index_ligne` | Position d'origine dans le catalogue |
 | `designation` | `text` (analyseur `francais`) | `designation` | **Le champ de recherche principal** |
 | `description` | `text` (analyseur `francais`) | `description` | Recherche secondaire, souvent vide |
@@ -60,8 +60,10 @@ docker compose exec app python -m recherche.etat
 
 **Codes de sortie :** 0 si l'index est conforme, 1 si le nombre de documents indexés diffère du nombre de fiches en zone intermédiaire. C'est ce code que la tâche Airflow lit.
 
-L'identifiant du document est `product_id` : réindexer écrase la fiche au lieu d'en créer une seconde. **C'est ce qui rend l'opération idempotente**, et il n'y a pas d'autre mécanisme de déduplication.
-
+L'identifiant du document est **`jeu:index_ligne`**, la clé primaire de la
+table d'origine — et non `product_id`, dont rien ne garantit l'unicité dans le
+catalogue. Réindexer écrase donc la fiche au lieu d'en créer une seconde :
+**c'est tout le mécanisme d'idempotence de ce module**, il n'y en a pas d'autre.
 ---
 
 ## 5. Ce que le moteur de recherche peut attendre
