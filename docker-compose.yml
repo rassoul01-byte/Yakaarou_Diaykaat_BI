@@ -206,6 +206,7 @@ services:
       context: .
       dockerfile: docker/app/Dockerfile
     container_name: df_app
+    user: "50000:0"
     environment:
       POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
