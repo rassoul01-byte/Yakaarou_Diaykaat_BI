@@ -21,7 +21,7 @@ from pathlib import Path
 
 import psycopg2
 
-from .ingestion import acquerir, acquerir_fichiers
+from .ingestion import acquerir, acquerir_catalogue, acquerir_fichiers
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,7 +42,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     try:
-        if args.source == "boutique":
+        if args.source == "catalogue":
+            resultat = acquerir_catalogue(racine_donnees=args.racine)
+        elif args.source == "boutique":
             resultat = acquerir(depuis=args.depuis, racine_donnees=args.racine)
         else:
             resultat = acquerir_fichiers(args.source, racine_donnees=args.racine)
