@@ -68,8 +68,12 @@ def afficher(evaluation, variables_influentes) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    analyseur = argparse.ArgumentParser(prog="python -m prediction", description=__doc__.split("\n")[0])
-    analyseur.add_argument("--fabrique", action="store_true", help="jeu fabriqué, résultats sans valeur")
+    analyseur = argparse.ArgumentParser(
+        prog="python -m prediction", description=__doc__.split("\n")[0]
+    )
+    analyseur.add_argument(
+        "--fabrique", action="store_true", help="jeu fabriqué, résultats sans valeur"
+    )
     arguments = analyseur.parse_args(argv)
 
     try:

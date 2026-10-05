@@ -68,15 +68,25 @@ def _date(texte: str) -> date:
     try:
         return date.fromisoformat(texte)
     except ValueError as erreur:
-        raise argparse.ArgumentTypeError(f"date attendue au format AAAA-MM-JJ : {texte!r}") from erreur
+        raise argparse.ArgumentTypeError(
+            f"date attendue au format AAAA-MM-JJ : {texte!r}"
+        ) from erreur
 
 
 def main(argv: list[str] | None = None) -> int:
-    analyseur = argparse.ArgumentParser(prog="python -m prediction.scorer", description=__doc__.split("\n")[0])
-    analyseur.add_argument("--date", type=_date, default=DATE_EVALUATION, help="date de référence à scorer")
-    analyseur.add_argument("--top", type=int, default=20, help="nombre de clients affichés (défaut 20)")
+    analyseur = argparse.ArgumentParser(
+        prog="python -m prediction.scorer", description=__doc__.split("\n")[0]
+    )
+    analyseur.add_argument(
+        "--date", type=_date, default=DATE_EVALUATION, help="date de référence à scorer"
+    )
+    analyseur.add_argument(
+        "--top", type=int, default=20, help="nombre de clients affichés (défaut 20)"
+    )
     analyseur.add_argument("--csv", help="écrit TOUS les scores dans ce fichier")
-    analyseur.add_argument("--fabrique", action="store_true", help="jeu fabriqué, résultats sans valeur")
+    analyseur.add_argument(
+        "--fabrique", action="store_true", help="jeu fabriqué, résultats sans valeur"
+    )
     arguments = analyseur.parse_args(argv)
 
     try:

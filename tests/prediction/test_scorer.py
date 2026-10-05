@@ -83,7 +83,9 @@ def test_la_commande_d_entrainement_tourne_sur_le_jeu_fabrique(capsys):
     assert code == 0
     assert "JEU FABRIQUÉ" in sortie
     assert "Matrice de confusion" in sortie
-    assert "exactitude" in sortie.lower()  # elle n'est citée que pour dire qu'elle n'est pas calculée
+    assert (
+        "exactitude" in sortie.lower()
+    )  # elle n'est citée que pour dire qu'elle n'est pas calculée
 
 
 def test_la_commande_de_scores_affiche_et_ecrit_le_csv(tmp_path, capsys):
