@@ -458,7 +458,17 @@ mauvais modèle.
 | **Formule** | `probabilité < seuil`, le seuil étant choisi sur le compromis rappel / précision |
 | **Granularité** | Liste de clients, et effectif total |
 | **Source des données** | Scores du modèle |
-| **Seuil retenu** | **À fixer après évaluation**, et écrit ici avec son coût en faux positifs |
+| **Seuil retenu** | **Les 250 premiers scores**, soit un score supérieur à 0,615 |
+
+**Ce que ce seuil coûte.** Sur 250 clients retenus, **13 reviendront
+réellement et 237 seront sollicités pour rien** — soit 5,2 % de réussite,
+contre 1,58 % en prenant des clients au hasard : **3,3 fois mieux**.
+
+**Pourquoi s'arrêter à 250.** Au-delà, le gain s'effondre : passer à 500
+clients n'en retrouve que 4 de plus pour 250 sollicitations supplémentaires,
+et à 1 000 le modèle ne fait quasiment plus mieux que le hasard. Ce seuil
+suppose qu'une sollicitation inutile coûte peu ; s'il s'agissait d'un appel
+téléphonique, il faudrait viser plus serré.
 
 **Pourquoi le seuil est une décision et non un calcul.** Viser large retient
 plus de clients à risque mais sollicite des gens qui seraient revenus seuls ;

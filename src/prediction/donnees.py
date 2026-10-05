@@ -44,8 +44,13 @@ DATE_EVALUATION = date(2017, 9, 30)
 def charger(dsn: str | None = None) -> pd.DataFrame:
     """Lit l'historique client, toutes dates de référence confondues."""
     colonnes = ", ".join((CLE, DATE_REFERENCE, *VARIABLES, CIBLE))
-    with psycopg2.connect(dsn or load_settings().postgres_dsn) as connexion:
-        return pd.read_sql(f"SELECT {colonnes} FROM {TABLE}", connexion)
+    with (
+        psycopg2.connect(dsn or load_settings().postgres_dsn) as connexion,
+        connexion.cursor() as curseur,
+    ):
+        curseur.execute(f"SELECT {colonnes} FROM {TABLE}")
+        noms = [colonne.name for colonne in curseur.description]
+        return pd.DataFrame(curseur.fetchall(), columns=noms)
 
 
 def lire(fabrique: bool = False) -> pd.DataFrame:
