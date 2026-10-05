@@ -73,7 +73,8 @@ def test_une_recherche_conserve_sa_requete():
 
 
 @pytest.mark.parametrize(
-    "manquant", ["id_evenement", "type", "horodatage", "id_session"],
+    "manquant",
+    ["id_evenement", "type", "horodatage", "id_session"],
     ids=["sans identifiant", "sans type", "sans horodatage", "sans session"],
 )
 def test_un_evenement_incomplet_est_ignore(manquant):
