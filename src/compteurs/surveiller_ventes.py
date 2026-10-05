@@ -53,17 +53,27 @@ def main(argv: list[str] | None = None) -> int:
             f"{verdict.jours_compares:>9} jour(s)"
         )
 
+    # Toute journée sous le seuil est signalée, pas seulement la plus récente :
+    # une chute passée inaperçue reste une chute, et le jour le plus récent est
+    # souvent celui qui a le moins d'historique.
+    signalees = [verdict for verdict in verdicts if verdict.alerte]
     courant = verdicts[0]
+
     print("\nCe qui mérite d'être regardé\n")
-    print(f"  {'! ' if courant.alerte else ''}{courant.message()}")
-    if not courant.alerte and courant.comparable:
-        print(
-            f"\n  Le seuil est à {SEUIL_POURCENT:.0f} % de l'activité habituelle, "
-            f"et l'alerte ne se prononce pas avant {HEURE_MINIMALE} h."
-        )
+    for verdict in signalees:
+        print(f"  ! {verdict.message()}")
+    if not signalees:
+        print(f"  {courant.message()}")
+        if courant.comparable:
+            print(
+                f"\n  Le seuil est à {SEUIL_POURCENT:.0f} % de l'activité habituelle, "
+                f"et l'alerte ne se prononce pas avant {HEURE_MINIMALE} h."
+            )
+    elif not courant.alerte:
+        print(f"\n  Jour le plus récent — {courant.message()}")
     print("\n  Trafic simulé — l'alerte démontre le dispositif, elle ne détecte rien de réel.\n")
 
-    return 1 if courant.alerte else 0
+    return 1 if signalees else 0
 
 
 if __name__ == "__main__":
