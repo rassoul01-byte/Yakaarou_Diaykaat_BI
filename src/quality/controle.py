@@ -44,6 +44,9 @@ from quality.schemas import schema_avis
 SOURCE_PHYSIQUE = {"olist": "boutique", "rakuten": "rakuten"}
 
 FICHIER_RAKUTEN = "rakuten_catalogue_produits.csv"
+# La source documentaire dépose un fichier au même format, sous un autre nom :
+# le catalogue vient alors de MongoDB et non du fichier livré.
+FICHIER_CATALOGUE = "catalogue_produits.csv"
 
 
 def resoudre_ingestion(source, ingestion, racine_brute=None):
@@ -911,7 +914,7 @@ def controler_olist(dossier, ingestion=None):
     return resultat
 
 
-def controler_rakuten(dossier, ingestion=None):
+def controler_rakuten(dossier, ingestion=None, source="rakuten"):
     """Applique les règles Rakuten à une ingestion de la zone brute.
 
     Les quatre règles Rakuten sont non bloquantes : aucune
@@ -922,14 +925,22 @@ def controler_rakuten(dossier, ingestion=None):
     """
     dossier = Path(dossier)
     resultat = ResultatControle(
-        source="rakuten",
+        source=source,
         ingestion=ingestion or dossier.name.split("=", 1)[-1],
         demarre_a=datetime.now(UTC),
     )
 
-    chemin = dossier / FICHIER_RAKUTEN
-    if not chemin.exists():
-        raise FileNotFoundError(f"Fichier absent de l'ingestion : {chemin}")
+    # Les deux sources déposent le même catalogue sous deux noms : le fichier
+    # livré d'un côté, l'extraction de la base documentaire de l'autre.
+    chemin = next(
+        (dossier / nom for nom in (FICHIER_CATALOGUE, FICHIER_RAKUTEN) if (dossier / nom).exists()),
+        None,
+    )
+    if chemin is None:
+        raise FileNotFoundError(
+            f"Aucun catalogue dans l'ingestion : attendu {FICHIER_CATALOGUE} "
+            f"ou {FICHIER_RAKUTEN} dans {dossier}"
+        )
     df_rakuten = lire_csv(chemin)
     resultat.lignes_lues = len(df_rakuten)
 
@@ -991,11 +1002,29 @@ def preparer_rakuten_staging(df_rakuten):
     une fiche sans prdtypecode au jeu de test.
     """
     df = df_rakuten.rename(columns={"source_index": "index_ligne"}).copy()
-    df["jeu"] = df["prdtypecode"].notna().map({True: "train", False: "test"})
+    # La source documentaire porte déjà « index_ligne » et « jeu » : ne les
+    # recalculer que s'ils manquent, pour que les deux provenances donnent
+    # exactement la même zone intermédiaire.
+    if "jeu" not in df.columns:
+        df["jeu"] = df["prdtypecode"].notna().map({True: "train", False: "test"})
     return df
 
 
-CONTROLEURS = {"olist": controler_olist, "rakuten": controler_rakuten}
+def controler_catalogue(dossier, ingestion=None):
+    """Contrôle le catalogue servi par la base documentaire.
+
+    Mêmes règles que pour le fichier livré : seule la provenance change. C'est
+    la preuve que les règles de qualité ne dépendent pas de la forme de la
+    source — ce que le dossier de conception affirme depuis le Sprint 2.
+    """
+    return controler_rakuten(dossier, ingestion, source="catalogue")
+
+
+CONTROLEURS = {
+    "olist": controler_olist,
+    "rakuten": controler_rakuten,
+    "catalogue": controler_catalogue,
+}
 
 
 def controler(source, ingestion, racine_brute=None):

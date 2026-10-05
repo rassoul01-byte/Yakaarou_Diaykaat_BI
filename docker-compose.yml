@@ -23,6 +23,9 @@ x-airflow-common: &airflow-common
     POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     KAFKA_BOOTSTRAP: kafka:9092
     AIRFLOW__WEBSERVER__WORKERS: "2"
+    MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
+    ES_URL: http://elasticsearch:9200
+    REFERENTIEL_URL: http://referentiel:8000
   volumes:
     - ./dags:/opt/airflow/dags
     - ./src:/opt/airflow/src
@@ -206,6 +209,7 @@ services:
       context: .
       dockerfile: docker/app/Dockerfile
     container_name: df_app
+    user: "50000:0"
     environment:
       POSTGRES_DSN: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
@@ -213,6 +217,7 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       PYTHONPATH: /app/src
       DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
+      RUFF_CACHE_DIR: /tmp/.ruff_cache
       DRIVE_RAKUTEN_ID: ${DRIVE_RAKUTEN_ID}
       CATALOGUE_RAKUTEN: ${CATALOGUE_RAKUTEN:-data/sources/rakuten/rakuten_catalogue_produits.csv}
       CLIENTS_OLIST: ${CLIENTS_OLIST:-data/sources/olist/olist_customers_dataset.csv}
@@ -227,6 +232,7 @@ services:
       - ./data:/app/data
       - ./tests:/app/tests
       - ./sql:/app/sql
+      - ./docs:/app/docs:ro
       - ./pyproject.toml:/app/pyproject.toml:ro
     depends_on:
       postgres: { condition: service_healthy }

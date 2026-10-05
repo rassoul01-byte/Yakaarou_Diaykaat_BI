@@ -33,11 +33,12 @@ def derniere(source: str) -> str:
 # livrable correspondant est fusionné.
 REELLES = {
     "acquisition",
-    "acquisition_rakuten",
+    "acquisition_catalogue",
     "controle_olist",
-    "controle_rakuten",
+    "controle_catalogue",
     "rapport_rejet",
     "transformation",
+    "reindexation",
     "correspondance",
     "chargement",
     "verification",
@@ -45,18 +46,29 @@ REELLES = {
 
 COMMANDES = {
     "acquisition": f"{PREFIXE} -m acquisition --source boutique",
-    "acquisition_rakuten": f"{PREFIXE} -m acquisition --source rakuten",
+    # Le catalogue vient de la base documentaire, et non plus du fichier livré :
+    # c'est la source NoSQL du projet. Le chargement initial de MongoDB se fait
+    # à la main, comme celui de la base de la boutique — la chaîne quotidienne
+    # consomme les systèmes sources, elle ne les remplit pas.
+    "acquisition_catalogue": f"{PREFIXE} -m acquisition --source catalogue",
     "controle_olist": (
         f"{PREFIXE} -m quality.controle --source olist --ingestion {derniere('boutique')}"
     ),
-    "controle_rakuten": (
-        f"{PREFIXE} -m quality.controle --source rakuten --ingestion {derniere('rakuten')}"
+    "controle_catalogue": (
+        f"{PREFIXE} -m quality.controle --source catalogue --ingestion {derniere('catalogue')}"
     ),
     "rapport_rejet": f"{PREFIXE} -m quality.rapport --seuil {SEUIL}",
+    # « rakuten » désigne ici la table staging.rakuten_produits, que la source
+    # documentaire alimente désormais : le nom de la table n'a pas changé.
     "transformation": (
         f"{PREFIXE} -m transformation --source olist && "
         f"{PREFIXE} -m transformation --source rakuten"
     ),
+    # La réindexation lit staging.rakuten_produits : elle suit la
+    # transformation, et n'a aucun lien avec le chargement de l'entrepôt. Les
+    # deux avancent donc en parallèle — une réindexation lente ne doit pas
+    # retarder les chiffres de vente.
+    "reindexation": f"{PREFIXE} -m recherche.indexer",
     "correspondance": f"{PREFIXE} -m integration.correspondance",
     "chargement": f"{PREFIXE} -m integration.chargement",
     "verification": f"{PREFIXE} -m integration.verifier",
@@ -83,19 +95,22 @@ with DAG(
     catchup=False,
     max_active_runs=1,
     default_args={"retries": 2, "retry_delay": timedelta(minutes=1)},
-    tags=["dataflow360", "sprint3"],
+    tags=["dataflow360"],
 ) as dag:
     acquisition = tache("acquisition")
-    acquisition_rakuten = tache("acquisition_rakuten")
+    acquisition_catalogue = tache("acquisition_catalogue")
     controle_olist = tache("controle_olist")
-    controle_rakuten = tache("controle_rakuten")
+    controle_catalogue = tache("controle_catalogue")
     rapport_rejet = tache("rapport_rejet")
     transformation = tache("transformation")
+    reindexation = tache("reindexation")
     correspondance = tache("correspondance")
     chargement = tache("chargement")
     verification = tache("verification")
 
     acquisition >> controle_olist
-    acquisition_rakuten >> controle_rakuten
-    [controle_olist, controle_rakuten] >> rapport_rejet
-    rapport_rejet >> transformation >> correspondance >> chargement >> verification
+    acquisition_catalogue >> controle_catalogue
+    [controle_olist, controle_catalogue] >> rapport_rejet
+    rapport_rejet >> transformation
+    transformation >> [correspondance, reindexation]
+    correspondance >> chargement >> verification

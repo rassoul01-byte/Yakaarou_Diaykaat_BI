@@ -246,6 +246,177 @@ une correspondance, **jamais** que les bons produits ont été reconnus.
 
 ---
 
+## Indicateurs temps réel et supervision — Sprint 4
+
+> ⚠️ **Les indicateurs de navigation reposent sur un trafic simulé.** Le
+> générateur produit les événements : aucune personne réelle ne visite ce site.
+> La mention doit apparaître **partout** où ces chiffres s'affichent — rapport,
+> tableau de bord, soutenance. Un indicateur de navigation présenté sans cette
+> précision est un chiffre faux.
+
+### Compteurs du jour
+
+| | |
+|---|---|
+| **Définition** | Sessions, pages vues, recherches, ajouts au panier et achats de la journée, mis à jour à mesure que les événements arrivent |
+| **Formule** | Comptage des événements du jour, dédoublonnés sur `id_evenement` |
+| **Granularité** | Journée en cours, rafraîchie à chaque lecture du bus |
+| **Source des données** | Le bus d'événements, sujet `navigation.evenements` |
+| **Calcul** | `staging.v_activite_par_jour` |
+| **Consultation** | `python -m compteurs` |
+| **Seuil d'alerte** | Aucun en propre — ils alimentent l'alerte sur chute des ventes |
+
+**Pourquoi aucun montant.** Un événement d'achat ne porte pas de prix — ni le
+contrat d'événements, ni le catalogue produits n'en contiennent. Ces compteurs
+mesurent donc l'**activité**, jamais le chiffre d'affaires. Un montant temps
+réel serait un chiffre inventé.
+
+**Ce qu'ils ne disent pas.** Le chiffre d'affaires reste celui de l'entrepôt,
+disponible le lendemain. Les deux ne se comparent pas : l'un compte des achats,
+l'autre des euros. Ces compteurs **ne passent pas par l'entrepôt** — ce sont
+deux chemins pour deux usages, l'un répondant à « que se passe-t-il
+maintenant », l'autre à « qu'avons-nous vendu ».
+
+**Un événement reçu deux fois ne compte qu'une fois** : la clé primaire sur
+`id_evenement` s'en charge. Le bus garantit « au moins une fois », pas
+« exactement une fois ». Et les événements rejoués circulent sur un sujet
+séparé, précisément pour que les compteurs ne les additionnent pas.
+
+---
+
+### Taux de conversion
+
+| | |
+|---|---|
+| **Définition** | Part des sessions de navigation qui se sont terminées par un achat |
+| **Formule** | `sessions avec au moins un événement « achat » ÷ sessions totales × 100` |
+| **Granularité** | Journée en cours, et par jour |
+| **Source des données** | Bus d'événements, clé `id_session` |
+| **Calcul** | `staging.v_taux_conversion` |
+| **Consultation** | `python -m compteurs` |
+| **Seuil d'alerte** | Aucun |
+
+**Pourquoi la session et non le visiteur.** `id_session` est la clé de
+partition du bus : tous les événements d'une même session sont lus dans
+l'ordre, par le même consommateur. Compter par session est donc exact sans
+aucune reconstitution — ce qui ne serait pas le cas d'un comptage par visiteur.
+
+**Ce qu'il ne dit pas.** Il **ne mesure pas l'efficacité commerciale** : le
+trafic est simulé, et le taux reflète les proportions choisies dans le
+générateur, pas le comportement d'acheteurs réels. Ce qu'il démontre, c'est
+**la chaîne de calcul en continu**, pas une performance de vente.
+
+Une session ouverte à cheval sur deux jours est comptée le jour de son premier
+événement.
+
+---
+
+### Journal des requêtes
+
+| | |
+|---|---|
+| **Définition** | Ce que les visiteurs ont cherché, regroupé par requête et par jour |
+| **Formule** | Comptage des événements de type `recherche`, requête mise en minuscules et détourée |
+| **Granularité** | Par jour et par requête |
+| **Source des données** | Bus d'événements, champ `requete` |
+| **Calcul** | `staging.v_journal_requetes` |
+| **Consultation** | `python -m compteurs` |
+| **Seuil d'alerte** | Aucun |
+
+**À quoi il sert.** Il alimente la remontée des requêtes sans résultat : une
+requête fréquente qui ne ramène rien signale un manque du catalogue ou une
+faiblesse du moteur de recherche.
+
+**Ce qu'il ne dit pas.** Les requêtes du générateur sont tirées des
+désignations du catalogue : elles ressemblent à des fragments de titres plutôt
+qu'à des recherches humaines. Le dispositif est juste, les requêtes ne le sont
+pas.
+
+---
+
+### Retard du flux
+
+| | |
+|---|---|
+| **Définition** | Nombre de messages publiés sur un sujet qu'un groupe de lecture n'a pas encore lus |
+| **Formule** | `dernier message publié − dernier message lu`, par groupe et par sujet |
+| **Granularité** | Par groupe de lecture et par sujet, historisé à chaque relevé |
+| **Source des données** | Le bus d'événements, décalages des groupes de lecture |
+| **Calcul** | `staging.retard_flux`, `staging.v_retard_tendance` |
+| **Consultation** | `python -m supervision.surveiller_flux` |
+| **Seuil d'alerte** | **Un retard qui croît sur trois relevés consécutifs** |
+
+**Pourquoi pas un seuil en nombre de messages.** Un retard de mille messages
+n'a pas le même sens selon le débit : ce qui compte, c'est qu'il **se résorbe**.
+Un retard stable signifie que le consommateur suit ; un retard qui grandit
+signale un lecteur arrêté ou trop lent — et c'est la seule chose à surveiller.
+
+**Ce qu'il ne dit pas.** Un retard nul ne signifie pas que tout va bien : un
+consommateur peut lire les messages et les traiter incorrectement. Le retard
+mesure la **circulation**, jamais la justesse du traitement.
+
+---
+
+### Durée et volume des exécutions
+
+| | |
+|---|---|
+| **Définition** | Durée, volume traité et statut de chaque étape de la chaîne |
+| **Formule** | `termine_a − demarre_a` pour la durée ; les volumes sont ceux que chaque traitement déclare |
+| **Granularité** | Par étape, par source et par exécution |
+| **Source des données** | `staging.execution_log` |
+| **Calcul** | `staging.v_executions`, `v_derniere_execution`, `v_profil_etapes` |
+| **Consultation** | `python -m supervision` |
+| **Seuil d'alerte** | Une étape **trois fois plus longue** que sa moyenne, sur au moins trois exécutions |
+
+**Pourquoi trois fois et pas deux.** Un facteur deux arrive trop souvent — une
+machine chargée, un cache froid — et une alerte qui se déclenche sans raison
+cesse d'être lue. Et en dessous de trois exécutions, il n'y a pas d'habitude à
+comparer.
+
+**Ce qu'il ne dit pas.** Une exécution rapide n'est pas une exécution réussie :
+une étape qui ne traite rien va très vite. **La durée se lit avec le volume**,
+jamais seule.
+
+Contrairement aux autres indicateurs de cette section, celui-ci **ne porte pas
+sur le trafic simulé** : il mesure les exécutions réelles de la plateforme.
+
+---
+
+### Alerte sur chute des ventes
+
+| | |
+|---|---|
+| **Définition** | Signalement déclenché quand le **nombre d'achats** du jour s'écarte à la baisse de ce qu'on observe habituellement le même jour de la semaine |
+| **Formule** | `achats du jour ÷ moyenne des quatre mêmes jours de semaine précédents × 100` |
+| **Granularité** | Journée en cours |
+| **Source des données** | Compteurs du jour |
+| **Seuil d'alerte** | **En dessous de 60 % de la moyenne**, et seulement après 12 h |
+
+**Pourquoi le nombre d'achats et non le chiffre d'affaires.** Les événements ne
+portent aucun montant : il n'existe pas de chiffre d'affaires temps réel.
+L'alerte compte donc des achats — ce qui détecte aussi bien une panne de la
+chaîne qu'une baisse d'activité.
+
+**Pourquoi le même jour de la semaine.** Un dimanche ne se compare pas à un
+mardi. Comparer un jour à la veille produirait une alerte chaque lundi matin —
+et une alerte qui se déclenche sans raison n'est plus lue au bout d'une semaine.
+
+**Pourquoi pas avant 12 h.** L'activité d'une matinée est toujours inférieure à
+celle d'une journée entière : alerter à 9 h reviendrait à alerter tous les jours.
+
+**Ce qu'elle ne dit pas.** Une chute signale **aussi bien une panne de la chaîne
+qu'une baisse réelle** — un consommateur arrêté fait tomber les compteurs à
+zéro. L'alerte se lit donc toujours **avec le retard du flux** : c'est leur
+lecture conjointe qui distingue un problème technique d'un problème commercial.
+
+⚠️ **Sur trafic simulé, cette alerte ne détecte rien de réel.** Ce qu'elle
+démontre, c'est le dispositif : une anomalie fabriquée la déclenche, une journée
+normale ne la déclenche pas. **Les deux cas doivent être montrés en
+démonstration** — le second est le plus important.
+
+---
+
 ## Comment ajouter un indicateur
 
 1. L'écrire **ici d'abord**, avec les six rubriques, avant d'écrire la moindre requête.
@@ -263,7 +434,7 @@ document existe pour empêcher.
 
 | Sprint | Indicateurs |
 |---|---|
-| 4 | Compteurs du jour, taux de conversion, qualité de la recherche |
+| 4 | Qualité de la recherche : requêtes sans résultat |
 | 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
 
 Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
