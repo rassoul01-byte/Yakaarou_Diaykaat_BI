@@ -25,6 +25,7 @@ from quality.chargement import charger
 from quality.controle import controler
 
 from .conftest import (
+    NB_ARTICLES_SANS_COMMANDE_RETENUE,
     NB_CLIENTS_SANS_IDENTIFIANT,
     NB_LIVREES_SANS_DATE,
     construire_ingestion_olist,
@@ -104,6 +105,8 @@ def test_raw_quality_staging_quarantaine_journal_puis_rapport(tmp_path, transact
     rejets = _rejets_par_regle(transaction, ingestion)
     assert rejets == {
         "OLIST_COMMANDES_02": NB_LIVREES_SANS_DATE,
+        # Les lignes d'article des commandes rejetées partent avec elles.
+        "OLIST_ARTICLES_02": NB_ARTICLES_SANS_COMMANDE_RETENUE,
         "OLIST_AVIS_01": 1,
         "OLIST_AVIS_02": 1,
         "OLIST_CLIENTS_01": NB_CLIENTS_SANS_IDENTIFIANT,
@@ -135,7 +138,7 @@ def test_raw_quality_staging_quarantaine_journal_puis_rapport(tmp_path, transact
         )
         pipeline, etape, source, lues, ecrites, rejetees, statut, message = curseur.fetchone()
     assert (pipeline, etape, source, statut) == ("qualite", "controle", "olist", "succes")
-    assert rejetees == sum(rejets.values()) == 11
+    assert rejetees == sum(rejets.values()) == 11 + NB_ARTICLES_SANS_COMMANDE_RETENUE
     assert lues == ecrites + rejetees + 1  # + 1 doublon strict de géolocalisation
     detail = {c["regle"]: c for c in json.loads(message)["controles"]}
     assert detail["OLIST_COMMANDES_02"]["lignes_quarantaine"] == NB_LIVREES_SANS_DATE
@@ -150,10 +153,10 @@ def test_raw_quality_staging_quarantaine_journal_puis_rapport(tmp_path, transact
         par_source = rapport._lire(curseur, rapport._PAR_SOURCE, source="olist")
         par_regle = rapport._lire(curseur, rapport._PAR_REGLE, source="olist", limite=100)
     (execution,) = par_execution
-    assert execution["lignes_rejetees"] == 11
-    assert float(execution["taux_rejet_pourcent"]) == rapport.taux_pourcent(lues, 11)
+    assert execution["lignes_rejetees"] == 11 + NB_ARTICLES_SANS_COMMANDE_RETENUE
+    assert float(execution["taux_rejet_pourcent"]) == rapport.taux_pourcent(lues, rejetees)
     # la dernière exécution d'olist, celle que le rapport affiche, est la nôtre
-    assert (par_source[0]["lignes_lues"], par_source[0]["lignes_rejetees"]) == (lues, 11)
+    assert (par_source[0]["lignes_lues"], par_source[0]["lignes_rejetees"]) == (lues, rejetees)
     regles = {ligne["regle"] for ligne in par_regle}
     assert "OLIST_COMMANDES_02" in regles
 
@@ -169,18 +172,21 @@ def test_relancer_la_meme_ingestion_ne_duplique_rien(tmp_path, transaction, inge
     # staging est écrasée, pas complétée
     assert _un(transaction, "SELECT COUNT(*) FROM staging.olist_orders") == staging_1
     # la quarantaine ne reçoit pas deux fois les mêmes rejets
-    assert sum(_rejets_par_regle(transaction, ingestion).values()) == 11
-    assert premier.rejets_inseres == 11
+    attendus = 11 + NB_ARTICLES_SANS_COMMANDE_RETENUE
+    assert sum(_rejets_par_regle(transaction, ingestion).values()) == attendus
+    assert premier.rejets_inseres == attendus
     assert second.rejets_inseres == 0
-    assert second.rejets_deja_presents == 11
+    assert second.rejets_deja_presents == attendus
     # le journal garde une ligne par exécution, chacune avec les rejets qu'elle a détectés
     assert second.execution_id != premier.execution_id
     assert (
         _un(
             transaction,
-            "SELECT COUNT(*) FROM staging.execution_log WHERE id IN (%s, %s) AND lignes_rejetees = 11",
+            "SELECT COUNT(*) FROM staging.execution_log "
+            "WHERE id IN (%s, %s) AND lignes_rejetees = %s",
             premier.execution_id,
             second.execution_id,
+            attendus,
         )
         == 2
     )
