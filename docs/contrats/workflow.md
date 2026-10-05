@@ -22,14 +22,26 @@ Les deux branches (olist et rakuten) s'exécutent en parallèle jusqu'au rapport
 | # | Tâche | Commande | Échec si | État | Durée mesurée |
 |---|-------|----------|----------|------|---------------|
 | 1a | `acquisition` | `python -m acquisition --source boutique` | code ≠ 0 | branchée | ~4 s |
-| 1b | `acquisition_rakuten` | `python -m acquisition --source rakuten` | code ≠ 0 | branchée | ~2 s |
+| 1b | `acquisition_catalogue` | `python -m acquisition --source catalogue` | code ≠ 0 | branchée | ~3 s |
 | 2a | `controle_olist` | `python -m quality.controle --source olist --ingestion <dernière ingestion de data/raw/lots/boutique>` | code ≠ 0 | branchée | ~17 s |
-| 2b | `controle_rakuten` | `python -m quality.controle --source rakuten --ingestion <dernière ingestion de data/raw/lots/rakuten>` | code ≠ 0 | branchée | ~6 s |
+| 2b | `controle_catalogue` | `python -m quality.controle --source catalogue --ingestion <dernière ingestion de data/raw/lots/catalogue>` | code ≠ 0 | branchée | ~6 s |
 | 3 | `rapport_rejet` | `python -m quality.rapport --seuil 5` | une source dépasse le seuil | branchée | ~1 s |
 | 4 | `transformation` | `python -m transformation --source olist` puis `--source rakuten` | code ≠ 0 | branchée | ~8 min 45 s (dont ~8 min 40 s pour la détection de langue de rakuten) |
-| 5 | `correspondance` | `python -m integration.correspondance` | catégorie du catalogue absente (code 1) | factice (F1.9) | — |
-| 6 | `chargement` | `python -m integration.chargement` | code ≠ 0 | factice (F1.10) | — |
-| 7 | `verification` | `python -m integration.verifier` | fait orphelin ou comptage différent (code 1) | factice (F1.10) | — |
+| 5a | `correspondance` | `python -m integration.correspondance` | catégorie du catalogue absente (code 1) | branchée | ~20 s |
+| 5b | `reindexation` | `python -m recherche.indexer` | index non conforme (code 1) | branchée | ~40 s |
+| 6 | `chargement` | `python -m integration.chargement` | code ≠ 0 | branchée | ~1 min |
+| 7 | `verification` | `python -m integration.verifier` | fait orphelin ou comptage différent (code 1) | branchée | ~10 s |
+
+⚠️ **La réindexation et la correspondance avancent en parallèle.** La première
+lit `staging.rakuten_produits`, la seconde alimente l'entrepôt : elles n'ont
+aucun lien, et une réindexation lente ne doit pas retarder les chiffres de
+vente.
+
+⚠️ **Le chargement initial des systèmes sources se fait à la main** —
+`charger_boutique.py` pour la base SQL, `charger_catalogue_mongo.py` pour la
+base documentaire. La chaîne quotidienne **consomme** les sources, elle ne les
+remplit pas : c'est le rôle des systèmes amont, que la plateforme n'administre
+pas.
 
 Durée de la chaîne mesurée avec les trois dernières tâches factices : environ 9 min 15 s, dominée par la transformation de rakuten.
 

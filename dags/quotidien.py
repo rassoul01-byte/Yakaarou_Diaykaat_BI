@@ -38,6 +38,7 @@ REELLES = {
     "controle_catalogue",
     "rapport_rejet",
     "transformation",
+    "reindexation",
     "correspondance",
     "chargement",
     "verification",
@@ -63,6 +64,11 @@ COMMANDES = {
         f"{PREFIXE} -m transformation --source olist && "
         f"{PREFIXE} -m transformation --source rakuten"
     ),
+    # La réindexation lit staging.rakuten_produits : elle suit la
+    # transformation, et n'a aucun lien avec le chargement de l'entrepôt. Les
+    # deux avancent donc en parallèle — une réindexation lente ne doit pas
+    # retarder les chiffres de vente.
+    "reindexation": f"{PREFIXE} -m recherche.indexer",
     "correspondance": f"{PREFIXE} -m integration.correspondance",
     "chargement": f"{PREFIXE} -m integration.chargement",
     "verification": f"{PREFIXE} -m integration.verifier",
@@ -97,6 +103,7 @@ with DAG(
     controle_catalogue = tache("controle_catalogue")
     rapport_rejet = tache("rapport_rejet")
     transformation = tache("transformation")
+    reindexation = tache("reindexation")
     correspondance = tache("correspondance")
     chargement = tache("chargement")
     verification = tache("verification")
@@ -104,4 +111,6 @@ with DAG(
     acquisition >> controle_olist
     acquisition_catalogue >> controle_catalogue
     [controle_olist, controle_catalogue] >> rapport_rejet
-    rapport_rejet >> transformation >> correspondance >> chargement >> verification
+    rapport_rejet >> transformation
+    transformation >> [correspondance, reindexation]
+    correspondance >> chargement >> verification
