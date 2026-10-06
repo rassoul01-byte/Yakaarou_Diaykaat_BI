@@ -108,7 +108,7 @@ Mesure du 2026-10-06, sur 24 questions reformulées et 8 questions hors base :
 - **Un seuil de score seul ne suffit pas.** Une question sur une commande précise (« Où en est ma commande numéro 4521 ? ») obtient 0,83, et une demande de remboursement personnalisé 0,73, parce qu'elles reprennent le vocabulaire de la FAQ. L'assistant doit refuser ces cas par une règle supplémentaire (commande ou montant précis), pas par le score.
 - L'échantillon hors base est petit (8 questions) : le seuil est à confirmer sur un jeu plus large.
 
-Seuil retenu : *à fixer avec Bachir*.
+Seuil retenu : 0,67 (provisoire, à revalider sur un jeu hors base plus large).
 
 ## 9. Les commandes
 
