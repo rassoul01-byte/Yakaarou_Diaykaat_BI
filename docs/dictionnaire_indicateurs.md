@@ -416,6 +416,125 @@ normale ne la déclenche pas. **Les deux cas doivent être montrés en
 démonstration** — le second est le plus important.
 
 ---
+## Indicateurs de prédiction et d'assistance — Sprint 5
+
+> ⚠️ **Deux indicateurs de ce sprint mesurent un modèle, pas une réalité.** La
+> probabilité de ré-achat décrit une ressemblance avec des clients passés ; le
+> taux de réponses ancrées décrit un dispositif, pas la justesse des réponses.
+> Les lire autrement serait une erreur, et chaque entrée dit laquelle.
+
+### Probabilité de ré-achat
+
+| | |
+|---|---|
+| **Définition** | Score entre 0 et 1 estimant la chance qu'un client passe une nouvelle commande dans les 180 jours suivant la date de référence |
+| **Formule** | Sortie du modèle entraîné selon `docs/contrats/modele.md` |
+| **Granularité** | Un score par client, identifié par `customer_unique_id` |
+| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt |
+| **Calcul** | `src/prediction/`, commande `python -m prediction.scorer` |
+| **Seuil d'alerte** | Aucun en propre — c'est le segment ci-dessous qui fixe un seuil |
+
+**Ce qu'il ne dit pas.** Le score **n'explique pas pourquoi** un client partirait :
+il mesure une ressemblance avec des clients qui ne sont pas revenus. Une
+ressemblance n'est pas une cause, et un score élevé n'autorise aucune
+conclusion sur les intentions d'une personne.
+
+**Il est daté et situé.** Le modèle est entraîné sur un marchand brésilien
+entre 2016 et 2018. Les comportements d'achat y sont ceux de ce marché et de
+cette période.
+
+**Une commande unique est la norme dans ce jeu**, pas une anomalie : Olist
+regroupe de nombreux vendeurs et beaucoup d'acheteurs n'y passent qu'une fois.
+Un rappel faible peut signaler un comportement peu prévisible plutôt qu'un
+mauvais modèle.
+
+---
+
+### Segment à retenir
+
+| | |
+|---|---|
+| **Définition** | Clients dont la probabilité de ré-achat est inférieure au seuil retenu, parmi ceux qui ont déjà commandé |
+| **Formule** | `probabilité < seuil`, le seuil étant choisi sur le compromis rappel / précision |
+| **Granularité** | Liste de clients, et effectif total |
+| **Source des données** | Scores du modèle |
+| **Seuil retenu** | **Les 250 premiers scores**, soit un score supérieur à 0,615 |
+
+**Ce que ce seuil coûte.** Sur 250 clients retenus, **13 reviendront
+réellement et 237 seront sollicités pour rien** — soit 5,2 % de réussite,
+contre 1,58 % en prenant des clients au hasard : **3,3 fois mieux**.
+
+**Pourquoi s'arrêter à 250.** Au-delà, le gain s'effondre : passer à 500
+clients n'en retrouve que 4 de plus pour 250 sollicitations supplémentaires,
+et à 1 000 le modèle ne fait quasiment plus mieux que le hasard. Ce seuil
+suppose qu'une sollicitation inutile coûte peu ; s'il s'agissait d'un appel
+téléphonique, il faudrait viser plus serré.
+
+**Pourquoi le seuil est une décision et non un calcul.** Viser large retient
+plus de clients à risque mais sollicite des gens qui seraient revenus seuls ;
+viser étroit rate des départs. **Il n'existe pas de bon seuil dans l'absolu** —
+seulement un compromis assumé, qui dépend de ce que coûte une sollicitation
+inutile.
+
+**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus** : c'est
+une liste de clients à qui il vaudrait peut-être la peine de s'adresser. La
+différence compte, parce qu'elle décide de ce qu'on en fait.
+
+**Les clients sans historique n'y figurent pas.** Un client dont la première
+commande est postérieure à la date de référence n'a pas de passé à analyser :
+il est hors du jeu, et non « à faible risque ».
+
+---
+
+### Taux de réponses ancrées
+
+| | |
+|---|---|
+| **Définition** | Part des réponses de l'assistant qui s'appuient sur au moins un passage cité de la base documentaire |
+| **Formule** | `réponses citant au moins un passage ÷ réponses totales × 100` |
+| **Granularité** | Sur un jeu de questions fixé |
+| **Source des données** | Journal des réponses de l'assistant |
+| **Seuil d'alerte** | **100 %**. Une réponse sans source est un défaut, pas une statistique |
+
+**Pourquoi le seuil est à 100 %.** Un refus poli — « je n'ai pas cette
+information » — **compte comme une réponse ancrée** : il est conforme au
+contrat de l'assistant. Ce qui ne doit jamais arriver, c'est une réponse
+affirmative sans passage à l'appui. Tolérer 95 % reviendrait à accepter qu'une
+réponse sur vingt soit inventée.
+
+**Ce qu'il ne dit pas.** Il **ne mesure pas la justesse** des réponses : une
+réponse peut citer un passage et le résumer de travers. Il mesure que
+l'assistant **ne parle pas sans source** — c'est nécessaire, ce n'est pas
+suffisant.
+
+**Le jeu de questions est fixé à l'avance** et versionné, avec des questions
+couvertes par la base et des questions qui ne le sont pas. Mesurer sur des
+exemples choisis après coup ne mesurerait rien.
+
+---
+
+### Requêtes sans résultat
+
+| | |
+|---|---|
+| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
+| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
+| **Granularité** | Par requête, classée par fréquence |
+| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
+| **Calcul** | `python -m recherche.sans_resultat` |
+| **Seuil d'alerte** | Aucun |
+
+**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
+manque du catalogue, soit une faiblesse du moteur. C'est la matière de
+l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
+répondre demain.
+
+**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
+désignations du catalogue : ce sont des fragments de titres, pas des recherches
+humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
+mesuré n'a donc aucune valeur commerciale.
+
+---
 
 ## Comment ajouter un indicateur
 

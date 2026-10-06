@@ -30,11 +30,14 @@ pandera>=0.24,<1              # SW · validation des avis (quality.schemas)
 langdetect>=1.0.9,<2          # AD · détection de langue du catalogue (transformation.langue)
 
 # --- À ajouter par leur responsable, au sprint indiqué -----------------------
-# scikit-learn               BD · Sprint 5 · modèle de ré-achat
+
 # imbalanced-learn           BD · Sprint 5 · rééquilibrage des classes
 #
 # NE PAS ajouter apache-airflow ici : Airflow tourne dans sa propre image,
 # et ses contraintes de versions entreraient en conflit avec ce fichier.
+
+# --- Modèle de ré-achat (Sprint 5) -------------------------------------------
+scikit-learn>=1.4,<2          # BD · modèle de ré-achat (prediction)
 # --- Service référentiel : source API (NPS, Sprint 3) ------------------------
 fastapi>=0.115,<1             # NPS · service référentiel local
 uvicorn>=0.30,<1              # NPS · serveur du service
