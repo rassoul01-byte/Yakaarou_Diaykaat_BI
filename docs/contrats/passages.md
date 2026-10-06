@@ -101,7 +101,14 @@ Le seuil de score sous lequel aucun passage n'est considéré comme pertinent es
 - Proposition : le fixer en mesurant les scores sur un jeu de questions couvertes et un jeu de questions hors base (prix, commande en cours, remboursement personnalisé), puis en choisissant la valeur qui sépare les deux.
 - Le seuil choisi, et le jeu qui a servi à le choisir, sont écrits ici une fois décidés.
 
-Seuil retenu : *à renseigner*.
+Mesure du 2026-10-06, sur 24 questions reformulées et 8 questions hors base :
+
+- Le bon passage est premier dans 15 cas sur 24, et dans les trois premiers dans 20 cas sur 24. Les échecs viennent de questions qui n'emploient pas les mots de la FAQ, ou qui contiennent des fautes de frappe.
+- Le plus bas score d'un bon premier résultat est 0,69. Les questions sans rapport (capitale, prix, promotions, boutique physique, « Bonjour ») obtiennent de 0,58 à 0,65 : un seuil vers 0,67 les écarte sans perdre de bonne réponse, sur cet échantillon.
+- **Un seuil de score seul ne suffit pas.** Une question sur une commande précise (« Où en est ma commande numéro 4521 ? ») obtient 0,83, et une demande de remboursement personnalisé 0,73, parce qu'elles reprennent le vocabulaire de la FAQ. L'assistant doit refuser ces cas par une règle supplémentaire (commande ou montant précis), pas par le score.
+- L'échantillon hors base est petit (8 questions) : le seuil est à confirmer sur un jeu plus large.
+
+Seuil retenu : *à fixer avec Bachir*.
 
 ## 9. Les commandes
 
