@@ -454,31 +454,43 @@ mauvais modèle.
 
 | | |
 |---|---|
-| **Définition** | Clients dont la probabilité de ré-achat est inférieure au seuil retenu, parmi ceux qui ont déjà commandé |
-| **Formule** | `probabilité < seuil`, le seuil étant choisi sur le compromis rappel / précision |
+| **Définition** | Les clients, parmi ceux qui ont déjà commandé, dont la probabilité de ré-achat est la plus élevée : ceux que le modèle juge les plus susceptibles de revenir, et à qui il vaut peut-être la peine de s'adresser |
+| **Formule** | `probabilité ≥ seuil`, le seuil étant le score du dernier client retenu dans la taille de segment choisie |
 | **Granularité** | Liste de clients, et effectif total |
 | **Source des données** | Scores du modèle |
-| **Seuil retenu** | **Les 250 premiers scores**, soit un score supérieur à 0,615 |
+| **Seuil retenu** | **Les 250 clients aux scores les plus élevés**, soit un score supérieur ou égal à 0,6335 |
 
-**Ce que ce seuil coûte.** Sur 250 clients retenus, **13 reviendront
-réellement et 237 seront sollicités pour rien** — soit 5,2 % de réussite,
-contre 1,58 % en prenant des clients au hasard : **3,3 fois mieux**.
+**Ce que ce seuil coûte.** Sur 250 clients retenus, **14 reviendront
+réellement et 236 seront sollicités pour rien** — soit 5,6 % de réussite,
+contre 1,58 % en prenant des clients au hasard : **3,5 fois mieux**. L'effectif
+est petit (14 clients) : le chiffre est indicatif, et quelques clients de plus
+ou de moins le font varier sensiblement.
 
-**Pourquoi s'arrêter à 250.** Au-delà, le gain s'effondre : passer à 500
-clients n'en retrouve que 4 de plus pour 250 sollicitations supplémentaires,
-et à 1 000 le modèle ne fait quasiment plus mieux que le hasard. Ce seuil
-suppose qu'une sollicitation inutile coûte peu ; s'il s'agissait d'un appel
-téléphonique, il faudrait viser plus serré.
+**Pourquoi s'arrêter à 250.** Au-delà, le gain tombe : passer à 500 clients n'en
+retrouve qu'un de plus (15 contre 14) pour 250 sollicitations supplémentaires,
+et le gain passe sous 2 fois (1,9 à 500 clients, 1,46 à 1 000). Pour
+comparaison, la règle « deux commandes ou plus » signale 711 clients pour 32
+retours (4,5 %). Ce seuil suppose qu'une sollicitation inutile coûte peu ;
+s'il s'agissait d'un appel téléphonique, il faudrait viser plus serré.
+
+**Pourquoi c'est le haut de la liste, et non les clients à faible
+probabilité.** 98 % des clients ne reviennent pas : une liste des clients à
+faible probabilité en contiendrait plus de 25 000, sans permettre aucune
+action. Le segment exploitable est donc le petit nombre de clients que le
+modèle repère comme les plus susceptibles de revenir.
 
 **Pourquoi le seuil est une décision et non un calcul.** Viser large retient
-plus de clients à risque mais sollicite des gens qui seraient revenus seuls ;
-viser étroit rate des départs. **Il n'existe pas de bon seuil dans l'absolu** —
+plus de clients mais en sollicite davantage qui seraient revenus seuls ; viser
+étroit en laisse de côté. **Il n'existe pas de bon seuil dans l'absolu** —
 seulement un compromis assumé, qui dépend de ce que coûte une sollicitation
 inutile.
 
-**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus** : c'est
-une liste de clients à qui il vaudrait peut-être la peine de s'adresser. La
-différence compte, parce qu'elle décide de ce qu'on en fait.
+**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus**, ni de
+clients qui risquent de partir : c'est une liste de clients à qui il vaudrait
+peut-être la peine de s'adresser. La différence compte, parce qu'elle décide de
+ce qu'on en fait. Le modèle qui produit les scores ne fait pas mieux que la
+règle « deux commandes ou plus » au F1 (voir `docs/contrats/modele.md`) : le
+segment est un classement des clients, pas une prédiction fiable.
 
 **Les clients sans historique n'y figurent pas.** Un client dont la première
 commande est postérieure à la date de référence n'a pas de passé à analyser :
