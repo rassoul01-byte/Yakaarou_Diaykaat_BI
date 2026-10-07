@@ -190,7 +190,7 @@ services:
     build: { context: ., dockerfile: docker/app/Dockerfile }
     container_name: df_referentiel
     environment:
-      PYTHONPATH: /app/src
+      PYTHONPATH: /app/src:/app 
       REFERENTIEL_RACINE: /app/data/raw/referentiel
     volumes:
       - ./src:/app/src
@@ -215,7 +215,7 @@ services:
       MONGO_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin
       ES_URL: http://elasticsearch:9200
       KAFKA_BOOTSTRAP: kafka:9092
-      PYTHONPATH: /app/src
+      PYTHONPATH: /app/src:/app
       DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
       RUFF_CACHE_DIR: /tmp/.ruff_cache
       # Modèle de vecteurs (fastembed) : l'utilisateur 50000 n'a pas de dossier personnel,
