@@ -109,29 +109,18 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 
 ---
 
-## 6. Évaluation et seuils
+## 6. Seuils
 
-`python -m assistant.evaluer` rejoue le jeu `tests/assistant/jeu_de_questions.jsonl` et mesure, du plus grave au moins grave :
+Mesurés sur le jeu gelé le JJ/MM/AAAA (empreinte SHA256 : <hash>),
+avec la recherche documentaire (`documentaire.rechercher`).
 
-| Mesure | Sens | Attendu |
+| Seuil | Valeur | Justification |
 |---|---|---|
-| **Réponse à tort** | Une question hors base reçoit une réponse | 0 |
-| **Mauvais passage** | Une question couverte reçoit la réponse d'un autre passage : une réponse fausse, citée | 0 |
-| Faux refus | Une question couverte est refusée sans suggestion | le plus bas possible |
-| Bonne réponse, ou refus avec bonne suggestion | L'assistant oriente vers le bon passage | le plus haut possible |
+| reponse | 0,XX | mauvais_passage = 0, réponse_à_tort = 0, faux_refus = Y |
+| suggestion | 0,XX | idem |
+| marge | 0,XX | stabilité en validation croisée |
 
-### Résultat actuel : `RetrouveurDepannage`, seuils 0,35 / 0,18 / marge 0,12
-
-Sur le jeu **provisoire** de 52 questions (27 couvertes, 25 hors base) :
-
-| | |
-|---|---|
-| Bonne réponse | 9 |
-| Refus avec la bonne suggestion | 15 |
-| Faux refus | 3 |
-| **Mauvais passage** | **0** |
-| Refus correct (hors base) | 25 sur 25 |
-| **Réponse à tort** | **0** |
+**Pas de filtre ES en amont** : voir `passages.md §8` pour la justification.
 
 ### Ce que ces chiffres ne disent pas
 
