@@ -27,8 +27,9 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .assistant import Reponse, repondre
+from .fabrique import creer_retrouveur
 from .garde_fous import Seuils
-from .retrouveur import Retrouveur, RetrouveurDepannage
+from .retrouveur import Retrouveur
 
 JEU = Path(__file__).resolve().parents[2] / "tests" / "assistant" / "jeu_de_questions.jsonl"
 
@@ -88,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     analyseur.add_argument("--detail", action="store_true", help="liste les questions mal traitées")
     arguments = analyseur.parse_args(argv)
 
-    retrouveur = RetrouveurDepannage.depuis_faq()
+    retrouveur = creer_retrouveur()
     resultats = evaluer(retrouveur, lire_jeu(arguments.jeu))
     s = synthese(resultats)
 
