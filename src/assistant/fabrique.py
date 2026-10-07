@@ -22,15 +22,22 @@ SEUILS_EXTERNE = Seuils(reponse=0.35, suggestion=0.18, marge=0.12)
 
 
 def _recherche_documentaire(question: str, k: int) -> dict:
-    """Adapte `documentaire.rechercher` au contrat passages.md §7.
+    """Adapte documentaire.rechercher au contrat passages.md §7.
 
-    Import et création du client tardifs : utiliser le retrouveur de dépannage
-    ne doit pas exiger qu'Elasticsearch soit joignable.
+    Import et création du client tardifs : le mode depannage reste hors ligne.
+    Les erreurs réseau d'Elasticsearch (TransportError et ses sous-classes :
+    ConnectionError, ConnectionTimeout) sont converties en ConnectionError
+    native pour que __main__ les présente proprement.
     """
+    from elastic_transport import TransportError
+
     from documentaire.rechercher import rechercher
     from recherche.client import connexion
 
-    return rechercher(connexion(), question, k)
+    try:
+        return rechercher(connexion(), question, k)
+    except TransportError as erreur:
+        raise ConnectionError(str(erreur)) from erreur
 
 
 def creer_retrouveur() -> Retrouveur:
