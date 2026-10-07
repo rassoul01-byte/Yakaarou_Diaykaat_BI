@@ -48,6 +48,7 @@ GROUP BY order_id;
 
 -- CREATE OR REPLACE ne peut pas retirer une colonne d'une vue existante : on la
 -- supprime d'abord. Rien ne dépend d'elle, et la migration reste rejouable.
+DROP VIEW IF EXISTS dwh.v_segment_a_retenir;
 DROP VIEW IF EXISTS dwh.v_historique_client;
 
 CREATE VIEW dwh.v_historique_client AS
