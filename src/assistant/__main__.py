@@ -15,9 +15,8 @@ import json
 import sys
 
 from .assistant import repondre
-from .journal import JournalFichier
-from .passages import ErreurCorpus
 from .fabrique import creer_retrouveur
+from .journal import JournalFichier
 from .retrouveur import ReponseContratInvalide
 
 

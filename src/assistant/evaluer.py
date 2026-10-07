@@ -27,8 +27,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .assistant import Reponse, repondre
-from .garde_fous import Seuils
 from .fabrique import creer_retrouveur
+from .garde_fous import Seuils
 from .retrouveur import Retrouveur
 
 JEU = Path(__file__).resolve().parents[2] / "tests" / "assistant" / "jeu_de_questions.jsonl"
