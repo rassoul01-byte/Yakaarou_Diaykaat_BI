@@ -26,6 +26,7 @@ from .retrouveur import Retrouveur, RetrouveurDepannage, RetrouveurExterne
 # Marge à 0 : les scores du retrouveur sont très serrés entre les top passages.
 SEUILS_EXTERNE = Seuils(reponse=0.84, suggestion=0.20, marge=0.00)
 
+
 def _recherche_documentaire(question: str, k: int) -> dict:
     """Adapte documentaire.rechercher au contrat passages.md §7.
 

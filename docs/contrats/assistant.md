@@ -108,7 +108,6 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 **Taux de réponses ancrées** (dictionnaire) = échanges citant au moins un passage, plus les refus polis, divisé par les échanges. Il vaut 100 % **par construction** : il est mesuré sur le jeu de questions fixé, et le journal permet de le recalculer sur l'usage réel.
 
 ---
-
 ## 6. Seuils
 
 Mesurés sur le jeu **gelé** le 2026-10-07 (empreinte SHA256 :
@@ -154,7 +153,6 @@ passages (écart médian top 1 / top 2 ≈ 0,02). Une marge non nulle
 docker compose exec app python -m scripts.assistant.mesurer_scores
 docker compose exec app python -m scripts.assistant.analyser_scores
 docker compose exec app python -m scripts.assistant.balayer_seuils --top 30
-
 ## 7. Les commandes
 
 ```bash
