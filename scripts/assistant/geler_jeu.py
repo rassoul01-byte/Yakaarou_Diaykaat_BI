@@ -28,6 +28,7 @@ ATTENDUS_VALIDES = {"reponse", "refus"}
 def lire_lignes(chemin: Path) -> list[str]:
     return [ligne for ligne in chemin.read_text(encoding="utf-8").splitlines() if ligne.strip()]
 
+
 def valider(chemin: Path) -> tuple[bool, list[str]]:
     """Vérifie le format du jeu. Retourne (ok, liste d'erreurs)."""
     erreurs: list[str] = []
@@ -60,8 +61,7 @@ def valider(chemin: Path) -> tuple[bool, list[str]]:
 
         if q["attendu"] == "refus" and q["passage"] is not None:
             erreurs.append(
-                f"ligne {i} : attendu='refus' mais passage={q['passage']!r} "
-                f"(devrait être null)"
+                f"ligne {i} : attendu='refus' mais passage={q['passage']!r} (devrait être null)"
             )
 
     return (not erreurs, erreurs)
@@ -108,10 +108,7 @@ def verifier(chemin: Path) -> int:
             file=sys.stderr,
         )
         return 1
-    print(
-        f"Jeu conforme au gel du {meta['date_gel']} "
-        f"({meta['nb_questions']} questions)."
-    )
+    print(f"Jeu conforme au gel du {meta['date_gel']} ({meta['nb_questions']} questions).")
     return 0
 
 
