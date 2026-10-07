@@ -432,7 +432,7 @@ démonstration** — le second est le plus important.
 | **Granularité** | Un score par client, identifié par `customer_unique_id` |
 | **Source des données** | Historique d'achat par client, calculé sur l'entrepôt |
 | **Calcul** | `src/prediction/`, commande `python -m prediction.scorer` |
-| **Seuil d'alerte** | Aucun en propre — c'est le segment ci-dessous qui fixe un seuil |
+| **Seuil d'alerte** | Aucun. Le segment retenu ci-dessous n'utilise pas ce score |
 
 **Ce qu'il ne dit pas.** Le score **n'explique pas pourquoi** un client partirait :
 il mesure une ressemblance avec des clients qui ne sont pas revenus. Une
@@ -454,47 +454,48 @@ mauvais modèle.
 
 | | |
 |---|---|
-| **Définition** | Les clients, parmi ceux qui ont déjà commandé, dont la probabilité de ré-achat est la plus élevée : ceux que le modèle juge les plus susceptibles de revenir, et à qui il vaut peut-être la peine de s'adresser |
-| **Formule** | `probabilité ≥ seuil`, le seuil étant le score du dernier client retenu dans la taille de segment choisie |
-| **Granularité** | Liste de clients, et effectif total |
-| **Source des données** | Scores du modèle |
-| **Seuil retenu** | **Les 250 clients aux scores les plus élevés**, soit un score supérieur ou égal à 0,6335 |
+| **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date de référence 2017-09-30 |
+| **Granularité** | Liste de clients (`customer_unique_id`), et effectif total |
+| **Source des données** | `dwh.v_historique_client` — le segment n'utilise pas le score du modèle |
+| **Seuil retenu** | Aucun seuil de score : filtre déterministe, sans graine ni réentraînement |
 
-**Ce que ce seuil coûte.** Sur 250 clients retenus, **14 reviendront
-réellement et 236 seront sollicités pour rien** — soit 5,6 % de réussite,
-contre 1,58 % en prenant des clients au hasard : **3,5 fois mieux**. L'effectif
-est petit (14 clients) : le chiffre est indicatif, et quelques clients de plus
-ou de moins le font varier sensiblement.
+**Ce que ce segment coûte.** Il contient **711 clients**, soit 2,7 % des 26 190
+clients de la date de référence. Dans les 180 jours suivants, **32 ont recommandé
+et 679 seront sollicités pour rien** : 4,5 % de réussite, contre 1,58 % en prenant
+des clients au hasard, soit **2,85 fois mieux**.
 
-**Pourquoi s'arrêter à 250.** Au-delà, le gain tombe : passer à 500 clients n'en
-retrouve qu'un de plus (15 contre 14) pour 250 sollicitations supplémentaires,
-et le gain passe sous 2 fois (1,9 à 500 clients, 1,46 à 1 000). Pour
-comparaison, la règle « deux commandes ou plus » signale 711 clients pour 32
-retours (4,5 %). Ce seuil suppose qu'une sollicitation inutile coûte peu ;
-s'il s'agissait d'un appel téléphonique, il faudrait viser plus serré.
+**Ce qu'il ne couvre pas.** Il ne retrouve que 7,7 % des 413 retours observés :
+plus de 92 % des clients qui reviennent n'en font pas partie, parce qu'ils n'avaient
+commandé qu'une fois. Le segment est petit et peu précis ; il convient à une action
+ciblée, pas à une campagne de masse.
 
-**Pourquoi c'est le haut de la liste, et non les clients à faible
-probabilité.** 98 % des clients ne reviennent pas : une liste des clients à
-faible probabilité en contiendrait plus de 25 000, sans permettre aucune
-action. Le segment exploitable est donc le petit nombre de clients que le
-modèle repère comme les plus susceptibles de revenir.
+**Pourquoi cette règle plutôt que le modèle.** C'était la référence naïve du
+protocole, définie avant toute mesure. À nombre de clients signalés égal (711), elle
+retrouve 32 retours contre 18 pour le modèle (voir `docs/contrats/modele.md`). Elle
+s'explique en une phrase et ne dépend pas des 75 retours d'entraînement, trop peu
+nombreux pour un modèle stable. Le classement du modèle reste un livrable, avec ses
+limites : il contient un signal faible (13,6 % des retours dans les 10 % les mieux
+classés, pour 10 % attendus au hasard).
 
-**Pourquoi le seuil est une décision et non un calcul.** Viser large retient
-plus de clients mais en sollicite davantage qui seraient revenus seuls ; viser
-étroit en laisse de côté. **Il n'existe pas de bon seuil dans l'absolu** —
-seulement un compromis assumé, qui dépend de ce que coûte une sollicitation
-inutile.
+**Alternative écartée.** Retenir les 250 clients aux scores les plus élevés du modèle
+(score ≥ 0,6335) donnait 14 retours sur 250 (5,6 %, 3,5 fois mieux que le hasard).
+Elle est plus précise, mais elle repose sur 14 clients seulement et sur un modèle
+instable : quelques clients de plus ou de moins la font varier sensiblement.
 
-**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus**, ni de
-clients qui risquent de partir : c'est une liste de clients à qui il vaudrait
-peut-être la peine de s'adresser. La différence compte, parce qu'elle décide de
-ce qu'on en fait. Le modèle qui produit les scores ne fait pas mieux que la
-règle « deux commandes ou plus » au F1 (voir `docs/contrats/modele.md`) : le
-segment est un classement des clients, pas une prédiction fiable.
+**Un choix fait après avoir vu l'évaluation.** La règle existait avant les résultats,
+mais la décision de la retenir a été prise après lecture de l'évaluation du
+2017-09-30. L'écart avec le modèle est petit en valeur absolue (14 retours sur 413) :
+il est suggestif, pas démontré, et une seule date d'évaluation a été mesurée.
+
+**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus** ni de clients
+qui risquent de partir : c'est une liste de clients à qui il vaudrait peut-être la
+peine de s'adresser. Un client du segment n'est pas sûr de revenir (95,5 % ne sont
+pas revenus), et un client hors segment n'est pas sûr de ne pas revenir.
 
 **Les clients sans historique n'y figurent pas.** Un client dont la première
-commande est postérieure à la date de référence n'a pas de passé à analyser :
-il est hors du jeu, et non « à faible risque ».
+commande est postérieure à la date de référence n'a pas de passé à analyser : il est
+hors du jeu, et non « à faible risque ».
 
 ---
 
