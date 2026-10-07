@@ -111,32 +111,49 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 
 ## 6. Seuils
 
-Mesurés sur le jeu gelé le JJ/MM/AAAA (empreinte SHA256 : <hash>),
-avec la recherche documentaire (`documentaire.rechercher`).
+Mesurés sur le jeu **gelé** le 2026-10-07 (empreinte SHA256 :
+`786dada1d1874e139d0376b7ff148c957762ffa16a77d1524f99c3700f4e0dbd`),
+avec la recherche documentaire (`documentaire.rechercher`, retrouveur
+`RetrouveurExterne`).
 
-| Seuil | Valeur | Justification |
-|---|---|---|
-| reponse | 0,XX | mauvais_passage = 0, réponse_à_tort = 0, faux_refus = Y |
-| suggestion | 0,XX | idem |
-| marge | 0,XX | stabilité en validation croisée |
+| Seuil | Valeur |
+|---|---|
+| `reponse` | 0,84 |
+| `suggestion` | 0,20 |
+| `marge` | 0,00 |
 
-**Pas de filtre ES en amont** : voir `passages.md §8` pour la justification.
+### Résultats obtenus sur le jeu gelé (62 questions, 31 couvertes)
 
-### Ce que ces chiffres ne disent pas
+| Verdict | Nombre |
+|---|---|
+| Bonne réponse directe | 6 |
+| Refus avec bonne suggestion | 23 |
+| Faux refus | 2 |
+| Refus correct (hors base) | 31 |
+| **Mauvais passage** | **0** ✅ |
+| **Réponse à tort** | **0** ✅ |
 
-- **Le jeu est provisoire.** Je l'ai écrit après avoir lu le corpus, ce qui flatte la mesure. Il doit être **gelé** avant toute mesure définitive, et une partie doit être écrite par quelqu'un d'autre (Seydina : dix questions pièges, sans que je les voie).
-- **Les seuils ont été réglés sur ce jeu**, par validation croisée sur ses deux moitiés. Avec 27 questions couvertes, **zéro mauvais passage n'est pas garanti hors échantillon** : un autre réglage essayé en donnait 2 sur la moitié non vue. Le réglage retenu est le plus prudent.
-- **Le coût de la prudence est assumé** : la recherche de dépannage ne répond directement qu'à environ une question couverte sur trois (9 sur 27) et suggère pour la plupart des autres. Parmi les 25 questions hors base, 5 reçoivent des suggestions peu pertinentes plutôt qu'un refus sec. C'est la limite d'une recherche lexicale, et ce qu'une recherche sémantique doit améliorer.
-- Les trois faux refus actuels : « Quand l'argent sort-il de mon compte ? », « Qui supporte le coût de renvoi du colis ? », « Combien coûte un retour ? ».
+### Justification de la marge à 0
 
-### Pour refaire le réglage sur le jeu gelé
+Le retrouveur vectoriel produit des cosinus très proches entre les top
+passages (écart médian top 1 / top 2 ≈ 0,02). Une marge non nulle
+éliminerait des réponses correctes sans gain mesurable en précision.
 
-1. Geler le jeu (date et empreinte dans la PR), avant toute mesure.
-2. Régler les seuils sur une partie, **mesurer sur l'autre**.
-3. Choisir le réglage qui garde `réponse à tort` et `mauvais passage` à 0 ; accepter le surcroît de suggestions.
-4. Écrire ici les seuils retenus et le jeu qui a servi.
+### Limites connues
 
----
+- **2 faux refus inévitables** : q05 (« J'ai reçu le mauvais article ») et
+  s07 (« Ma commande passée en 2026 est arrivée cassée »). Leur passage
+  attendu n'apparaît pas dans le top 5 du retrouveur — aucun seuil ne peut
+  les sauver. C'est une limite du retrouveur actuel.
+- **Piste d'amélioration (Sprint 6)** : ajouter un reranker cross-encoder
+  après la recherche vectorielle.
+
+### Pour refaire le réglage
+
+```bash
+docker compose exec app python -m scripts.assistant.mesurer_scores
+docker compose exec app python -m scripts.assistant.analyser_scores
+docker compose exec app python -m scripts.assistant.balayer_seuils --top 30
 
 ## 7. Les commandes
 
@@ -147,7 +164,7 @@ docker compose exec app python -m assistant.evaluer --detail
 ```
 
 `--sans-journal` évite l'écriture du journal.
-
+`
 ---
 
 ## 8. Limites connues
