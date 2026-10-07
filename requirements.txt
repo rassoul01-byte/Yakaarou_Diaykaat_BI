@@ -42,4 +42,4 @@ scikit-learn>=1.4,<2          # BD · modèle de ré-achat (prediction)
 fastapi>=0.115,<1             # NPS · service référentiel local
 uvicorn>=0.30,<1              # NPS · serveur du service
 httpx>=0.27,<1                # NPS · appels aux services publics et client interne
-
+fastembed==0.8.1        # modèle de vecteurs de la base documentaire (F5.2)

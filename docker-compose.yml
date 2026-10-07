@@ -218,6 +218,11 @@ services:
       PYTHONPATH: /app/src
       DRIVE_OLIST_ID: ${DRIVE_OLIST_ID}
       RUFF_CACHE_DIR: /tmp/.ruff_cache
+      # Modèle de vecteurs (fastembed) : l'utilisateur 50000 n'a pas de dossier personnel,
+      # donc le cache de Hugging Face est redirigé vers un dossier accessible en écriture.
+      HF_HOME: /tmp/hf_home
+      HF_HUB_DISABLE_XET: "1"
+      FASTEMBED_CACHE_PATH: /app/data/.cache/fastembed
       DRIVE_RAKUTEN_ID: ${DRIVE_RAKUTEN_ID}
       CATALOGUE_RAKUTEN: ${CATALOGUE_RAKUTEN:-data/sources/rakuten/rakuten_catalogue_produits.csv}
       CLIENTS_OLIST: ${CLIENTS_OLIST:-data/sources/olist/olist_customers_dataset.csv}

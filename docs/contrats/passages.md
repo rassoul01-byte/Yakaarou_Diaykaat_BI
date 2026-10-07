@@ -37,21 +37,23 @@ Pourquoi vectoriser la question **et** la réponse : une question de client refo
 
 ## 4. Le modèle de vecteurs
 
-À valider avec Bachir avant le jour 3, parce que la même famille de modèle doit servir à l'indexation et à la recherche.
+Le même modèle sert à l'indexation et à la recherche : en changer impose `--recreer`.
 
-| Point | Proposition |
+| Point | Choix |
 |---|---|
 | Bibliothèque | `fastembed` |
-| Modèle | un modèle **multilingue** (la FAQ est en français) ; candidat : `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` |
-| Dimension | celle du modèle retenu (384 pour le candidat) |
+| Modèle | `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (multilingue, la FAQ est en français) |
+| Dimension | 384 |
 | Similarité | cosinus |
 
-**À vérifier en Python avant de figer** : que le modèle figure bien dans `TextEmbedding.list_supported_models()` de la version installée, et sa dimension réelle. Le contrat sera mis à jour avec le nom exact et la dimension confirmés.
+Vérifié dans `TextEmbedding.list_supported_models()` du conteneur. Alternatives disponibles si la qualité de recherche est insuffisante : `paraphrase-multilingual-mpnet-base-v2` (768) ou `multilingual-e5-large` (1024), plus lourds. **À valider avec Bachir.**
+
+Limite connue : ce modèle ne lit qu'environ 128 mots par texte. Les réponses plus longues sont tronquées à la vectorisation (le texte complet reste dans l'index et dans les résultats).
 
 ## 5. L'index Elasticsearch
 
 - Nom : `faq_passages`.
-- `vecteur` : type `dense_vector`, dimension du modèle, similarité cosinus, indexé pour la recherche kNN.
+- `vecteur` : type `dense_vector`, 384 dimensions, similarité cosinus, indexé pour la recherche kNN.
 - `id`, `theme`, `source` : type `keyword`.
 - `question`, `reponse`, `texte` : type `text`.
 - `maj` : type `date`.
@@ -61,7 +63,7 @@ Pourquoi vectoriser la question **et** la réponse : une question de client refo
 - L'identifiant du document Elasticsearch **est** l'`id` du passage. Réindexer un passage le remplace, il ne le duplique pas.
 - Après indexation, les passages présents dans l'index mais absents de `faq.jsonl` sont supprimés : l'index reflète exactement le fichier.
 - Lancer l'indexation deux fois de suite donne le même nombre de passages et les mêmes contenus.
-- Avant d'indexer, `src/documentaire/verifier.py` doit passer. S'il échoue, rien n'est indexé.
+- Avant d'indexer, `python -m documentaire.verifier` doit passer. L'indexeur refuse de lui-même un fichier illisible, un champ vide ou un identifiant en double : dans ces cas rien n'est indexé.
 
 ## 7. La recherche : ce que reçoit l'assistant
 
@@ -88,7 +90,7 @@ Sortie : une liste de passages triés par pertinence décroissante, au format su
 Règles :
 
 - Chaque résultat porte sa `source`. L'assistant l'affiche telle quelle dans ses citations.
-- `score` est la similarité cosinus, entre 0 et 1 : plus il est haut, plus le passage est proche.
+- `score` est celui d'Elasticsearch pour la similarité cosinus, soit (1 + cosinus) / 2 : entre 0 et 1, plus il est haut, plus le passage est proche.
 - La liste peut être **vide** ou ne contenir que de faibles scores. C'est à l'assistant de décider qu'il ne sait pas.
 - La recherche ne rédige jamais de réponse. Elle renvoie des passages, rien d'autre.
 
@@ -99,16 +101,25 @@ Le seuil de score sous lequel aucun passage n'est considéré comme pertinent es
 - Proposition : le fixer en mesurant les scores sur un jeu de questions couvertes et un jeu de questions hors base (prix, commande en cours, remboursement personnalisé), puis en choisissant la valeur qui sépare les deux.
 - Le seuil choisi, et le jeu qui a servi à le choisir, sont écrits ici une fois décidés.
 
-Seuil retenu : *à renseigner*.
+Mesure du 2026-10-06, sur 24 questions reformulées et 8 questions hors base :
+
+- Le bon passage est premier dans 15 cas sur 24, et dans les trois premiers dans 20 cas sur 24. Les échecs viennent de questions qui n'emploient pas les mots de la FAQ, ou qui contiennent des fautes de frappe.
+- Le plus bas score d'un bon premier résultat est 0,69. Les questions sans rapport (capitale, prix, promotions, boutique physique, « Bonjour ») obtiennent de 0,58 à 0,65 : un seuil vers 0,67 les écarte sans perdre de bonne réponse, sur cet échantillon.
+- **Un seuil de score seul ne suffit pas.** Une question sur une commande précise (« Où en est ma commande numéro 4521 ? ») obtient 0,83, et une demande de remboursement personnalisé 0,73, parce qu'elles reprennent le vocabulaire de la FAQ. L'assistant doit refuser ces cas par une règle supplémentaire (commande ou montant précis), pas par le score.
+- L'échantillon hors base est petit (8 questions) : le seuil est à confirmer sur un jeu plus large.
+
+Seuil retenu : 0,67 (provisoire, à revalider sur un jeu hors base plus large).
 
 ## 9. Les commandes
 
-À adapter si les noms changent à l'implémentation.
-
 ```bash
-python -m src.documentaire.indexer                      # indexe, de façon idempotente
-python -m src.documentaire.rechercher "ma question" -k 3  # affiche le JSON du §7
+docker compose exec app python -m documentaire.verifier
+docker compose exec app python -m documentaire.indexer             # idempotent
+docker compose exec app python -m documentaire.indexer --recreer   # si la structure change
+docker compose exec app python -m documentaire.rechercher "ma question" -k 3
 ```
+
+La recherche affiche le JSON du §7 ; code de sortie 0 même sans résultat, 1 si Elasticsearch ne répond pas.
 
 ## 10. Critères de réussite
 
@@ -122,6 +133,6 @@ python -m src.documentaire.rechercher "ma question" -k 3  # affiche le JSON du �
 
 | Point | Avec qui | Échéance |
 |---|---|---|
-| Nom exact et dimension du modèle fastembed | Bachir | jour 3 |
+| Validation du modèle de vecteurs (MiniLM multilingue, 384) | Bachir | jour 3 |
 | Seuil « je ne sais pas » | Bachir | quand l'assistant tourne sur les passages réels |
 | Relecteur : `faq.md` indique Mouhameth DIOP, ce contrat Bachir DEME | équipe | à aligner dans `ROLES.md` |
