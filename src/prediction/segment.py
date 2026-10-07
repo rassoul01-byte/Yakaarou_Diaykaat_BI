@@ -2,8 +2,9 @@
 
 Le modèle produit un score par client. En faire une liste exploitable suppose
 un seuil, et **il n'existe pas de bon seuil dans l'absolu** : viser large
-retient plus de clients à risque mais sollicite des gens qui seraient revenus
-seuls ; viser étroit rate des départs.
+retient plus de clients qui reviendront mais en sollicite beaucoup qui ne
+reviendront pas ; viser étroit sollicite moins de monde pour rien mais laisse de
+côté des clients qui reviendront.
 
 Ce module ne choisit pas à la place du Product Owner. Il montre ce que chaque
 taille de segment rapporte et ce qu'elle coûte, pour que le choix soit fait
