@@ -4,6 +4,7 @@ Le jeu est gelé (voir jeu_de_questions.gel.json) : 52 questions provisoires éc
 l'auteur de l'assistant, plus 10 questions pièges écrites par Seydina (origine « seydina »).
 Toute modification du jeu invalide l'empreinte SHA256 et doit être suivie d'un nouveau gel.
 """
+
 from collections import Counter
 
 from assistant.evaluer import evaluer, lire_jeu, synthese
