@@ -190,7 +190,7 @@ services:
     build: { context: ., dockerfile: docker/app/Dockerfile }
     container_name: df_referentiel
     environment:
-      PYTHONPATH: /app/src
+      PYTHONPATH: /app/src:/app 
       REFERENTIEL_RACINE: /app/data/raw/referentiel
     volumes:
       - ./src:/app/src

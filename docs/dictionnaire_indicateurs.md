@@ -207,8 +207,9 @@ compte pas ici : le total ne correspond donc pas au nombre de lignes de
 | **Calcul** | Mêmes vues |
 
 **Ce qu'il ne dit pas.** Ce n'est pas ce qu'un client dépense : une personne
-peut avoir passé plusieurs commandes. La dépense par client viendra avec
-l'historique d'achat, au Sprint 5.
+peut avoir passé plusieurs commandes. La dépense par client n'est pas un
+indicateur publié ; seul l'historique d'achat (`montant_total` de
+`dwh.v_historique_client`) la porte, pour le segment du Sprint 5.
 
 ### Produits et catégories les plus vendus
 
@@ -334,6 +335,29 @@ pas.
 
 ---
 
+### Requêtes sans résultat
+
+| | |
+|---|---|
+| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
+| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
+| **Granularité** | Par requête, classée par fréquence |
+| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
+| **Calcul** | `python -m recherche.sans_resultat` |
+| **Seuil d'alerte** | Aucun |
+
+**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
+manque du catalogue, soit une faiblesse du moteur. C'est la matière de
+l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
+répondre demain.
+
+**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
+désignations du catalogue : ce sont des fragments de titres, pas des recherches
+humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
+mesuré n'a donc aucune valeur commerciale.
+
+---
+
 ### Retard du flux
 
 | | |
@@ -416,6 +440,7 @@ normale ne la déclenche pas. **Les deux cas doivent être montrés en
 démonstration** — le second est le plus important.
 
 ---
+
 ## Indicateurs de prédiction et d'assistance — Sprint 5
 
 > ⚠️ **Deux indicateurs de ce sprint mesurent un modèle, pas une réalité.** La
@@ -430,7 +455,7 @@ démonstration** — le second est le plus important.
 | **Définition** | Score entre 0 et 1 estimant la chance qu'un client passe une nouvelle commande dans les 180 jours suivant la date de référence |
 | **Formule** | Sortie du modèle entraîné selon `docs/contrats/modele.md` |
 | **Granularité** | Un score par client, identifié par `customer_unique_id` |
-| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt |
+| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt (`dwh.v_historique_client`) |
 | **Calcul** | `src/prediction/`, commande `python -m prediction.scorer` |
 | **Seuil d'alerte** | Aucun. Le segment retenu ci-dessous n'utilise pas ce score |
 
@@ -455,9 +480,11 @@ mauvais modèle.
 | | |
 |---|---|
 | **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
-| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date de référence 2017-09-30 |
-| **Granularité** | Liste de clients (`customer_unique_id`), et effectif total |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date de référence la plus récente (2017-09-30) |
+| **Granularité** | Une ligne par client (`customer_unique_id`) avec `date_reference`, `commandes`, `montant_total` et `recence_jours` ; l'effectif total se compte sur la vue |
 | **Source des données** | `dwh.v_historique_client` — le segment n'utilise pas le score du modèle |
+| **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`) |
+| **Consultation** | `SELECT * FROM dwh.v_segment_a_retenir` |
 | **Seuil retenu** | Aucun seuil de score : filtre déterministe, sans graine ni réentraînement |
 
 **Ce que ce segment coûte.** Il contient **711 clients**, soit 2,7 % des 26 190
@@ -505,8 +532,10 @@ hors du jeu, et non « à faible risque ».
 |---|---|
 | **Définition** | Part des réponses de l'assistant qui s'appuient sur au moins un passage cité de la base documentaire |
 | **Formule** | `réponses citant au moins un passage ÷ réponses totales × 100` |
-| **Granularité** | Sur un jeu de questions fixé |
-| **Source des données** | Journal des réponses de l'assistant |
+| **Granularité** | Sur un jeu de questions fixé et gelé (date et empreinte : `docs/contrats/assistant.md`, §6) |
+| **Source des données** | Journal des réponses de l'assistant (fichier `.jsonl`, `docs/contrats/assistant.md`, §5) |
+| **Calcul** | `python -m assistant.evaluer`, avec la recherche `RetrouveurExterne` |
+| **Dernière mesure** | **[À COMPLÉTER après le gel du jeu : valeur, date du gel, nombre de questions]** |
 | **Seuil d'alerte** | **100 %**. Une réponse sans source est un défaut, pas une statistique |
 
 **Pourquoi le seuil est à 100 %.** Un refus poli — « je n'ai pas cette
@@ -520,32 +549,18 @@ réponse peut citer un passage et le résumer de travers. Il mesure que
 l'assistant **ne parle pas sans source** — c'est nécessaire, ce n'est pas
 suffisant.
 
+**Il vaut 100 % par construction.** L'assistant sélectionne et cite des passages, il
+ne rédige rien : une réponse sans citation ne peut pas être construite. Une mesure
+à 100 % confirme donc le dispositif, elle ne prouve pas la qualité de la recherche.
+Ce qui renseigne sur cette qualité — réponses données à tort, mauvais passage cité,
+faux refus — est calculé par `assistant.evaluer` (voir `docs/contrats/assistant.md`)
+mais ne figure pas parmi les indicateurs publiés : pour être présenté, un de ces
+chiffres doit d'abord être ajouté ici.
+
 **Le jeu de questions est fixé à l'avance** et versionné, avec des questions
-couvertes par la base et des questions qui ne le sont pas. Mesurer sur des
+couvertes par la base et des questions qui ne le sont pas, dont dix questions
+pièges écrites par une personne qui ne connaissait pas les seuils. Mesurer sur des
 exemples choisis après coup ne mesurerait rien.
-
----
-
-### Requêtes sans résultat
-
-| | |
-|---|---|
-| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
-| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
-| **Granularité** | Par requête, classée par fréquence |
-| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
-| **Calcul** | `python -m recherche.sans_resultat` |
-| **Seuil d'alerte** | Aucun |
-
-**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
-manque du catalogue, soit une faiblesse du moteur. C'est la matière de
-l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
-répondre demain.
-
-**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
-désignations du catalogue : ce sont des fragments de titres, pas des recherches
-humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
-mesuré n'a donc aucune valeur commerciale.
 
 ---
 
@@ -562,12 +577,15 @@ document existe pour empêcher.
 
 ---
 
-## À venir
+## Non documentés à ce jour
 
-| Sprint | Indicateurs |
+| Indicateur | Statut |
 |---|---|
-| 4 | Qualité de la recherche : requêtes sans résultat |
-| 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
+| Délai de livraison moyen | Annoncé pour le Sprint 5, **non écrit**. Le document du sprint n'autorise pas d'ajout : à écrire, ou à inscrire en dette dans le dossier de conception |
+| Note moyenne | Idem |
 
-Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
-**trafic simulé** : la mention devra apparaître partout où ils s'affichent.
+Ces deux indicateurs ne doivent apparaître ni dans un rapport, ni dans le tableau
+de bord, ni en soutenance tant qu'ils n'ont pas d'entrée ici.
+
+Les indicateurs de navigation (Sprint 4) reposent sur un **trafic simulé** : la
+mention doit apparaître partout où ils s'affichent.

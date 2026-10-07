@@ -223,3 +223,4 @@ data/
 # Copies de sauvegarde des éditeurs (nano, etc.)
 *.save
 *~
+data/scores_*.jsonl
