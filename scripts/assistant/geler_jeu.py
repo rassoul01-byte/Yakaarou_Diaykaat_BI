@@ -15,7 +15,7 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 JEU = Path("tests/assistant/jeu_de_questions.jsonl")
@@ -83,7 +83,7 @@ def geler(chemin: Path) -> int:
     lignes = lire_lignes(chemin)
     empreinte = sha256(chemin)
     meta = {
-        "date_gel": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "date_gel": datetime.now(UTC).isoformat(timespec="seconds"),
         "sha256": empreinte,
         "nb_questions": len(lignes),
         "fichier": chemin.name,
