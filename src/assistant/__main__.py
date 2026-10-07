@@ -17,6 +17,7 @@ import sys
 from .assistant import repondre
 from .fabrique import creer_retrouveur
 from .journal import JournalFichier
+from .passages import ErreurCorpus
 from .retrouveur import ReponseContratInvalide
 
 
@@ -45,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
         retrouveur = creer_retrouveur()
         journal = None if arguments.sans_journal else JournalFichier()
         reponse = repondre(" ".join(arguments.question), retrouveur, k=arguments.k, journal=journal)
+    except ErreurCorpus as erreur:
+        print(f"ERREUR : la foire aux questions n'est pas exploitable ({erreur})", file=sys.stderr)
+        return 1
     except (ConnectionError, OSError) as erreur:
         print(f"ERREUR : Elasticsearch ne répond pas ({erreur})", file=sys.stderr)
         return 1
