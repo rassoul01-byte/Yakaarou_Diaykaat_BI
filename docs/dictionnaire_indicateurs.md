@@ -207,8 +207,9 @@ compte pas ici : le total ne correspond donc pas au nombre de lignes de
 | **Calcul** | Mêmes vues |
 
 **Ce qu'il ne dit pas.** Ce n'est pas ce qu'un client dépense : une personne
-peut avoir passé plusieurs commandes. La dépense par client viendra avec
-l'historique d'achat, au Sprint 5.
+peut avoir passé plusieurs commandes. La dépense par client n'est pas un
+indicateur publié ; seul l'historique d'achat (`montant_total` de
+`dwh.v_historique_client`) la porte, pour le segment du Sprint 5.
 
 ### Produits et catégories les plus vendus
 
@@ -334,6 +335,29 @@ pas.
 
 ---
 
+### Requêtes sans résultat
+
+| | |
+|---|---|
+| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
+| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
+| **Granularité** | Par requête, classée par fréquence |
+| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
+| **Calcul** | `python -m recherche.sans_resultat` |
+| **Seuil d'alerte** | Aucun |
+
+**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
+manque du catalogue, soit une faiblesse du moteur. C'est la matière de
+l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
+répondre demain.
+
+**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
+désignations du catalogue : ce sont des fragments de titres, pas des recherches
+humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
+mesuré n'a donc aucune valeur commerciale.
+
+---
+
 ### Retard du flux
 
 | | |
@@ -416,6 +440,7 @@ normale ne la déclenche pas. **Les deux cas doivent être montrés en
 démonstration** — le second est le plus important.
 
 ---
+
 ## Indicateurs de prédiction et d'assistance — Sprint 5
 
 > ⚠️ **Deux indicateurs de ce sprint mesurent un modèle, pas une réalité.** La
@@ -430,9 +455,9 @@ démonstration** — le second est le plus important.
 | **Définition** | Score entre 0 et 1 estimant la chance qu'un client passe une nouvelle commande dans les 180 jours suivant la date de référence |
 | **Formule** | Sortie du modèle entraîné selon `docs/contrats/modele.md` |
 | **Granularité** | Un score par client, identifié par `customer_unique_id` |
-| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt |
+| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt (`dwh.v_historique_client`) |
 | **Calcul** | `src/prediction/`, commande `python -m prediction.scorer` |
-| **Seuil d'alerte** | Aucun en propre — c'est le segment ci-dessous qui fixe un seuil |
+| **Seuil d'alerte** | Aucun. Le segment retenu ci-dessous n'utilise pas ce score |
 
 **Ce qu'il ne dit pas.** Le score **n'explique pas pourquoi** un client partirait :
 il mesure une ressemblance avec des clients qui ne sont pas revenus. Une
@@ -454,47 +479,50 @@ mauvais modèle.
 
 | | |
 |---|---|
-| **Définition** | Les clients, parmi ceux qui ont déjà commandé, dont la probabilité de ré-achat est la plus élevée : ceux que le modèle juge les plus susceptibles de revenir, et à qui il vaut peut-être la peine de s'adresser |
-| **Formule** | `probabilité ≥ seuil`, le seuil étant le score du dernier client retenu dans la taille de segment choisie |
-| **Granularité** | Liste de clients, et effectif total |
-| **Source des données** | Scores du modèle |
-| **Seuil retenu** | **Les 250 clients aux scores les plus élevés**, soit un score supérieur ou égal à 0,6335 |
+| **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date de référence la plus récente (2017-09-30) |
+| **Granularité** | Une ligne par client (`customer_unique_id`) avec `date_reference`, `commandes`, `montant_total` et `recence_jours` ; l'effectif total se compte sur la vue |
+| **Source des données** | `dwh.v_historique_client` — le segment n'utilise pas le score du modèle |
+| **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`) |
+| **Consultation** | `SELECT * FROM dwh.v_segment_a_retenir` |
+| **Seuil retenu** | Aucun seuil de score : filtre déterministe, sans graine ni réentraînement |
 
-**Ce que ce seuil coûte.** Sur 250 clients retenus, **14 reviendront
-réellement et 236 seront sollicités pour rien** — soit 5,6 % de réussite,
-contre 1,58 % en prenant des clients au hasard : **3,5 fois mieux**. L'effectif
-est petit (14 clients) : le chiffre est indicatif, et quelques clients de plus
-ou de moins le font varier sensiblement.
+**Ce que ce segment coûte.** Il contient **711 clients**, soit 2,7 % des 26 190
+clients de la date de référence. Dans les 180 jours suivants, **32 ont recommandé
+et 679 seront sollicités pour rien** : 4,5 % de réussite, contre 1,58 % en prenant
+des clients au hasard, soit **2,85 fois mieux**.
 
-**Pourquoi s'arrêter à 250.** Au-delà, le gain tombe : passer à 500 clients n'en
-retrouve qu'un de plus (15 contre 14) pour 250 sollicitations supplémentaires,
-et le gain passe sous 2 fois (1,9 à 500 clients, 1,46 à 1 000). Pour
-comparaison, la règle « deux commandes ou plus » signale 711 clients pour 32
-retours (4,5 %). Ce seuil suppose qu'une sollicitation inutile coûte peu ;
-s'il s'agissait d'un appel téléphonique, il faudrait viser plus serré.
+**Ce qu'il ne couvre pas.** Il ne retrouve que 7,7 % des 413 retours observés :
+plus de 92 % des clients qui reviennent n'en font pas partie, parce qu'ils n'avaient
+commandé qu'une fois. Le segment est petit et peu précis ; il convient à une action
+ciblée, pas à une campagne de masse.
 
-**Pourquoi c'est le haut de la liste, et non les clients à faible
-probabilité.** 98 % des clients ne reviennent pas : une liste des clients à
-faible probabilité en contiendrait plus de 25 000, sans permettre aucune
-action. Le segment exploitable est donc le petit nombre de clients que le
-modèle repère comme les plus susceptibles de revenir.
+**Pourquoi cette règle plutôt que le modèle.** C'était la référence naïve du
+protocole, définie avant toute mesure. À nombre de clients signalés égal (711), elle
+retrouve 32 retours contre 18 pour le modèle (voir `docs/contrats/modele.md`). Elle
+s'explique en une phrase et ne dépend pas des 75 retours d'entraînement, trop peu
+nombreux pour un modèle stable. Le classement du modèle reste un livrable, avec ses
+limites : il contient un signal faible (13,6 % des retours dans les 10 % les mieux
+classés, pour 10 % attendus au hasard).
 
-**Pourquoi le seuil est une décision et non un calcul.** Viser large retient
-plus de clients mais en sollicite davantage qui seraient revenus seuls ; viser
-étroit en laisse de côté. **Il n'existe pas de bon seuil dans l'absolu** —
-seulement un compromis assumé, qui dépend de ce que coûte une sollicitation
-inutile.
+**Alternative écartée.** Retenir les 250 clients aux scores les plus élevés du modèle
+(score ≥ 0,6335) donnait 14 retours sur 250 (5,6 %, 3,5 fois mieux que le hasard).
+Elle est plus précise, mais elle repose sur 14 clients seulement et sur un modèle
+instable : quelques clients de plus ou de moins la font varier sensiblement.
 
-**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus**, ni de
-clients qui risquent de partir : c'est une liste de clients à qui il vaudrait
-peut-être la peine de s'adresser. La différence compte, parce qu'elle décide de
-ce qu'on en fait. Le modèle qui produit les scores ne fait pas mieux que la
-règle « deux commandes ou plus » au F1 (voir `docs/contrats/modele.md`) : le
-segment est un classement des clients, pas une prédiction fiable.
+**Un choix fait après avoir vu l'évaluation.** La règle existait avant les résultats,
+mais la décision de la retenir a été prise après lecture de l'évaluation du
+2017-09-30. L'écart avec le modèle est petit en valeur absolue (14 retours sur 413) :
+il est suggestif, pas démontré, et une seule date d'évaluation a été mesurée.
+
+**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus** ni de clients
+qui risquent de partir : c'est une liste de clients à qui il vaudrait peut-être la
+peine de s'adresser. Un client du segment n'est pas sûr de revenir (95,5 % ne sont
+pas revenus), et un client hors segment n'est pas sûr de ne pas revenir.
 
 **Les clients sans historique n'y figurent pas.** Un client dont la première
-commande est postérieure à la date de référence n'a pas de passé à analyser :
-il est hors du jeu, et non « à faible risque ».
+commande est postérieure à la date de référence n'a pas de passé à analyser : il est
+hors du jeu, et non « à faible risque ».
 
 ---
 
@@ -504,8 +532,10 @@ il est hors du jeu, et non « à faible risque ».
 |---|---|
 | **Définition** | Part des réponses de l'assistant qui s'appuient sur au moins un passage cité de la base documentaire |
 | **Formule** | `réponses citant au moins un passage ÷ réponses totales × 100` |
-| **Granularité** | Sur un jeu de questions fixé |
-| **Source des données** | Journal des réponses de l'assistant |
+| **Granularité** | Sur un jeu de questions fixé et gelé (date et empreinte : `docs/contrats/assistant.md`, §6) |
+| **Source des données** | Journal des réponses de l'assistant (fichier `.jsonl`, `docs/contrats/assistant.md`, §5) |
+| **Calcul** | `python -m assistant.evaluer`, avec la recherche `RetrouveurExterne` |
+| **Dernière mesure** | **[À COMPLÉTER après le gel du jeu : valeur, date du gel, nombre de questions]** |
 | **Seuil d'alerte** | **100 %**. Une réponse sans source est un défaut, pas une statistique |
 
 **Pourquoi le seuil est à 100 %.** Un refus poli — « je n'ai pas cette
@@ -519,32 +549,18 @@ réponse peut citer un passage et le résumer de travers. Il mesure que
 l'assistant **ne parle pas sans source** — c'est nécessaire, ce n'est pas
 suffisant.
 
+**Il vaut 100 % par construction.** L'assistant sélectionne et cite des passages, il
+ne rédige rien : une réponse sans citation ne peut pas être construite. Une mesure
+à 100 % confirme donc le dispositif, elle ne prouve pas la qualité de la recherche.
+Ce qui renseigne sur cette qualité — réponses données à tort, mauvais passage cité,
+faux refus — est calculé par `assistant.evaluer` (voir `docs/contrats/assistant.md`)
+mais ne figure pas parmi les indicateurs publiés : pour être présenté, un de ces
+chiffres doit d'abord être ajouté ici.
+
 **Le jeu de questions est fixé à l'avance** et versionné, avec des questions
-couvertes par la base et des questions qui ne le sont pas. Mesurer sur des
+couvertes par la base et des questions qui ne le sont pas, dont dix questions
+pièges écrites par une personne qui ne connaissait pas les seuils. Mesurer sur des
 exemples choisis après coup ne mesurerait rien.
-
----
-
-### Requêtes sans résultat
-
-| | |
-|---|---|
-| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
-| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
-| **Granularité** | Par requête, classée par fréquence |
-| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
-| **Calcul** | `python -m recherche.sans_resultat` |
-| **Seuil d'alerte** | Aucun |
-
-**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
-manque du catalogue, soit une faiblesse du moteur. C'est la matière de
-l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
-répondre demain.
-
-**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
-désignations du catalogue : ce sont des fragments de titres, pas des recherches
-humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
-mesuré n'a donc aucune valeur commerciale.
 
 ---
 
@@ -561,12 +577,15 @@ document existe pour empêcher.
 
 ---
 
-## À venir
+## Non documentés à ce jour
 
-| Sprint | Indicateurs |
+| Indicateur | Statut |
 |---|---|
-| 4 | Qualité de la recherche : requêtes sans résultat |
-| 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
+| Délai de livraison moyen | Annoncé pour le Sprint 5, **non écrit**. Le document du sprint n'autorise pas d'ajout : à écrire, ou à inscrire en dette dans le dossier de conception |
+| Note moyenne | Idem |
 
-Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
-**trafic simulé** : la mention devra apparaître partout où ils s'affichent.
+Ces deux indicateurs ne doivent apparaître ni dans un rapport, ni dans le tableau
+de bord, ni en soutenance tant qu'ils n'ont pas d'entrée ici.
+
+Les indicateurs de navigation (Sprint 4) reposent sur un **trafic simulé** : la
+mention doit apparaître partout où ils s'affichent.
