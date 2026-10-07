@@ -17,8 +17,14 @@ from .retrouveur import Retrouveur, RetrouveurDepannage, RetrouveurExterne
 # Seuils de la recherche vectorielle. PROVISOIRES : repris du dépannage en
 # attendant la remesure sur le jeu gelé (passages.md §8). Échelle cosinus,
 # plus haut = plus proche.
-# TODO(F5): remplacer par les seuils mesurés sur le jeu gelé.
-SEUILS_EXTERNE = Seuils(reponse=0.35, suggestion=0.18, marge=0.12)
+
+# Seuils de la recherche vectorielle, mesurés sur le jeu gelé (62 questions)
+# le 2026-10-07 (SHA256 786dada1d1874e139d0376b7ff148c957762ffa16a77d1524f99c3700f4e0dbd).
+# Contraintes respectées : mauvais_passage=0, réponse_à_tort=0.
+# Résultats : 6 bonnes réponses, 23 suggestions, 2 faux refus (q05, s07 :
+# leur passage n'est pas dans le top 5 — limite du retrouveur).
+# Marge à 0 : les scores du retrouveur sont très serrés entre les top passages.
+SEUILS_EXTERNE = Seuils(reponse=0.84, suggestion=0.20, marge=0.00)
 
 
 def _recherche_documentaire(question: str, k: int) -> dict:
