@@ -14,3 +14,14 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(passer)
+
+
+@pytest.fixture(autouse=True)
+def _retrouveur_depannage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Les tests unitaires ne dépendent pas d'Elasticsearch.
+
+    Le retrouveur par défaut de l'assistant (RetrouveurExterne) exige un index
+    ES joignable, ce qui n'a pas de sens en test. On force le dépannage (TF-IDF
+    en mémoire). La couverture du retrouveur externe vit dans tests/integration/.
+    """
+    monkeypatch.setenv("ASSISTANT_RETROUVEUR", "depannage")
