@@ -16,6 +16,7 @@ import sys
 
 import psycopg2
 
+from .classement import lignes_rapport
 from .donnees import DATE_ENTRAINEMENT, DATE_EVALUATION, lire, separer, verifier_absence_de_fuite
 from .modele import entrainer, evaluer, influences
 
@@ -56,10 +57,20 @@ def afficher(evaluation, variables_influentes) -> None:
     )
     print(f"\n  {verdict}")
 
+    if evaluation.classement:
+        print()
+        for ligne in lignes_rapport(evaluation.classement):
+            print(ligne)
+
     print("\n  Variables les plus influentes\n")
     for nom, coefficient in variables_influentes:
         sens = "augmente" if coefficient > 0 else "diminue"
         print(f"    {nom:<26}{coefficient:>8}   {sens} la chance de retour")
+    print(
+        "\n  Les variables sont liées entre elles (le montant total est le montant"
+        "\n  moyen multiplié par le nombre de commandes) : les coefficients ne se"
+        "\n  lisent pas un à un."
+    )
 
     print(
         "\n  L'exactitude n'est pas calculée : un modèle qui répondrait « ne revient"
