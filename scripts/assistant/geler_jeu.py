@@ -26,8 +26,7 @@ ATTENDUS_VALIDES = {"reponse", "refus"}
 
 
 def lire_lignes(chemin: Path) -> list[str]:
-    return [l for l in chemin.read_text(encoding="utf-8").splitlines() if l.strip()]
-
+    return [ligne for ligne in chemin.read_text(encoding="utf-8").splitlines() if ligne.strip()]
 
 def valider(chemin: Path) -> tuple[bool, list[str]]:
     """Vérifie le format du jeu. Retourne (ok, liste d'erreurs)."""
