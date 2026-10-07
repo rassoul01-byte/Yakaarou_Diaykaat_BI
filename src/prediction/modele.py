@@ -11,6 +11,8 @@ from sklearn.metrics import confusion_matrix, f1_score, precision_score, recall_
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from .classement import mesures_classement
+
 GRAINE = 42
 
 # Pondération des classes : la classe rare pèse davantage à l'entraînement.
@@ -32,6 +34,9 @@ class Evaluation:
     positifs_reels: int
     total: int
     naives: dict = field(default_factory=dict)
+    # Mesures indépendantes du seuil (voir classement.py). Vide s'il n'y a aucun
+    # client revenu : le classement n'a alors pas de sens.
+    classement: dict = field(default_factory=dict)
 
     @property
     def part_positifs(self) -> float:
@@ -89,13 +94,17 @@ def probabilites_de_retour(modele: Pipeline, variables: pd.DataFrame):
     return modele.predict_proba(variables)[:, 1]
 
 
+def _regle_deux_commandes(variables: pd.DataFrame):
+    return (variables["commandes"] >= 2).astype(int).to_numpy()
+
+
 def regles_naives(variables: pd.DataFrame, cible: pd.Series) -> dict:
     """Deux règles en une ligne, qui servent de juge au modèle."""
     import numpy as np
 
     regles = {
         "tous negatifs": np.zeros(len(cible), dtype=int),
-        "deux commandes ou plus": (variables["commandes"] >= 2).astype(int).to_numpy(),
+        "deux commandes ou plus": _regle_deux_commandes(variables),
     }
     return {
         nom: {
@@ -117,6 +126,14 @@ def evaluer(modele: Pipeline, variables: pd.DataFrame, cible: pd.Series) -> Eval
     prediction = modele.predict(variables)
     vn, fp, fn, vp = confusion_matrix(cible, prediction, labels=[0, 1]).ravel()
 
+    classement = {}
+    if int(cible.sum()) > 0:
+        classement = mesures_classement(
+            cible.to_numpy(),
+            probabilites_de_retour(modele, variables),
+            regle=_regle_deux_commandes(variables),
+        )
+
     return Evaluation(
         rappel=round(recall_score(cible, prediction, zero_division=0), 3),
         precision=round(precision_score(cible, prediction, zero_division=0), 3),
@@ -128,6 +145,7 @@ def evaluer(modele: Pipeline, variables: pd.DataFrame, cible: pd.Series) -> Eval
         positifs_reels=int(cible.sum()),
         total=len(cible),
         naives=regles_naives(variables, cible),
+        classement=classement,
     )
 
 
