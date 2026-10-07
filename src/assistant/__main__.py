@@ -49,11 +49,14 @@ def main(argv: list[str] | None = None) -> int:
     except ErreurCorpus as erreur:
         print(f"ERREUR : la foire aux questions n'est pas exploitable ({erreur})", file=sys.stderr)
         return 1
-    except (ConnectionError, OSError) as erreur:
+    except ConnectionError as erreur:
         print(f"ERREUR : Elasticsearch ne répond pas ({erreur})", file=sys.stderr)
         return 1
     except ReponseContratInvalide as erreur:
         print(f"ERREUR : la recherche a répondu hors contrat ({erreur})", file=sys.stderr)
+        return 1
+    except OSError as erreur:
+        print(f"ERREUR : impossible d'écrire le journal ({erreur})", file=sys.stderr)
         return 1
 
     if arguments.json:
