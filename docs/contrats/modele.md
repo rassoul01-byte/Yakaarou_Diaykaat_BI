@@ -144,3 +144,11 @@ davantage.
   ne départage presque personne. Le segment du livrable 5 ne doit pas s'appuyer
   sur ce risque seul : il le croise avec la valeur du client, ou bascule vers
   une règle simple documentée.
+
+## Décision sur le segment (F3.7)
+
+Le modèle ne battant pas la règle « deux commandes ou plus » à volume égal
+(18 retours contre 32 sur 711 clients), le segment à retenir est cette règle
+simple, documentée dans `docs/dictionnaire_indicateurs.md`. La décision a été
+prise après lecture de l'évaluation du 2017-09-30. Le modèle reste livré comme
+résultat négatif honnête.
