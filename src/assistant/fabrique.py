@@ -40,6 +40,4 @@ def creer_retrouveur() -> Retrouveur:
         return RetrouveurExterne(_recherche_documentaire, SEUILS_EXTERNE)
     if choix == "depannage":
         return RetrouveurDepannage.depuis_faq()
-    raise ValueError(
-        f"ASSISTANT_RETROUVEUR={choix!r} inconnu (attendu : 'externe' ou 'depannage')"
-    )
+    raise ValueError(f"ASSISTANT_RETROUVEUR={choix!r} inconnu (attendu : 'externe' ou 'depannage')")
