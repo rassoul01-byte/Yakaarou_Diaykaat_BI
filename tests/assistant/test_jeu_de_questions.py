@@ -1,8 +1,8 @@
 """Le jeu de questions : bien formé, et l'assistant ne commet pas les deux fautes graves dessus.
 
-⚠️ Le jeu actuel est PROVISOIRE (origine « provisoire ») : écrit par l'auteur de l'assistant après
-lecture du corpus, il sert à régler et à garder un filet. La mesure qui compte se fait sur un jeu
-gelé, dont une partie est écrite par quelqu'un d'autre (docs/contrats/assistant.md, §6).
+Le jeu est gelé (voir jeu_de_questions.gel.json) : 52 questions provisoires écrites par
+l'auteur de l'assistant, plus 10 questions pièges écrites par Seydina (origine « seydina »).
+Toute modification du jeu invalide l'empreinte SHA256 et doit être suivie d'un nouveau gel.
 """
 
 from collections import Counter
@@ -24,7 +24,9 @@ def test_le_jeu_est_bien_forme():
         assert q["categorie"] in CATEGORIES and q["attendu"] in ("reponse", "refus")
         assert q["origine"]
         if q["attendu"] == "reponse":
-            assert q["categorie"] == "couverte" and q["passage"] in ids_passages
+            # Un piège peut recevoir une réponse (le bon passage existe),
+            # la distinction réponse/refus est portée par `attendu`.
+            assert q["categorie"] in ("couverte", "piege") and q["passage"] in ids_passages
         else:
             assert q["passage"] is None and q["categorie"] != "couverte"
 
