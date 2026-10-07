@@ -17,7 +17,8 @@ import sys
 from .assistant import repondre
 from .journal import JournalFichier
 from .passages import ErreurCorpus
-from .retrouveur import RetrouveurDepannage
+from .fabrique import creer_retrouveur
+from .retrouveur import ReponseContratInvalide
 
 
 def afficher(reponse) -> None:
@@ -42,14 +43,14 @@ def main(argv: list[str] | None = None) -> int:
     arguments = analyseur.parse_args(argv)
 
     try:
-        retrouveur = RetrouveurDepannage.depuis_faq()
+        retrouveur = creer_retrouveur()
         journal = None if arguments.sans_journal else JournalFichier()
         reponse = repondre(" ".join(arguments.question), retrouveur, k=arguments.k, journal=journal)
-    except ErreurCorpus as erreur:
-        print(f"ERREUR : la foire aux questions n'est pas exploitable ({erreur})", file=sys.stderr)
+    except (ConnectionError, OSError) as erreur:
+        print(f"ERREUR : Elasticsearch ne répond pas ({erreur})", file=sys.stderr)
         return 1
-    except OSError as erreur:
-        print(f"ERREUR : impossible d'écrire le journal ({erreur})", file=sys.stderr)
+    except ReponseContratInvalide as erreur:
+        print(f"ERREUR : la recherche a répondu hors contrat ({erreur})", file=sys.stderr)
         return 1
 
     if arguments.json:
