@@ -146,8 +146,8 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 | Assistant et garde-fous | Branché sur la recherche vectorielle par défaut |
 | Jeu de questions gelé (date, empreinte) | **Gelé le 2026-10-07** : 62 questions, dont 31 couvertes ; empreinte SHA256 dans `contrats/assistant.md`, §6 |
 | Seuils de l'assistant et de la recherche | **Mesurés sur le jeu gelé** : 0,84 / 0,20 / 0,00 (`contrats/assistant.md`, §6) ; l'ancien seuil provisoire de 0,67 est retiré |
-| Taux de réponses ancrées | **À relever** avec `python -m assistant.evaluer` sur le jeu gelé, puis à écrire au dictionnaire (ligne « Dernière mesure ») |
-| `assistant.md` et `passages.md` | Statut « brouillon » **à lever** : les seuils sont écrits |
+| Taux de réponses ancrées | **100 % (62/62)**, relevé le 2026-10-08 sur le jeu gelé : 6 réponses directes citant un passage et 56 refus, comptés comme ancrés (dictionnaire, ligne « Dernière mesure ») |
+| `assistant.md` et `passages.md` | Statut « brouillon » **levé** (PR #112) ; les points ouverts restent listés dans chaque contrat |
 | Tableau de bord final | Page « Qualité » seule |
 | Démonstration chronométrée, captures de secours | À faire |
 | Note de version v1.0 | Rédigée (`NOTE_DE_VERSION_v1.0.md`) ; fusion dans `main` et tag `v1.0` à faire |
