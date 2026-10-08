@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 
+from elasticsearch.exceptions import ApiError, TransportError
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -78,8 +79,10 @@ def recherche(payload: RechercheIn) -> dict:
     try:
         client = connexion()
         resultat = rechercher(client, payload.q, payload.k)
-    except ConnectionError as erreur:
-        logger.exception("Elasticsearch injoignable")
+    except (ConnectionError, TransportError, ApiError) as erreur:
+        # Les erreurs d'Elasticsearch (ConnectionError, ConnectionTimeout, index absent...)
+        # n'héritent pas du ConnectionError natif : sans ce `except`, elles donnent un 500.
+        logger.exception("Elasticsearch indisponible")
         raise HTTPException(
             status_code=503, detail=f"Elasticsearch indisponible : {erreur}"
         ) from erreur

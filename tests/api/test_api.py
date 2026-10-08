@@ -5,6 +5,8 @@ La recherche est remplacée par un faux retrouveur : on teste le contrat HTTP
 """
 
 import pytest
+from elastic_transport import ConnectionError as EsConnectionError
+from elastic_transport import ConnectionTimeout
 from fastapi.testclient import TestClient
 
 import api.main as principal
@@ -137,3 +139,21 @@ def test_recherche_elasticsearch_injoignable_donne_503(monkeypatch):
 @pytest.mark.parametrize("corps", [{"q": ""}, {"q": "x" * 301}, {"q": "ok", "k": 21}, {}])
 def test_recherche_valide_ses_entrees(corps):
     assert client.post("/api/recherche", json=corps).status_code == 422
+
+
+@pytest.mark.parametrize(
+    "erreur",
+    [EsConnectionError("down"), ConnectionTimeout("lent"), ConnectionError("down")],
+    ids=["es-connexion", "es-delai", "connexion-native"],
+)
+def test_recherche_panne_d_elasticsearch_donne_503_avec_son_message(monkeypatch, erreur):
+    """Les erreurs d'Elasticsearch n'héritent pas du ConnectionError natif : elles donnaient un 500."""
+
+    def panne(*_, **__):
+        raise erreur
+
+    monkeypatch.setattr(principal, "connexion", lambda: object())
+    monkeypatch.setattr(principal, "rechercher", panne)
+    r = client.post("/api/recherche", json={"q": "colis"})
+    assert r.status_code == 503
+    assert "Elasticsearch indisponible" in r.json()["detail"]
