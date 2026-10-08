@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "./api/client";
 import Sidebar from "./components/Sidebar";
-import { navItems, type Page } from "./components/navigation";import Topbar from "./components/Topbar";
+import { navItems, type Page } from "./components/navigation";
+import Topbar from "./components/Topbar";
 import AssistantPage from "./pages/AssistantPage";
 import DashboardPage from "./pages/DashboardPage";
 import RecherchePage from "./pages/RecherchePage";
