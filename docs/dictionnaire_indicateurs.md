@@ -538,11 +538,11 @@ hors du jeu, et non « à faible risque ».
 | | |
 |---|---|
 | **Définition** | Part des réponses de l'assistant qui s'appuient sur au moins un passage cité de la base documentaire |
-| **Formule** | `réponses citant au moins un passage ÷ réponses totales × 100` |
+| **Formule** | `(réponses citant au moins un passage + refus) ÷ réponses totales × 100`. Un refus compte comme ancré (voir ci-dessous) ; c'est ce que calcule `assistant.evaluer` |
 | **Granularité** | Sur un jeu de questions fixé et gelé (date et empreinte : `docs/contrats/assistant.md`, §6) |
 | **Source des données** | Journal des réponses de l'assistant (fichier `.jsonl`, `docs/contrats/assistant.md`, §5) |
 | **Calcul** | `python -m assistant.evaluer`, avec la recherche `RetrouveurExterne` |
-| **Dernière mesure** | **[À COMPLÉTER après le gel du jeu : valeur, date du gel, nombre de questions]** |
+| **Dernière mesure** | **100 % (62/62)**, relevée le 2026-10-08 avec `RetrouveurExterne` (seuils 0,84 / 0,20 / 0,00) sur le jeu gelé le 2026-10-07 : 62 questions, empreinte SHA256 `786dada1…e0dbd`. Détail : **6 réponses directes citant un passage et 56 refus** (23 avec la bonne suggestion, 31 corrects hors base, 2 faux refus) |
 | **Seuil d'alerte** | **100 %**. Une réponse sans source est un défaut, pas une statistique |
 
 **Pourquoi le seuil est à 100 %.** Un refus poli — « je n'ai pas cette
