@@ -107,6 +107,16 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 
 **Taux de réponses ancrées** (dictionnaire) = échanges citant au moins un passage, plus les refus polis, divisé par les échanges. Il vaut 100 % **par construction** : il est mesuré sur le jeu de questions fixé, et le journal permet de le recalculer sur l'usage réel.
 
+
+**Chargement dans PostgreSQL (décidé le 2026-10-08).** Power BI ne lit pas le fichier : il lit des vues PostgreSQL, comme pour toutes les autres pages, par le compte en lecture seule. Le journal est donc chargé dans `staging.journal_assistant` (migration `020_journal_assistant.sql`) par `python -m assistant.charger_journal` :
+
+| Source | Contenu | Chargement |
+|---|---|---|
+| `evaluation` | Le jeu gelé rejoué par `assistant.evaluer --journal` : c'est la **mesure** du dictionnaire | Remplace l'évaluation précédente : un rejeu ne gonfle pas les chiffres |
+| `usage` | Les questions posées à la main, par exemple en démonstration | Ajoute sans jamais doubler : une ligne déjà chargée (même empreinte) est ignorée |
+
+La question est masquée une seconde fois au chargement. Une ligne illisible est signalée avec son numéro, jamais ignorée en silence. Les vues `staging.v_taux_ancrage` (par jour) et `staging.v_taux_ancrage_global` donnent, pour chaque source : les échanges, les réponses directes, les refus et le taux. Comme il vaut 100 % par construction, la page doit montrer les **réponses directes et les refus**, pas seulement le pourcentage.
+
 ---
 ## 6. Seuils
 
@@ -178,6 +188,14 @@ docker compose exec app python -m assistant.evaluer --detail
 
 `--sans-journal` évite l'écriture du journal.
 
+Pour alimenter la page Assistant de Power BI :
+
+```bash
+docker compose exec app python -m assistant.evaluer --journal
+docker compose exec app python -m assistant.charger_journal --source evaluation
+docker compose exec app python -m assistant.charger_journal --source usage
+```
+
 ---
 
 ## 8. Limites connues
@@ -195,6 +213,6 @@ docker compose exec app python -m assistant.evaluer --detail
 |---|---|---|
 | ~~Brancher `documentaire.rechercher` derrière `RetrouveurExterne` et mesurer ses seuils sur le jeu gelé~~ | Seydina | **fait le 2026-10-07** (`fabrique.py`, seuils au §6) |
 | ~~Dix questions pièges, écrites sans que l'auteur les voie, puis gel du jeu~~ | Seydina | **fait le 2026-10-07** (62 questions, empreinte au §6) |
-| Format du journal : confirmer qu'il suffit au calcul du taux d'ancrage et où il est lu | Ndeye Penda | avant l'intégration |
+| ~~Format du journal : confirmer qu'il suffit au calcul du taux d'ancrage et où il est lu~~ | Ndeye Penda | **décidé le 2026-10-08** : le journal est chargé dans PostgreSQL (§5, migration 020), lu par Power BI via `staging.v_taux_ancrage` |
 | Format de réponse (§3) : confirmer qu'il suffit à l'interface | Responsable de l'interface | dès la lecture de ce contrat |
 | Libellé exact du « service client » dans les refus | Product Owner | avant la démonstration |
