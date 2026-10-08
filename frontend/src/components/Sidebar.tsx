@@ -1,12 +1,8 @@
-import { Activity, LayoutDashboard, MessageCircle, Search, X } from "lucide-react";
+import { Activity, X } from "lucide-react";
 
-export type Page = "dashboard" | "recherche" | "assistant";
+import { navItems, type Page } from "./navigation";
 
-export const navItems: { id: Page; label: string; icon: typeof Activity }[] = [
-  { id: "dashboard", label: "Vue générale", icon: LayoutDashboard },
-  { id: "recherche", label: "Recherche produits", icon: Search },
-  { id: "assistant", label: "Assistant client", icon: MessageCircle },
-];
+export type { Page };
 
 type Props = {
   page: Page;
