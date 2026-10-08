@@ -61,9 +61,16 @@ contrôlé. Le rapport affiche `—` et un avertissement.
 | **Seuil d'alerte** | **5 %**, comme le taux par source |
 
 **Pourquoi il existe.** Le tableau de bord affichait la **moyenne des taux par
-source** — 0,04 % —, qui donne le même poids à une source de 1,5 million de
-lignes et à une source de 85 000. Le taux global, lui, se calcule sur le total
-des lignes : **0,066 %**. Un taux ne se moyenne pas, il se recalcule.
+source** — 0,02 % avec les trois sources actuelles —, qui donne le même poids à
+une source de 1,5 million de lignes et à une source de 85 000. Le taux global,
+lui, se calcule sur le total des lignes : **0,062 %**. Un taux ne se moyenne
+pas, il se recalcule.
+
+**Un doublon à connaître.** `catalogue` et `rakuten` déposent le même fichier
+sous deux noms : ses 84 916 lignes comptent deux fois au dénominateur. Compté
+une seule fois, le taux global serait de 0,066 %. L'écart est faible ; le
+chiffre affiché est celui de `quarantaine.v_taux_rejet_global`, sur les trois
+sources.
 
 **Ce qu'il ne dit pas.** Il ne remplace pas le taux par source : une source
 isolée peut dépasser 5 % sans que le global bouge, parce qu'elle pèse peu. **Le
