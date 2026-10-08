@@ -5,6 +5,8 @@ La recherche est remplacée par un faux moteur : on teste le contrat HTTP
 """
 
 import pytest
+from elastic_transport import ConnectionError as EsConnectionError
+from elastic_transport import ConnectionTimeout
 from fastapi.testclient import TestClient
 
 import api.main as principal
@@ -218,34 +220,14 @@ def test_recherche_valide_ses_entrees(corps):
     ids=["es-connexion", "es-delai", "connexion-native"],
 )
 def test_recherche_panne_d_elasticsearch_donne_503_avec_son_message(monkeypatch, erreur):
-    """Les erreurs d'Elasticsearch n'héritent pas du ConnectionError natif : elles donnaient un 500."""
+    """Les erreurs d'Elasticsearch n'héritent pas du ConnectionError natif :
+    elles donnaient un 500 sans le `except` dédié."""
 
     def panne(*_, **__):
         raise erreur
 
-    monkeypatch.setattr(principal, "connexion", lambda: object())
-    monkeypatch.setattr(principal, "rechercher", panne)
+    monkeypatch.setattr(router_recherche, "connexion", lambda: object())
+    monkeypatch.setattr(router_recherche, "rechercher", panne)
     r = client.post("/api/recherche", json={"q": "colis"})
     assert r.status_code == 503
     assert "Elasticsearch indisponible" in r.json()["detail"]
-
-@pytest.mark.parametrize(
-    "erreur",
-    [
-        EsConnectionError("down"),
-        ConnectionTimeout("lent"),
-        ConnectionError("down"),
-    ],
-    ids=["es-connexion", "es-delai", "connexion-native"],
-)
-def test_recherche_panne_d_elasticsearch_donne_503_avec_son_message(monkeypatch, erreur):
-    """Les erreurs d'Elasticsearch n'héritent pas du ConnectionError natif :
-    sans le `except` dédié, elles donneraient un 500."""
-
-    def panne(*_, **__):
-        raise erreur
-
-    monkeypatch.setattr(router_recherche, "connexion", panne)
-    r = client.post("/api/recherche", json={"q": "colis"})
-    assert r.status_code == 503
-    assert "detail" in r.json()
