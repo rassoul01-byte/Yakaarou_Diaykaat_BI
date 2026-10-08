@@ -2,6 +2,7 @@
 
     docker compose exec app python -m assistant.evaluer
     docker compose exec app python -m assistant.evaluer --jeu tests/assistant/jeu_de_questions.jsonl
+    docker compose exec app python -m assistant.evaluer --journal   # + journal de l'évaluation
 
 Chaque question porte ce qu'on attend : une réponse (avec le bon passage) ou un refus.
 Ce qui se mesure, du plus grave au moins grave :
@@ -27,8 +28,10 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from .assistant import Reponse, repondre
+from .fabrique import creer_retrouveur
 from .garde_fous import Seuils
-from .retrouveur import Retrouveur, RetrouveurDepannage
+from .journal import JOURNAL_EVALUATION, JournalFichier
+from .retrouveur import Retrouveur
 
 JEU = Path(__file__).resolve().parents[2] / "tests" / "assistant" / "jeu_de_questions.jsonl"
 
@@ -55,10 +58,11 @@ def juger(question: dict, reponse: Reponse) -> str:
 
 
 def evaluer(
-    retrouveur: Retrouveur, jeu: list[dict], seuils: Seuils | None = None
+    retrouveur: Retrouveur, jeu: list[dict], seuils: Seuils | None = None, journal=None
 ) -> list[tuple[dict, Reponse, str]]:
     return [
-        (q, (r := repondre(q["question"], retrouveur, seuils=seuils)), juger(q, r)) for q in jeu
+        (q, (r := repondre(q["question"], retrouveur, seuils=seuils, journal=journal)), juger(q, r))
+        for q in jeu
     ]
 
 
@@ -86,10 +90,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     analyseur.add_argument("--jeu", type=Path, default=JEU)
     analyseur.add_argument("--detail", action="store_true", help="liste les questions mal traitées")
+    analyseur.add_argument(
+        "--journal",
+        nargs="?",
+        const=JOURNAL_EVALUATION,
+        type=Path,
+        help="écrit chaque échange dans ce journal (défaut : celui de l'évaluation), à charger "
+        "ensuite par assistant.charger_journal --source evaluation",
+    )
     arguments = analyseur.parse_args(argv)
 
-    retrouveur = RetrouveurDepannage.depuis_faq()
-    resultats = evaluer(retrouveur, lire_jeu(arguments.jeu))
+    journal = None
+    if arguments.journal:
+        arguments.journal.unlink(missing_ok=True)  # l'évaluation est un instantané, pas un cumul
+        journal = JournalFichier(arguments.journal)
+
+    retrouveur = creer_retrouveur()
+    resultats = evaluer(retrouveur, lire_jeu(arguments.jeu), journal=journal)
     s = synthese(resultats)
 
     print(

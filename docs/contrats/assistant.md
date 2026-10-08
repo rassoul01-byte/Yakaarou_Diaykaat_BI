@@ -1,6 +1,6 @@
 # Contrat — L'assistant client local
 
-**Statut** : brouillon · **Responsable** : Bachir DEME · **Relecteur** : Seydina WADE · **Fonctionnalités** : F5.3 à F5.6 · **Sprint** : 5
+**Statut** : stable (seuils mesurés le 2026-10-07 sur le jeu gelé, §6) · points ouverts au §9 · **Responsable** : Bachir DEME · **Relecteur** : Seydina WADE · **Fonctionnalités** : F5.3 à F5.6 · **Sprint** : 5
 **Modules** : `src/assistant/` · **Lecteurs** : Seydina (recherche de passages), Ndeye Penda (journal, taux d'ancrage), la personne chargée de l'interface
 
 ---
@@ -107,45 +107,74 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 
 **Taux de réponses ancrées** (dictionnaire) = échanges citant au moins un passage, plus les refus polis, divisé par les échanges. Il vaut 100 % **par construction** : il est mesuré sur le jeu de questions fixé, et le journal permet de le recalculer sur l'usage réel.
 
----
 
-## 6. Évaluation et seuils
+**Chargement dans PostgreSQL (décidé le 2026-10-08).** Power BI ne lit pas le fichier : il lit des vues PostgreSQL, comme pour toutes les autres pages, par le compte en lecture seule. Le journal est donc chargé dans `staging.journal_assistant` (migration `020_journal_assistant.sql`) par `python -m assistant.charger_journal` :
 
-`python -m assistant.evaluer` rejoue le jeu `tests/assistant/jeu_de_questions.jsonl` et mesure, du plus grave au moins grave :
-
-| Mesure | Sens | Attendu |
+| Source | Contenu | Chargement |
 |---|---|---|
-| **Réponse à tort** | Une question hors base reçoit une réponse | 0 |
-| **Mauvais passage** | Une question couverte reçoit la réponse d'un autre passage : une réponse fausse, citée | 0 |
-| Faux refus | Une question couverte est refusée sans suggestion | le plus bas possible |
-| Bonne réponse, ou refus avec bonne suggestion | L'assistant oriente vers le bon passage | le plus haut possible |
+| `evaluation` | Le jeu gelé rejoué par `assistant.evaluer --journal` : c'est la **mesure** du dictionnaire | Remplace l'évaluation précédente : un rejeu ne gonfle pas les chiffres |
+| `usage` | Les questions posées à la main, par exemple en démonstration | Ajoute sans jamais doubler : une ligne déjà chargée (même empreinte) est ignorée |
 
-### Résultat actuel : `RetrouveurDepannage`, seuils 0,35 / 0,18 / marge 0,12
+La question est masquée une seconde fois au chargement. Une ligne illisible est signalée avec son numéro, jamais ignorée en silence. Les vues `staging.v_taux_ancrage` (par jour) et `staging.v_taux_ancrage_global` donnent, pour chaque source : les échanges, les réponses directes, les refus et le taux. Comme il vaut 100 % par construction, la page doit montrer les **réponses directes et les refus**, pas seulement le pourcentage.
 
-Sur le jeu **provisoire** de 52 questions (27 couvertes, 25 hors base) :
+---
+## 6. Seuils
 
-| | |
+Mesurés sur le jeu **gelé** le 2026-10-07 (empreinte SHA256 :
+`786dada1d1874e139d0376b7ff148c957762ffa16a77d1524f99c3700f4e0dbd`),
+avec la recherche documentaire (`documentaire.rechercher`, retrouveur
+`RetrouveurExterne`).
+
+| Seuil | Valeur |
 |---|---|
-| Bonne réponse | 9 |
-| Refus avec la bonne suggestion | 15 |
-| Faux refus | 3 |
-| **Mauvais passage** | **0** |
-| Refus correct (hors base) | 25 sur 25 |
-| **Réponse à tort** | **0** |
+| `reponse` | 0,84 |
+| `suggestion` | 0,20 |
+| `marge` | 0,00 |
 
-### Ce que ces chiffres ne disent pas
+### Résultats obtenus sur le jeu gelé (62 questions, 31 couvertes)
 
-- **Le jeu est provisoire.** Je l'ai écrit après avoir lu le corpus, ce qui flatte la mesure. Il doit être **gelé** avant toute mesure définitive, et une partie doit être écrite par quelqu'un d'autre (Seydina : dix questions pièges, sans que je les voie).
-- **Les seuils ont été réglés sur ce jeu**, par validation croisée sur ses deux moitiés. Avec 27 questions couvertes, **zéro mauvais passage n'est pas garanti hors échantillon** : un autre réglage essayé en donnait 2 sur la moitié non vue. Le réglage retenu est le plus prudent.
-- **Le coût de la prudence est assumé** : la recherche de dépannage ne répond directement qu'à environ une question couverte sur trois (9 sur 27) et suggère pour la plupart des autres. Parmi les 25 questions hors base, 5 reçoivent des suggestions peu pertinentes plutôt qu'un refus sec. C'est la limite d'une recherche lexicale, et ce qu'une recherche sémantique doit améliorer.
-- Les trois faux refus actuels : « Quand l'argent sort-il de mon compte ? », « Qui supporte le coût de renvoi du colis ? », « Combien coûte un retour ? ».
+| Verdict | Nombre |
+|---|---|
+| Bonne réponse directe | 6 |
+| Refus avec bonne suggestion | 23 |
+| Faux refus | 2 |
+| Refus correct (hors base) | 31 |
+| **Mauvais passage** | **0** ✅ |
+| **Réponse à tort** | **0** ✅ |
 
-### Pour refaire le réglage sur le jeu gelé
+Ces zéros valent **sur ce jeu**, pas au-delà : voir « Limites connues » ci-dessous.
 
-1. Geler le jeu (date et empreinte dans la PR), avant toute mesure.
-2. Régler les seuils sur une partie, **mesurer sur l'autre**.
-3. Choisir le réglage qui garde `réponse à tort` et `mauvais passage` à 0 ; accepter le surcroît de suggestions.
-4. Écrire ici les seuils retenus et le jeu qui a servi.
+### Justification de la marge à 0
+
+Le retrouveur vectoriel produit des cosinus très proches entre les top
+passages (écart médian top 1 / top 2 ≈ 0,02). Une marge non nulle
+éliminerait des réponses correctes sans gain mesurable en précision.
+
+### Limites connues
+
+- **2 faux refus inévitables** : q05 (« J'ai reçu le mauvais article ») et
+  s07 (« Ma commande passée en 2026 est arrivée cassée »). Leur passage
+  attendu n'apparaît pas dans le top 5 du retrouveur — aucun seuil ne peut
+  les sauver. C'est une limite du retrouveur actuel.
+- **« 0 sur le jeu » n'est pas une garantie.** Les seuils ont été réglés sur ce jeu,
+  qui ne compte que 31 questions couvertes : zéro mauvais passage et zéro réponse à
+  tort ne sont pas assurés sur des questions que personne n'a vues. Une validation
+  croisée sur deux moitiés du jeu (réglage sur l'une, mesure sur l'autre) a d'ailleurs
+  donné une erreur grave pour certains réglages voisins.
+- **Le seuil de réponse est proche d'une erreur connue.** À la collecte du 7 octobre,
+  le plus haut score d'un premier résultat faux était de 0,8391 (« Combien coûte un
+  retour ? »), soit moins de 0,001 sous le seuil de 0,84. Un réglage à 0,85 aurait un
+  peu plus de marge de sécurité, au prix de quelques réponses directes en moins.
+- **Piste d'amélioration (Sprint 6)** : ajouter un reranker cross-encoder
+  après la recherche vectorielle.
+
+### Pour refaire le réglage
+
+```bash
+docker compose exec app python -m scripts.assistant.mesurer_scores
+docker compose exec app python -m scripts.assistant.analyser_scores
+docker compose exec app python -m scripts.assistant.balayer_seuils --top 30
+```
 
 ---
 
@@ -158,6 +187,14 @@ docker compose exec app python -m assistant.evaluer --detail
 ```
 
 `--sans-journal` évite l'écriture du journal.
+
+Pour alimenter la page Assistant de Power BI :
+
+```bash
+docker compose exec app python -m assistant.evaluer --journal
+docker compose exec app python -m assistant.charger_journal --source evaluation
+docker compose exec app python -m assistant.charger_journal --source usage
+```
 
 ---
 
@@ -174,8 +211,8 @@ docker compose exec app python -m assistant.evaluer --detail
 
 | Point | Avec qui | Échéance |
 |---|---|---|
-| Brancher `documentaire.rechercher` derrière `RetrouveurExterne` et mesurer ses seuils sur le jeu gelé | Seydina | quand `rechercher.py` existe |
-| Dix questions pièges, écrites sans que l'auteur les voie, puis gel du jeu | Seydina | avant le calibrage |
-| Format du journal : confirmer qu'il suffit au calcul du taux d'ancrage et où il est lu | Ndeye Penda | avant l'intégration |
+| ~~Brancher `documentaire.rechercher` derrière `RetrouveurExterne` et mesurer ses seuils sur le jeu gelé~~ | Seydina | **fait le 2026-10-07** (`fabrique.py`, seuils au §6) |
+| ~~Dix questions pièges, écrites sans que l'auteur les voie, puis gel du jeu~~ | Seydina | **fait le 2026-10-07** (62 questions, empreinte au §6) |
+| ~~Format du journal : confirmer qu'il suffit au calcul du taux d'ancrage et où il est lu~~ | Ndeye Penda | **décidé le 2026-10-08** : le journal est chargé dans PostgreSQL (§5, migration 020), lu par Power BI via `staging.v_taux_ancrage` |
 | Format de réponse (§3) : confirmer qu'il suffit à l'interface | Responsable de l'interface | dès la lecture de ce contrat |
 | Libellé exact du « service client » dans les refus | Product Owner | avant la démonstration |

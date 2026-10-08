@@ -21,6 +21,7 @@ from pathlib import Path
 from .assistant import Reponse
 
 JOURNAL_DEFAUT = Path("data/assistant/journal.jsonl")
+JOURNAL_EVALUATION = Path("data/assistant/journal_evaluation.jsonl")
 
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
 _TELEPHONE = re.compile(r"\+?\d[\d .\-]{7,}\d")

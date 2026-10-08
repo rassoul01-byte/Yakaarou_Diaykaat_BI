@@ -1,6 +1,6 @@
 # Contrat — Passages : la base documentaire vectorisée
 
-**Statut** : brouillon · **Responsable** : Seydina WADE · **Relecteur** : Bachir DEME · **Fonctionnalité** : F5.2 · **Sprint** : 5
+**Statut** : stable (indexation et seuils mesurés, voir `assistant.md` §6) · points ouverts au §11 · **Responsable** : Seydina WADE · **Relecteur** : Bachir DEME · **Fonctionnalité** : F5.2 · **Sprint** : 5
 
 Ce contrat fixe ce que l'assistant de Bachir reçoit de la recherche de passages, avant que l'indexation soit écrite. Il prolonge `docs/contrats/faq.md` (F5.1) : la foire aux questions est la matière, les passages en sont la forme indexée.
 
@@ -94,21 +94,22 @@ Règles :
 - La liste peut être **vide** ou ne contenir que de faibles scores. C'est à l'assistant de décider qu'il ne sait pas.
 - La recherche ne rédige jamais de réponse. Elle renvoie des passages, rien d'autre.
 
-## 8. Le seuil « je ne sais pas »
+## 8. Filtrage des scores
 
-Le seuil de score sous lequel aucun passage n'est considéré comme pertinent est une **décision partagée** avec Bachir, parce qu'elle commande le refus de l'assistant.
+**Il n'y a pas de filtre ES en amont.** `rechercher()` renvoie les k passages
+les plus proches, quels que soient leurs scores. C'est l'assistant qui décide
+de répondre, suggérer ou refuser, via les seuils de `assistant.md §6`.
 
-- Proposition : le fixer en mesurant les scores sur un jeu de questions couvertes et un jeu de questions hors base (prix, commande en cours, remboursement personnalisé), puis en choisissant la valeur qui sépare les deux.
-- Le seuil choisi, et le jeu qui a servi à le choisir, sont écrits ici une fois décidés.
+Ce choix est délibéré :
+- Le jeu de la FAQ tient en quelques dizaines de passages ; l'économie de
+  bande passante d'un filtre ES serait négligeable.
+- Un seul endroit à régler (les 3 seuils de `Seuils`) simplifie la mesure.
+- La distinction « score bon / score moyen / score mauvais » dépend du contexte
+  de la question, pas seulement du score brut — c'est `garde_fous.decider()`
+  qui a le dernier mot.
 
-Mesure du 2026-10-06, sur 24 questions reformulées et 8 questions hors base :
-
-- Le bon passage est premier dans 15 cas sur 24, et dans les trois premiers dans 20 cas sur 24. Les échecs viennent de questions qui n'emploient pas les mots de la FAQ, ou qui contiennent des fautes de frappe.
-- Le plus bas score d'un bon premier résultat est 0,69. Les questions sans rapport (capitale, prix, promotions, boutique physique, « Bonjour ») obtiennent de 0,58 à 0,65 : un seuil vers 0,67 les écarte sans perdre de bonne réponse, sur cet échantillon.
-- **Un seuil de score seul ne suffit pas.** Une question sur une commande précise (« Où en est ma commande numéro 4521 ? ») obtient 0,83, et une demande de remboursement personnalisé 0,73, parce qu'elles reprennent le vocabulaire de la FAQ. L'assistant doit refuser ces cas par une règle supplémentaire (commande ou montant précis), pas par le score.
-- L'échantillon hors base est petit (8 questions) : le seuil est à confirmer sur un jeu plus large.
-
-Seuil retenu : 0,67 (provisoire, à revalider sur un jeu hors base plus large).
+Les valeurs provisoires antérieures (0,67) sont donc **retirées**. Les seuils
+réels vivent dans `docs/contrats/assistant.md §6`.
 
 ## 9. Les commandes
 
@@ -134,5 +135,5 @@ La recherche affiche le JSON du §7 ; code de sortie 0 même sans résultat, 1 s
 | Point | Avec qui | Échéance |
 |---|---|---|
 | Validation du modèle de vecteurs (MiniLM multilingue, 384) | Bachir | jour 3 |
-| Seuil « je ne sais pas » | Bachir | quand l'assistant tourne sur les passages réels |
+| ~~Seuil « je ne sais pas »~~ | Bachir | **fait le 2026-10-07** : 0,84 / 0,20 / 0,00, mesurés sur le jeu gelé (`assistant.md` §6) |
 | Relecteur : `faq.md` indique Mouhameth DIOP, ce contrat Bachir DEME | équipe | à aligner dans `ROLES.md` |
