@@ -1,7 +1,7 @@
 # Dossier de conception — DataFlow360
 
 **Projet :** plateforme data d'un e-commerçant — GROUPE 2, Orange Digital Center, promotion 8
-**Version :** mise à jour de clôture du Sprint 5, rédigée le 7 octobre 2026
+**Version :** mise à jour de clôture du Sprint 5, rédigée le 7 octobre 2026 et mise à jour le 8 octobre (gel du jeu de questions)
 **Statut :** reflète le dépôt tel qu'il est. En cas d'écart avec un contrat de `docs/contrats/`, le contrat fait foi et ce dossier est corrigé.
 
 Ce dossier répond à une question : **qu'est-ce qui a été prévu, qu'est-ce qui a été réalisé, et pourquoi l'écart.** Il ne décrit pas l'architecture en détail : celle-ci est dans le [README](../README.md) et dans [`docs/architecture/`](architecture/). Chaque décision renvoie au document du dépôt qui la porte.
@@ -82,6 +82,8 @@ Le modèle ne bat pas la règle au F1, et à 711 clients signalés il retrouve 1
 
 **Ce que mesure le « taux de réponses ancrées », et ce qu'il ne mesure pas.** Il vaut 100 % par construction : il confirme le dispositif, il ne prouve ni la justesse des réponses ni la qualité de la recherche. Les chiffres qui renseignent sur celle-ci (réponse à tort, mauvais passage, faux refus) sont calculés par `python -m assistant.evaluer` et doivent valoir 0 pour les deux premiers.
 
+**Seuils et résultats mesurés (jeu gelé le 2026-10-07).** Seuils : réponse 0,84, suggestion 0,20, marge 0,00 (`contrats/assistant.md`, §6). Sur 62 questions, dont 31 couvertes par la base : 6 bonnes réponses directes, 23 refus avec bonne suggestion, 31 refus corrects (hors base), 2 faux refus, **0 mauvais passage, 0 réponse à tort**. **Ces zéros valent sur ce jeu, pas au-delà** : les seuils ont été réglés sur lui, et une validation croisée sur deux moitiés a donné une erreur grave pour certains réglages voisins. Le seuil de réponse est à moins de 0,001 d'une erreur connue (0,8391, pour « Combien coûte un retour ? »). Les deux faux refus (q05 et s07) viennent d'un passage absent du top 5 du retrouveur : aucun seuil ne peut les sauver. Piste de suite : un reranker après la recherche vectorielle.
+
 ---
 
 ## 4. Décisions de conception qui structurent la plateforme
@@ -109,7 +111,7 @@ Le détail et les motifs sont dans [`ROLES.md`](ROLES.md), §4.3. En résumé :
 | Historique d'achat et variables (F3.1) | Aissata DIALLO | Bachir DEME | Départ d'Aissata DIALLO en cours de projet |
 | Modèle de ré-achat (F3.2 à F3.6) | Mouhameth DIOP | Ndeye Penda SARR | Livrable non réalisé par son porteur prévu, repris par Ndeye Penda SARR |
 
-**Le départ d'Aissata DIALLO.** Un départ en cours de projet s'explique, il ne se découvre pas à la soutenance. Ce qu'elle avait livré avant de partir (normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue, rédaction de la foire aux questions avec Seydina) reste crédité. Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.
+**Le départ d'Aissata DIALLO.** Aissata DIALLO a quitté le projet au Sprint 3 : Ndeye Penda SARR a repris sa part des Sprints 3 et 4, puis Bachir DEME celle du Sprint 5 (l'historique d'achat). Un départ en cours de projet s'explique, il ne se découvre pas à la soutenance. Ce qu'elle avait livré avant de partir (normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue, rédaction de la foire aux questions avec Seydina) reste crédité. Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.
 
 **Le risque que cela crée.** Les deux chaînes du Sprint 5 ne sont plus parallèles : Bachir est au départ des deux (variables, puis assistant), Ndeye Penda à l'arrivée des deux (modèle, segment, tableau de bord). La mesure retenue : Bachir livre les variables en premier, et Ndeye Penda avance sur un jeu fabriqué de 200 lignes aux mêmes colonnes puis branche le vrai.
 
@@ -125,7 +127,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 | Couverture du fichier de correspondance des catégories | Une partie des produits est rattachée à `inconnu` | Assumée |
 | Requêtes du générateur d'événements peu réalistes | Les compteurs du jour et les requêtes sans résultat sont indicatifs | Assumée |
 | Prix absent du catalogue | Pas de filtre de prix, pas de montant en temps réel (E4, E5) | Assumée, voir §2 |
-| « Délai de livraison moyen » et « note moyenne » absents du dictionnaire des indicateurs | Variables utilisées par le modèle, non publiées comme indicateurs | **Décision en attente** : les écrire, ou les inscrire ici comme dette |
+| « Délai de livraison moyen » et « note moyenne » absents du dictionnaire des indicateurs | Variables utilisées par le modèle, non publiées comme indicateurs | **Décision : inscrits en dette**, à valider par le Product Owner. Le document du sprint n'autorise aucun ajout ; leurs définitions existent comme variables de `dwh.v_historique_client` (`contrats/modele.md`). Ils n'apparaissent ni dans un rapport ni dans le tableau de bord tant qu'ils n'ont pas d'entrée au dictionnaire |
 | Modèle évalué à **une seule date**, 75 retours à l'entraînement | Écarts de quelques points fragiles | Limite écrite dans `modele.md` |
 | Tableau de bord Power BI : seule la page « Qualité » est livrée | Pages ventes, compteurs du jour (« trafic simulé »), segment à retenir et ancrage à construire | **À terminer avant la démonstration** |
 
@@ -135,20 +137,20 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 
 À mettre à jour avant la soutenance : ce paragraphe vieillit vite.
 
-| Élément | État le 7 octobre 2026 |
+| Élément | État le 8 octobre 2026 |
 |---|---|
 | Variables d'historique (`v_historique_client`) | Fait |
 | Modèle de ré-achat, protocole, limites | Fait ; résultat négatif publié |
 | Segment à retenir (`v_segment_a_retenir`) | Fait |
 | Base documentaire vectorisée et recherche | Fait |
 | Assistant et garde-fous | Branché sur la recherche vectorielle par défaut |
-| Jeu de questions gelé (date, empreinte) | **Pas encore gelé** ; les dix questions pièges de Seydina sont à intégrer |
-| Seuils de l'assistant et de la recherche | **Provisoires** ; à mesurer sur le jeu gelé |
-| Taux de réponses ancrées | **Pas de valeur officielle** avant le gel (indicatif tant que le jeu n'est pas gelé) |
-| `assistant.md` et `passages.md` | Encore au statut « brouillon » |
+| Jeu de questions gelé (date, empreinte) | **Gelé le 2026-10-07** : 62 questions, dont 31 couvertes ; empreinte SHA256 dans `contrats/assistant.md`, §6 |
+| Seuils de l'assistant et de la recherche | **Mesurés sur le jeu gelé** : 0,84 / 0,20 / 0,00 (`contrats/assistant.md`, §6) ; l'ancien seuil provisoire de 0,67 est retiré |
+| Taux de réponses ancrées | **À relever** avec `python -m assistant.evaluer` sur le jeu gelé, puis à écrire au dictionnaire (ligne « Dernière mesure ») |
+| `assistant.md` et `passages.md` | Statut « brouillon » **à lever** : les seuils sont écrits |
 | Tableau de bord final | Page « Qualité » seule |
 | Démonstration chronométrée, captures de secours | À faire |
-| Note de version v1.0 et fusion dans `main` | À faire |
+| Note de version v1.0 | Rédigée (`NOTE_DE_VERSION_v1.0.md`) ; fusion dans `main` et tag `v1.0` à faire |
 
 ---
 
