@@ -31,6 +31,8 @@ Les deux branches (olist et rakuten) s'exécutent en parallèle jusqu'au rapport
 | 5b | `reindexation` | `python -m recherche.indexer` | index non conforme (code 1) | branchée | ~40 s |
 | 6 | `chargement` | `python -m integration.chargement` | code ≠ 0 | branchée | ~1 min |
 | 7 | `verification` | `python -m integration.verifier` | fait orphelin ou comptage différent (code 1) | branchée | ~10 s |
+| 8 | `scores_reachat` | `python -m prediction.scorer --top 0 --csv data/scores_reachat.csv` | données inutilisables (code 1) | branchée, non mesurée | à mesurer |
+| 0 | `indexation_passages` | `python -m documentaire.verifier` puis `python -m documentaire.indexer` | FAQ invalide ou index différent du fichier (code 1) | branchée, non mesurée | à mesurer |
 
 ⚠️ **La réindexation et la correspondance avancent en parallèle.** La première
 lit `staging.rakuten_produits`, la seconde alimente l'entrepôt : elles n'ont
@@ -95,7 +97,7 @@ Chaque poste de l'équipe doit relever `free -h` avant la journée d'intégratio
 - [x] **Accès d'Airflow aux modules.** Image dédiée (`docker/airflow/Dockerfile`), dépendances dans un venv séparé, `src/` et `data/` montés, aucun accès au démon Docker. Conséquence : `docker compose build app` ne reconstruit pas Airflow, le réflexe devient `docker compose build`.
 - [x] **Droits sur `data/`.** L'utilisateur `airflow` ne pouvait pas écrire dans `data/raw/lots/` (créé par le conteneur `app`, en root). Correction : `sudo chmod -R a+rwX data`. À annoncer à toute l'équipe.
 - [x] **Doublons de quarantaine au rejeu d'un contrôle.** Aucun doublon : `quarantaine.rejets` reste à 2 130 lignes après plusieurs exécutions du contrôle olist sur la même ingestion.
-- [ ] **Commandes de F1.9 et F1.10.** `integration.correspondance`, `integration.chargement` et `integration.verifier` n'existent pas encore : tâches factices jusqu'à la fusion.
+- [x] **Commandes de F1.9 et F1.10.** `integration.correspondance`, `integration.chargement` et `integration.verifier` existent et sont branchées dans le DAG.
 - [ ] **Lignes d'article sans commande parente.** 8 lignes de `staging.olist_order_items` n'ont pas de commande dans `staging.olist_orders` (commandes rejetées par `OLIST_COMMANDES_02`) : le comptage attendu par la vérification dépend de la décision du livrable 2.
 
 ## 8. Vérification du contrat

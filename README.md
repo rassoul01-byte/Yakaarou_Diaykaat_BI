@@ -75,11 +75,11 @@ Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »),
 | Supervision de la chaîne et du flux | Fonctionne | `src/supervision/` | — |
 | Recherche produit | Fonctionne ; pas de filtre de prix (le catalogue n'en contient pas) | `src/recherche/` | `recherche.md`, `index.md` |
 | Service référentiel | Fonctionne | `src/referentiel/` | `referentiel.md` |
-| Orchestration quotidienne | Fonctionne, 10 tâches ; pas de tâche pour la prédiction ni pour l'index des passages | `dags/quotidien.py` | `workflow.md` |
+| Orchestration quotidienne | Fonctionne, 12 tâches (dont les scores de ré-achat et l'index des passages) | `dags/quotidien.py` | `workflow.md` |
 | Modèle de ré-achat | Fait ; ne bat pas la règle simple, résultat publié tel quel | `src/prediction/` | `modele.md` |
 | Segment à retenir | Fait : vue `dwh.v_segment_a_retenir` | `sql/019_v_segment_a_retenir.sql` | dictionnaire |
-| Base documentaire vectorisée (FAQ) | Fait ; seuil de recherche provisoire | `src/documentaire/`, `docs/documentaire/` | `faq.md`, `passages.md` (brouillon) |
-| Assistant | Branché sur la recherche vectorielle par défaut ; seuils et jeu de questions provisoires | `src/assistant/` | `assistant.md` (brouillon) |
+| Base documentaire vectorisée (FAQ) | Fait ; indexée chaque jour par le DAG | `src/documentaire/`, `docs/documentaire/` | `faq.md` (brouillon), `passages.md` |
+| Assistant | Branché sur la recherche vectorielle par défaut ; seuils mesurés sur le jeu gelé (62 questions) | `src/assistant/` | `assistant.md` |
 | Tableau de bord Power BI | Page « Qualité » ; les autres pages restent à construire | `dashboards/ventes.pbix` | dictionnaire |
 
 Tous les contrats sont dans [`docs/contrats/`](docs/contrats/).
@@ -124,7 +124,7 @@ acquisition_catalogue ─▶ controle_catalogue ────┘                 
 
 Un rapport de rejet au-dessus du seuil est un échec métier : la tâche n'est pas rejouée. La réindexation du catalogue avance en parallèle du chargement de l'entrepôt, pour qu'une indexation lente ne retarde pas les chiffres de vente.
 
-**Dette connue :** le DAG ne comporte pas de tâche pour la prédiction ni pour l'index des passages de la FAQ. Ces deux traitements se lancent à la main.
+Deux tâches complètent la chaîne : `indexation_passages` (vérifie puis indexe la FAQ, sans dépendance amont) et `scores_reachat` (écrit tous les scores dans `data/scores_reachat.csv`, après la `verification` de l'entrepôt). L'entraînement et l'évaluation du modèle (`python -m prediction`) restent lancés à la main.
 
 ### Recherche produit
 
@@ -181,13 +181,11 @@ python -m assistant.evaluer                              # évalue sur le jeu de
 - Le retrouveur par défaut est **externe** : il passe par la recherche vectorielle d'Elasticsearch. La variable `ASSISTANT_RETROUVEUR=depannage` bascule sur une recherche TF-IDF hors ligne, pour les tests et les diagnostics.
 - Chaque échange est écrit dans un journal `.jsonl` local, sauf avec `--sans-journal`.
 - `assistant.evaluer` mesure, du plus grave au moins grave : les réponses à tort, les mauvais passages, les faux refus, puis les questions bien orientées. Le taux de réponses ancrées vaut 100 % par construction.
-- Le jeu de questions (`tests/assistant/jeu_de_questions.jsonl`, 52 questions) est d'origine « provisoire ». Les dix questions pièges de Seydina sont dans `docs/documentaire/questions_pieges_seydina.jsonl`, en attente de leur intégration au jeu et de son gel.
-- Les seuils de l'assistant (0,35 / 0,18 / 0,12) et celui de la recherche sémantique (0,67) sont **provisoires** : ils seront remesurés sur le jeu gelé.
+- Le jeu de questions (`tests/assistant/jeu_de_questions.jsonl`, 62 questions dont les dix questions pièges de Seydina) est **gelé** depuis le 2026-10-07 (empreinte dans `tests/assistant/jeu_de_questions.gel.json`).
+- Les seuils de l'assistant (0,84 / 0,20 / 0,00) ont été mesurés sur ce jeu gelé : 0 mauvais passage et 0 réponse à tort **sur ce jeu**, ce qui n'est pas une garantie au-delà (limites au §6 de [`assistant.md`](docs/contrats/assistant.md)). Taux de réponses ancrées relevé le 2026-10-08 : 100 % (62/62), voir le dictionnaire des indicateurs. Les seuils de dépannage (0,35 / 0,18 / 0,12) ne servent qu'au retrouveur TF-IDF hors ligne.
 
 ### Reste à faire pour clore le Sprint 5
 
-- Geler le jeu de questions, remesurer les seuils, mesurer le taux d'ancrage et l'écrire dans le dictionnaire.
-- Sortir `assistant.md` et `passages.md` du statut « brouillon ».
 - Construire les pages manquantes du tableau de bord (ventes, compteurs du jour, segment, ancrage).
 - Rédiger le dossier de conception, puis publier la version 1.0 : fusion de `develop` dans `main` et tag `v1.0`.
 
@@ -411,6 +409,8 @@ docker compose exec app python -m pytest
 
 Tous les tests doivent passer. Les tests marqués `integration` sont ignorés par défaut : ils exigent les services démarrés (PostgreSQL migré, et Elasticsearch pour les passages). Ils se lancent avec `python -m pytest -m integration`. C'est la commande `pytest -m "not integration"` que lance l'intégration continue.
 
+> **Usage local uniquement.** Les ports sont liés à `127.0.0.1`, Elasticsearch tourne sans authentification (`xpack.security.enabled: false`) et les mots de passe de `.env.example` sont des valeurs de démonstration. Ne pas déployer cette configuration telle quelle sur un serveur.
+
 ### Accès aux services
 
 | Service | Adresse par défaut |
@@ -506,7 +506,7 @@ Plusieurs modules ont leur propre `README.md` : `src/acquisition/`, `src/common/
 | Sprint 2 | Qualité et transformation | Terminé |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | Terminé |
 | Sprint 4 | Temps réel, recherche et supervision | Terminé (tag `v0.5`) |
-| Sprint 5 | Intelligence artificielle et finalisation | En cours — voir « Reste à faire pour clore le Sprint 5 » |
+| Sprint 5 | Intelligence artificielle et finalisation | En cours — voir « Reste à faire pour clore le Sprint 5 » (jeu gelé, seuils et taux d'ancrage faits) |
 
 ---
 
