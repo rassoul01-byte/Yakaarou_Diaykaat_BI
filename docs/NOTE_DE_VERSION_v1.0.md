@@ -63,6 +63,8 @@ Ils sont publiés tels quels, y compris quand ils sont défavorables.
 
 **Le taux de réponses ancrées vaut 100 % par construction** : l'assistant ne peut pas produire une réponse sans citation. La mesure confirme le dispositif, elle ne prouve ni la justesse des réponses ni la qualité de la recherche.
 
+**L'assistant, sur le jeu gelé le 2026-10-07** (62 questions, dont 31 couvertes ; seuils 0,84 / 0,20 / 0,00) : 6 bonnes réponses directes, 23 refus avec bonne suggestion, 31 refus corrects, 2 faux refus, **0 mauvais passage et 0 réponse à tort**. Ces zéros valent sur ce jeu, pas au-delà : les seuils ont été réglés dessus, et le seuil de réponse est à moins de 0,001 d'une erreur connue. Détail dans `docs/contrats/assistant.md`, §6.
+
 ---
 
 ## Écarts par rapport au prévu
@@ -80,8 +82,8 @@ Détail et motifs : `docs/dossier_conception.md`, §2.
 
 ## Limites connues
 
-- **Jeu de questions de l'assistant** : au moment de cette note, il n'est pas encore gelé (date et empreinte) ; les seuils de l'assistant et de la recherche sont à mesurer sur le jeu gelé, et le taux d'ancrage n'a pas de valeur officielle avant ce gel. *À mettre à jour avant de taguer si le gel est fait.*
-- `docs/contrats/assistant.md` et `docs/contrats/passages.md` restent au statut « brouillon » tant que les seuils ne sont pas écrits.
+- **Assistant** : les zéros « mauvais passage » et « réponse à tort » valent sur le jeu gelé (62 questions), pas sur des questions que personne n'a vues. Deux faux refus connus ; le seuil de réponse est proche d'une erreur connue. Piste de suite : un reranker après la recherche vectorielle.
+- `docs/contrats/assistant.md` et `docs/contrats/passages.md` sont encore au statut « brouillon » : à lever avant de taguer, les seuils étant écrits.
 - **Tableau de bord Power BI** : la page « Qualité » est livrée ; les pages ventes, compteurs du jour (« trafic simulé »), segment à retenir et ancrage restent à finaliser.
 - Le DAG `quotidien` (10 tâches) ne lance ni la prédiction ni l'index des passages : ils se lancent à la main.
 - Couverture du fichier de correspondance des catégories partielle ; requêtes du générateur d'événements peu réalistes ; prix absent du catalogue.

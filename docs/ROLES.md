@@ -12,10 +12,10 @@ Ce document fixe qui fait quoi et qui décide quoi. Il complète la section cons
 
 | Membre | Rôle de conduite | Périmètre technique | Dossier dans `src/` |
 |---|---|---|---|
-| **Bachir DEME** | Product Owner | Recherche, Machine Learning et intelligence artificielle | `search/`, `ml/` |
-| **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements | `acquisition/`, `streaming/` |
-| **Ndeye Penda SARR** | Conception et documentation | Orchestration et restitution décisionnelle | `dags/`, `common/` |
-| **Seydina WADE** | — | Stockage, qualité des données et intégration continue | `quality/`, `.github/workflows/` |
+| **Bachir DEME** | Product Owner | Recherche, historique d'achat et assistant | `recherche/`, `assistant/` |
+| **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements | `acquisition/`, `generateur/`, `compteurs/` |
+| **Ndeye Penda SARR** | Conception et documentation | Orchestration, restitution décisionnelle et modèle de ré-achat | `dags/`, `common/`, `prediction/`, `dashboards/` |
+| **Seydina WADE** | — | Stockage, qualité des données, base documentaire et intégration continue | `quality/`, `documentaire/`, `.github/workflows/` |
 | **Aissata DIALLO** (a quitté le projet, §4.3) | — | Transformation et intégration | `transformation/`, `integration/` |
 
 Les rôles de conduite s'ajoutent au périmètre technique, ils ne le remplacent pas. Bachir et Mouhameth développent au même titre que les autres.
@@ -109,7 +109,7 @@ Répartition finale : Bachir 14, Ndeye Penda 11, Seydina 7, Aissata 7, Mouhameth
 
 ### 4.3 Révision du Sprint 5
 
-Deux livrables du Sprint 5 changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
+Aissata DIALLO a quitté le projet au Sprint 3 : Ndeye Penda SARR a repris sa part des Sprints 3 et 4. Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
 
 | Code | Fonctionnalité | De → vers | Motif |
 |---|---|---|---|
@@ -143,15 +143,7 @@ En cas de désaccord persistant, la décision est prise à la réunion de sprint
 
 ## 6. Suppléance
 
-Chaque périmètre a un suppléant désigné, capable de reprendre les tâches en cours en cas d'empêchement. **Table révisée au Sprint 5 après le départ d'Aissata DIALLO, qui était suppléante de deux périmètres : proposition, à valider à la réunion de sprint.** Le suppléant est le relecteur privilégié des demandes de fusion du périmètre : c'est ainsi qu'il en garde la connaissance sans effort supplémentaire.
-
-| Périmètre | Responsable | Suppléant | Raison |
-|---|---|---|---|
-| Recherche, ML et IA | Bachir DEME | Seydina WADE | Il relit l'assistant et a construit la base documentaire qu'il interroge |
-| Acquisition et flux | Mouhameth DIOP | Seydina WADE | La collecte alimente directement les zones de stockage |
-| Stockage et qualité | Seydina WADE | Mouhameth DIOP | Réciproque du précédent |
-| Transformation et intégration | — (livré avant le départ d'Aissata DIALLO) | Ndeye Penda SARR | L'entrepôt est la source des indicateurs ; elle reprend les corrections éventuelles |
-| Orchestration et restitution | Ndeye Penda SARR | Bachir DEME | Il relit le modèle et connaît l'entrepôt par ses variables |
+Il n'y a pas de suppléant désigné. Aissata DIALLO, suppléante de deux périmètres au Sprint 0, a quitté le projet au Sprint 3. La relecture croisée du §7 (une demande de fusion est relue par un membre d'un autre périmètre) reste en vigueur.
 
 ---
 
