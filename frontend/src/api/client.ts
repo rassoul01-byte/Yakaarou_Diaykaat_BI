@@ -3,11 +3,17 @@
 import type {
   AssistantIn,
   AssistantOut,
+  IndicateursIn,
+  IndicateursOut,
   RechercheIn,
   RechercheOut,
 } from "../types/api";
 
-const API_BASE = "http://localhost:8001/api";
+/* L'adresse de l'API se règle à la construction, via VITE_API_BASE
+   (voir frontend/.env.example). Écrite en dur, elle ne marchait que sur le
+   poste de développement : sur une autre machine, le frontend ne joignait
+   rien. La valeur par défaut reste le poste local. */
+const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8001/api";
 
 export class ApiError extends Error {
   status: number;
@@ -60,4 +66,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+
+  indicateurs: (options: IndicateursIn = {}) => {
+    const parametres = new URLSearchParams();
+    if (options.top !== undefined) parametres.set("top", String(options.top));
+    if (options.motifs !== undefined) parametres.set("motifs", String(options.motifs));
+    if (options.heure !== undefined) parametres.set("heure", String(options.heure));
+
+    const requete = parametres.toString();
+    return request<IndicateursOut>(`/indicateurs${requete ? `?${requete}` : ""}`);
+  },
 };
