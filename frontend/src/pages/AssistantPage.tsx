@@ -2,17 +2,23 @@ import { useState } from "react";
 import { AlertTriangle, Bot, Search, ShieldCheck } from "lucide-react";
 
 import { ApiError, api } from "../api/client";
+import BoutonRetry from "../components/BoutonRetry";
+import { SkeletonAssistant } from "../components/Skeleton";
 import type { AssistantOut, Passage, Suggestion } from "../types/api";
 
+const CLE_LOCALSTORAGE = "assistant.derniereQuestion";
+
 export default function AssistantPage() {
-  const [question, setQuestion] = useState("");
-  const [reponse, setReponse] = useState<AssistantOut | null>(null);
+  const [question, setQuestion] = useState(
+    () => localStorage.getItem(CLE_LOCALSTORAGE) ?? "",
+  );  const [reponse, setReponse] = useState<AssistantOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
   async function demander(texte = question) {
     if (!texte.trim()) return;
     setQuestion(texte);
+    localStorage.setItem(CLE_LOCALSTORAGE, texte);
     setLoading(true);
     setErreur(null);
     try {
@@ -61,9 +67,10 @@ export default function AssistantPage() {
               onChange={(e) => setQuestion(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && demander()}
               placeholder="Ex. Comment suivre une commande ?"
+              disabled={loading}
             />
             <button onClick={() => demander()} disabled={loading}>
-              {loading ? "…" : "Envoyer"}
+              {loading ? "Recherche…" : "Envoyer"}
             </button>
           </div>
 
@@ -73,23 +80,19 @@ export default function AssistantPage() {
               "Quel est le délai de remboursement ?",
               "Combien coûte un retour ?",
             ].map((item) => (
-              <button key={item} onClick={() => demander(item)}>
+              <button key={item} onClick={() => demander(item)} disabled={loading}>
                 {item}
               </button>
             ))}
           </div>
 
-          {erreur && (
-            <div className="warning-box" style={{ marginTop: "1rem" }}>
-              <AlertTriangle size={18} />
-              <div>
-                <strong>Erreur</strong>
-                <span>{erreur}</span>
-              </div>
-            </div>
+          {loading && <SkeletonAssistant />}
+
+          {erreur && !loading && (
+            <BoutonRetry message={erreur} onRetry={() => demander()} />
           )}
 
-          {reponse && (
+          {reponse && !loading && !erreur && (
             <div className="answer-card">
               <div className="answer-label">
                 {reponse.refus ? "REFUS" : "RÉPONSE"}
@@ -101,8 +104,12 @@ export default function AssistantPage() {
               {reponse.passages.length > 0 && (
                 <div className="sources">
                   <div className="answer-label">PASSAGES UTILISÉS</div>
-                  {reponse.passages.map((p: Passage) => (
-                    <div className="source-row" key={p.id}>
+                  {reponse.passages.map((p: Passage, i: number) => (
+                    <div
+                      className="source-row"
+                      key={p.id}
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
                       <span>{p.theme}</span>
                       <strong>{p.question}</strong>
                       <span style={{ marginLeft: "auto", opacity: 0.6 }}>
@@ -116,8 +123,12 @@ export default function AssistantPage() {
               {reponse.suggestions.length > 0 && (
                 <div className="sources">
                   <div className="answer-label">SUGGESTIONS</div>
-                  {reponse.suggestions.map((s: Suggestion) => (
-                    <div className="source-row" key={s.id}>
+                  {reponse.suggestions.map((s: Suggestion, i: number) => (
+                    <div
+                      className="source-row"
+                      key={s.id}
+                      style={{ animationDelay: `${i * 60}ms` }}
+                    >
                       <strong>{s.question}</strong>
                     </div>
                   ))}

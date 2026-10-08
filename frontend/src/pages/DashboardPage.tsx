@@ -1,7 +1,5 @@
-import { AlertTriangle, ArrowUpRight, Bot, Database, Search, Sparkles, ShieldCheck } from "lucide-react";
-
-import type { Page } from "../components/Sidebar";
-
+import { AlertTriangle, ArrowUpRight, Bot, Search, Sparkles, ShieldCheck } from "lucide-react";
+import type { Page } from "../components/navigation";
 type Props = {
   onNavigate: (page: Page) => void;
 };

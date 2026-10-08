@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { AlertTriangle, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 import { ApiError, api } from "../api/client";
+import BoutonRetry from "../components/BoutonRetry";
+import { SkeletonListeProduits } from "../components/Skeleton";
 import type { Produit } from "../types/api";
+
+const CLE_LOCALSTORAGE = "recherche.derniereRequete";
 
 export default function RecherchePage() {
   const [q, setQ] = useState("");
@@ -15,6 +19,7 @@ export default function RecherchePage() {
   async function lancer(question = q) {
     if (!question.trim()) return;
     setQ(question);
+    localStorage.setItem(CLE_LOCALSTORAGE, question);
     setLoading(true);
     setErreur(null);
     try {
@@ -55,7 +60,7 @@ export default function RecherchePage() {
             <div className="panel-kicker">REQUÊTE</div>
             <h3>Votre recherche</h3>
           </div>
-          {total !== null && temps !== null && (
+          {total !== null && temps !== null && !loading && (
             <span className="panel-tag">
               {total} résultat{total > 1 ? "s" : ""} · {temps} ms
             </span>
@@ -68,38 +73,39 @@ export default function RecherchePage() {
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && lancer()}
             placeholder="Ex. chaise de bureau, lampe, tapis…"
+            disabled={loading}
           />
           <button onClick={() => lancer()} disabled={loading}>
-            {loading ? "…" : "Rechercher"}
+            {loading ? "Recherche…" : "Rechercher"}
           </button>
         </div>
 
         <div className="suggestions">
           {["chaise de bureau", "lampe", "tapis", "coussin"].map((item) => (
-            <button key={item} onClick={() => lancer(item)}>
+            <button key={item} onClick={() => lancer(item)} disabled={loading}>
               {item}
             </button>
           ))}
         </div>
 
-        {erreur && (
-          <div className="warning-box" style={{ marginTop: "1rem" }}>
-            <AlertTriangle size={18} />
-            <div>
-              <strong>Erreur</strong>
-              <span>{erreur}</span>
-            </div>
-          </div>
+        {loading && <SkeletonListeProduits nombre={5} />}
+
+        {erreur && !loading && (
+          <BoutonRetry message={erreur} onRetry={() => lancer()} />
         )}
 
-        {produits && produits.length > 0 && (
+        {produits && produits.length > 0 && !loading && !erreur && (
           <div className="sources" style={{ marginTop: "1rem" }}>
             <div className="answer-label">
               {produits.length} PRODUIT{produits.length > 1 ? "S" : ""} AFFICHÉ
               {produits.length > 1 ? "S" : ""}
             </div>
-            {produits.map((p) => (
-              <div className="source-row" key={p.product_id}>
+            {produits.map((p, i) => (
+              <div
+                className="source-row"
+                key={p.product_id}
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
                 <span>{p.categorie_code || "—"}</span>
                 <strong>{p.designation}</strong>
                 <span style={{ marginLeft: "auto", opacity: 0.6 }}>
@@ -110,8 +116,10 @@ export default function RecherchePage() {
           </div>
         )}
 
-        {produits && produits.length === 0 && !erreur && (
-          <p style={{ marginTop: "1rem" }}>Aucun résultat pour cette requête.</p>
+        {produits && produits.length === 0 && !loading && !erreur && (
+          <p style={{ marginTop: "1rem", color: "var(--c-texte-doux)" }}>
+            Aucun résultat pour cette requête.
+          </p>
         )}
       </section>
     </>

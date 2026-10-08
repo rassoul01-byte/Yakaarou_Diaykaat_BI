@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { api } from "./api/client";
-import Sidebar, { navItems, type Page } from "./components/Sidebar";
-import Topbar from "./components/Topbar";
+import Sidebar from "./components/Sidebar";
+import { navItems, type Page } from "./components/navigation";import Topbar from "./components/Topbar";
 import AssistantPage from "./pages/AssistantPage";
 import DashboardPage from "./pages/DashboardPage";
 import RecherchePage from "./pages/RecherchePage";
@@ -47,9 +47,12 @@ export default function App() {
         />
 
         <div className="content">
-          {page === "dashboard" && <DashboardPage onNavigate={naviguer} />}
-          {page === "recherche" && <RecherchePage />}
-          {page === "assistant" && <AssistantPage />}
+          {/* La clé force React à remonter le composant, ce qui relance l'animation */}
+          <div key={page} className="page-enter">
+            {page === "dashboard" && <DashboardPage onNavigate={naviguer} />}
+            {page === "recherche" && <RecherchePage />}
+            {page === "assistant" && <AssistantPage />}
+          </div>
         </div>
       </main>
     </div>
