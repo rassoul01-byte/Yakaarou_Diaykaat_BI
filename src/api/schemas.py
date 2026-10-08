@@ -26,8 +26,8 @@ class PassageOut(BaseModel):
 
 
 class SuggestionOut(BaseModel):
-    """Ce que l'assistant propose quand il hésite : le contrat (assistant.md §3) ne
-    publie que l'identifiant et la question, pas le texte ni le score."""
+    """Ce que l'assistant propose quand il hésite : le contrat (assistant.md §3)
+    ne publie que l'identifiant et la question, pas le texte ni le score."""
 
     id: str
     question: str
@@ -42,9 +42,25 @@ class AssistantOut(BaseModel):
     duree_ms: int
 
 
-# --------------------------------------------------------------- recherche
+# --------------------------------------------------------------- recherche produits
 
 
 class RechercheIn(BaseModel):
     q: str = Field(min_length=1, max_length=300)
-    k: int = Field(default=5, ge=1, le=20)
+    k: int = Field(default=10, ge=1, le=50)
+    categorie: str | None = None
+    langue: str | None = None
+
+
+class ProduitOut(BaseModel):
+    product_id: str
+    designation: str
+    categorie_code: str | None
+    score: float
+
+
+class RechercheOut(BaseModel):
+    question_posee: str
+    produits: list[ProduitOut]
+    total: int
+    temps_serveur_ms: int
