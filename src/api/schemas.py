@@ -25,12 +25,20 @@ class PassageOut(BaseModel):
     score: float
 
 
+class SuggestionOut(BaseModel):
+    """Ce que l'assistant propose quand il hésite : le contrat (assistant.md §3) ne
+    publie que l'identifiant et la question, pas le texte ni le score."""
+
+    id: str
+    question: str
+
+
 class AssistantOut(BaseModel):
     reponse: str
     refus: bool
     motif: str | None
     passages: list[PassageOut]
-    suggestions: list[PassageOut]
+    suggestions: list[SuggestionOut]
     duree_ms: int
 
 
