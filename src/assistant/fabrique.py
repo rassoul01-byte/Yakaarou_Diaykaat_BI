@@ -14,16 +14,13 @@ import os
 from .garde_fous import Seuils
 from .retrouveur import Retrouveur, RetrouveurDepannage, RetrouveurExterne
 
-# Seuils de la recherche vectorielle. PROVISOIRES : repris du dépannage en
-# attendant la remesure sur le jeu gelé (passages.md §8). Échelle cosinus,
-# plus haut = plus proche.
-
 # Seuils de la recherche vectorielle, mesurés sur le jeu gelé (62 questions)
 # le 2026-10-07 (SHA256 786dada1d1874e139d0376b7ff148c957762ffa16a77d1524f99c3700f4e0dbd).
 # Contraintes respectées : mauvais_passage=0, réponse_à_tort=0.
 # Résultats : 6 bonnes réponses, 23 suggestions, 2 faux refus (q05, s07 :
 # leur passage n'est pas dans le top 5 — limite du retrouveur).
 # Marge à 0 : les scores du retrouveur sont très serrés entre les top passages.
+# Échelle des scores : plus haut = plus proche.
 SEUILS_EXTERNE = Seuils(reponse=0.84, suggestion=0.20, marge=0.00)
 
 

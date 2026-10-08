@@ -132,6 +132,8 @@ avec la recherche documentaire (`documentaire.rechercher`, retrouveur
 | **Mauvais passage** | **0** ✅ |
 | **Réponse à tort** | **0** ✅ |
 
+Ces zéros valent **sur ce jeu**, pas au-delà : voir « Limites connues » ci-dessous.
+
 ### Justification de la marge à 0
 
 Le retrouveur vectoriel produit des cosinus très proches entre les top
@@ -144,6 +146,15 @@ passages (écart médian top 1 / top 2 ≈ 0,02). Une marge non nulle
   s07 (« Ma commande passée en 2026 est arrivée cassée »). Leur passage
   attendu n'apparaît pas dans le top 5 du retrouveur — aucun seuil ne peut
   les sauver. C'est une limite du retrouveur actuel.
+- **« 0 sur le jeu » n'est pas une garantie.** Les seuils ont été réglés sur ce jeu,
+  qui ne compte que 31 questions couvertes : zéro mauvais passage et zéro réponse à
+  tort ne sont pas assurés sur des questions que personne n'a vues. Une validation
+  croisée sur deux moitiés du jeu (réglage sur l'une, mesure sur l'autre) a d'ailleurs
+  donné une erreur grave pour certains réglages voisins.
+- **Le seuil de réponse est proche d'une erreur connue.** À la collecte du 7 octobre,
+  le plus haut score d'un premier résultat faux était de 0,8391 (« Combien coûte un
+  retour ? »), soit moins de 0,001 sous le seuil de 0,84. Un réglage à 0,85 aurait un
+  peu plus de marge de sécurité, au prix de quelques réponses directes en moins.
 - **Piste d'amélioration (Sprint 6)** : ajouter un reranker cross-encoder
   après la recherche vectorielle.
 
