@@ -1,6 +1,6 @@
 # Contrat — Passages : la base documentaire vectorisée
 
-**Statut** : brouillon · **Responsable** : Seydina WADE · **Relecteur** : Bachir DEME · **Fonctionnalité** : F5.2 · **Sprint** : 5
+**Statut** : stable (indexation et seuils mesurés, voir `assistant.md` §6) · points ouverts au §11 · **Responsable** : Seydina WADE · **Relecteur** : Bachir DEME · **Fonctionnalité** : F5.2 · **Sprint** : 5
 
 Ce contrat fixe ce que l'assistant de Bachir reçoit de la recherche de passages, avant que l'indexation soit écrite. Il prolonge `docs/contrats/faq.md` (F5.1) : la foire aux questions est la matière, les passages en sont la forme indexée.
 
@@ -135,5 +135,5 @@ La recherche affiche le JSON du §7 ; code de sortie 0 même sans résultat, 1 s
 | Point | Avec qui | Échéance |
 |---|---|---|
 | Validation du modèle de vecteurs (MiniLM multilingue, 384) | Bachir | jour 3 |
-| Seuil « je ne sais pas » | Bachir | quand l'assistant tourne sur les passages réels |
+| ~~Seuil « je ne sais pas »~~ | Bachir | **fait le 2026-10-07** : 0,84 / 0,20 / 0,00, mesurés sur le jeu gelé (`assistant.md` §6) |
 | Relecteur : `faq.md` indique Mouhameth DIOP, ce contrat Bachir DEME | équipe | à aligner dans `ROLES.md` |

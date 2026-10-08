@@ -1,6 +1,6 @@
 # Contrat — L'assistant client local
 
-**Statut** : brouillon · **Responsable** : Bachir DEME · **Relecteur** : Seydina WADE · **Fonctionnalités** : F5.3 à F5.6 · **Sprint** : 5
+**Statut** : stable (seuils mesurés le 2026-10-07 sur le jeu gelé, §6) · points ouverts au §9 · **Responsable** : Bachir DEME · **Relecteur** : Seydina WADE · **Fonctionnalités** : F5.3 à F5.6 · **Sprint** : 5
 **Modules** : `src/assistant/` · **Lecteurs** : Seydina (recherche de passages), Ndeye Penda (journal, taux d'ancrage), la personne chargée de l'interface
 
 ---
@@ -164,6 +164,10 @@ passages (écart médian top 1 / top 2 ≈ 0,02). Une marge non nulle
 docker compose exec app python -m scripts.assistant.mesurer_scores
 docker compose exec app python -m scripts.assistant.analyser_scores
 docker compose exec app python -m scripts.assistant.balayer_seuils --top 30
+```
+
+---
+
 ## 7. Les commandes
 
 ```bash
@@ -173,7 +177,7 @@ docker compose exec app python -m assistant.evaluer --detail
 ```
 
 `--sans-journal` évite l'écriture du journal.
-`
+
 ---
 
 ## 8. Limites connues
@@ -189,8 +193,8 @@ docker compose exec app python -m assistant.evaluer --detail
 
 | Point | Avec qui | Échéance |
 |---|---|---|
-| Brancher `documentaire.rechercher` derrière `RetrouveurExterne` et mesurer ses seuils sur le jeu gelé | Seydina | quand `rechercher.py` existe |
-| Dix questions pièges, écrites sans que l'auteur les voie, puis gel du jeu | Seydina | avant le calibrage |
+| ~~Brancher `documentaire.rechercher` derrière `RetrouveurExterne` et mesurer ses seuils sur le jeu gelé~~ | Seydina | **fait le 2026-10-07** (`fabrique.py`, seuils au §6) |
+| ~~Dix questions pièges, écrites sans que l'auteur les voie, puis gel du jeu~~ | Seydina | **fait le 2026-10-07** (62 questions, empreinte au §6) |
 | Format du journal : confirmer qu'il suffit au calcul du taux d'ancrage et où il est lu | Ndeye Penda | avant l'intégration |
 | Format de réponse (§3) : confirmer qu'il suffit à l'interface | Responsable de l'interface | dès la lecture de ce contrat |
 | Libellé exact du « service client » dans les refus | Product Owner | avant la démonstration |
