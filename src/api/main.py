@@ -1,7 +1,9 @@
 """API HTTP pour l'app React de démonstration.
 
-Trois endpoints (périmètre figé avec Ndeye Penda) :
+Quatre endpoints (périmètre rouvert avec Ndeye Penda le 2026-10-08, pour que
+la vue générale affiche des chiffres plutôt que des captures d'écran) :
 - GET  /api/health
+- GET  /api/indicateurs        (routers/indicateurs.py)  — lecture seule
 - POST /api/assistant/ask      (routers/assistant.py)
 - POST /api/recherche          (routers/recherche.py)
 """
@@ -11,7 +13,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import assistant, recherche
+from .routers import assistant, indicateurs, recherche
 
 app = FastAPI(title="DataFlow360 API", version="1.0")
 
@@ -38,3 +40,4 @@ def health() -> dict:
 
 app.include_router(assistant.router, prefix="/api/assistant", tags=["assistant"])
 app.include_router(recherche.router, prefix="/api/recherche", tags=["recherche"])
+app.include_router(indicateurs.router, prefix="/api/indicateurs", tags=["indicateurs"])
