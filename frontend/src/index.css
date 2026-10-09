@@ -1054,6 +1054,40 @@ textarea {
   color: var(--c-texte);
 }
 
+/* Une suggestion est une question que l'assistant SAIT traiter. Elle doit donc se
+   cliquer : affichée en texte mort, l'utilisateur voit la bonne réponse sans pouvoir
+   l'ouvrir, et doit la recopier à la main. */
+button.source-row {
+  width: 100%;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+
+button.source-row:hover:not(:disabled) {
+  border-color: var(--c-primaire);
+  background: var(--c-primaire-clair);
+}
+
+button.source-row:hover:not(:disabled) strong {
+  color: var(--c-primaire-sombre);
+}
+
+button.source-row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+button.source-row .chevron {
+  display: flex;
+  color: var(--c-primaire);
+}
+
 /* ============================================================
    Assistant sidebar
    ============================================================ */

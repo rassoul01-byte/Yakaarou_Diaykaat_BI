@@ -5,7 +5,8 @@
 
 Le journal reste un fichier .jsonl écrit par l'assistant (docs/contrats/assistant.md, §5). Ce
 chargeur le copie dans `staging.journal_assistant`, que Power BI lit par les vues
-`staging.v_taux_ancrage` et `staging.v_taux_ancrage_global`.
+`staging.v_taux_ancrage`, `staging.v_taux_ancrage_global`, `staging.v_part_suggestions` et
+`staging.v_reformulations` (les formulations de clients à relire, voir sql/022).
 
 Deux sources, qui ne se mélangent jamais :
 
@@ -38,7 +39,7 @@ import psycopg2.extras
 
 from common.config import load_settings
 
-from .journal import JOURNAL_DEFAUT, JOURNAL_EVALUATION, masquer
+from .journal import JOURNAL_DEFAUT, JOURNAL_EVALUATION, ORIGINE_PAR_DEFAUT, ORIGINES, masquer
 
 SOURCES = ("usage", "evaluation")
 
@@ -55,6 +56,8 @@ CHAMPS = (
     "suggestions",
     "duree_ms",
     "retrouveur",
+    "origine",
+    "reformulation",
 )
 
 INSERTION = f"""
@@ -126,6 +129,14 @@ def en_ligne(entree: dict, source: str, id_echange: str) -> tuple:
     duree = entree.get("duree_ms")
     if duree is not None and (isinstance(duree, bool) or not isinstance(duree, int | float)):
         raise ValueError("« duree_ms » doit être un nombre ou null")
+    # Un journal écrit avant la migration 023 n'a pas ces champs : on le charge quand même,
+    # avec l'origine par défaut, plutôt que de déclarer illisibles des échanges déjà passés.
+    origine = entree.get("origine", ORIGINE_PAR_DEFAUT)
+    if origine not in ORIGINES:
+        raise ValueError(f"« origine » inconnue : {origine!r} (attendu : {', '.join(ORIGINES)})")
+    reformulation = entree.get("reformulation")
+    if reformulation is not None and not isinstance(reformulation, str):
+        raise ValueError("« reformulation » doit être du texte ou null")
     return (
         id_echange,
         source,
@@ -139,6 +150,9 @@ def en_ligne(entree: dict, source: str, id_echange: str) -> tuple:
         _liste(entree, "suggestions"),
         None if duree is None else round(duree),
         _texte(entree, "retrouveur"),
+        origine,
+        # Masquée une seconde fois, comme la question : le fichier peut venir d'ailleurs.
+        masquer(reformulation) if reformulation else None,
     )
 
 

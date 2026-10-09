@@ -59,6 +59,10 @@ def test_une_entree_valide_donne_une_ligne_complete():
         "suggestions": [],
         "duree_ms": 12,
         "retrouveur": "faux",
+        # `une_entree()` ne les porte pas : un journal d'avant la migration 023 se
+        # charge quand même, avec l'origine par défaut.
+        "origine": "saisie",
+        "reformulation": None,
     }
 
 
@@ -104,11 +108,25 @@ def test_un_refus_sans_passage_est_une_entree_valide():
         ({"score_meilleur": "haut"}, "score_meilleur"),
         ({"duree_ms": True}, "duree_ms"),
         ({"retrouveur": None}, "retrouveur"),
+        ({"origine": "ailleurs"}, "origine"),
+        ({"reformulation": 12}, "reformulation"),
     ],
 )
 def test_une_entree_invalide_est_refusee_avec_sa_cause(surcharge, cause):
     with pytest.raises(ValueError, match=cause):
         cj.en_ligne(une_entree(**surcharge), "usage", "id-1")
+
+
+def test_la_reformulation_est_masquee_une_seconde_fois():
+    """Le fichier peut venir d'ailleurs que de l'assistant : la base ne doit rien recevoir."""
+    ligne = cj.en_ligne(
+        une_entree(origine="suggestion", reformulation="ma commande 8f3a2c9d1e est perdue"),
+        "usage",
+        "id-1",
+    )
+    colonnes = dict(zip(cj.CHAMPS, ligne, strict=True))
+    assert colonnes["origine"] == "suggestion"
+    assert colonnes["reformulation"] == "ma commande [identifiant] est perdue"
 
 
 def test_l_entree_ecrite_par_l_assistant_se_charge_telle_quelle():

@@ -37,11 +37,18 @@ class Retrouveur(Protocol):
         ...
 
 
-# Réglés sur le jeu de questions PROVISOIRE (tests/assistant/jeu_de_questions.jsonl, 52 questions),
-# par validation croisée sur ses deux moitiés ; à refaire sur le jeu gelé. Réglage prudent :
-# aucune réponse à tort ni aucun mauvais passage sur les deux moitiés. Son coût : l'assistant
-# ne répond directement qu'à environ une question couverte sur trois, et suggère pour la plupart
-# des autres. Voir docs/contrats/assistant.md, §6.
+# Réglés par validation croisée sur les deux moitiés du jeu, puis vérifiés sur le jeu gelé
+# (62 questions). Réglage prudent : aucune réponse à tort ni aucun mauvais passage.
+#
+# Mesure du 2026-10-09, après l'ajout des entrées de lexique « coût / délai / sort /
+# nouveau » : 12 bonnes réponses, 19 refus avec la bonne suggestion, 0 faux refus, sur
+# 31 questions couvertes. Chaque question couverte est donc soit répondue, soit bien
+# orientée.
+#
+# Baisser le seuil ne gagne rien ici : la plus haute question HORS BASE qui échappe au
+# filtre A (« Peut-on payer en bitcoin ? », que la foire aux questions ne traite pas)
+# score 0,33. Descendre sous cette valeur produit des réponses à tort avant de produire
+# des réponses justes. Voir docs/contrats/assistant.md, §6.
 SEUILS_DEPANNAGE = Seuils(reponse=0.35, suggestion=0.18, marge=0.12)
 
 

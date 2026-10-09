@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass, field
 
 from . import compositeur, garde_fous
+from . import journal as journal_module
 from .passages import Passage
 from .retrouveur import Retrouveur
 
@@ -79,11 +80,16 @@ def repondre(
     k: int = 3,
     journal=None,
     seuils: garde_fous.Seuils | None = None,
+    origine: str = journal_module.ORIGINE_PAR_DEFAUT,
+    reformulation: str | None = None,
 ) -> Reponse:
     """Répond à une question, ou refuse. Un refus est une réponse, pas une exception.
 
     Les pannes techniques (la recherche qui ne répond pas) remontent en exceptions : une
     panne n'est pas un refus et ne doit pas être comptée comme telle.
+
+    `origine` et `reformulation` ne changent RIEN à la réponse : ils ne servent qu'au
+    journal, pour savoir d'où venait la question (voir `journal.py`).
     """
     debut = time.perf_counter()
     texte = (question or "").strip()
@@ -106,5 +112,10 @@ def repondre(
             reponse = _refus(texte, decision.motif, debut, decision.suggestions)
 
     if journal is not None:
-        journal.enregistrer(reponse, retrouveur=retrouveur.nom)
+        journal.enregistrer(
+            reponse,
+            retrouveur=retrouveur.nom,
+            origine=origine,
+            reformulation=reformulation,
+        )
     return reponse
