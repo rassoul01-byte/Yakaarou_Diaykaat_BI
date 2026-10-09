@@ -187,7 +187,7 @@ function Chaine({ chaine, donnees }: SchemaProps) {
         </title>
 
         {/* liaisons */}
-        <g stroke="#a9bcd6" strokeWidth="1.25" fill="none">
+        <g stroke="#b8cde6" strokeWidth="1.25" fill="none">
           {sources.map((_, i) => (
             <path key={i} d={`M168 ${30 + i * 58} H208`} />
           ))}
@@ -206,19 +206,19 @@ function Chaine({ chaine, donnees }: SchemaProps) {
         </g>
         <path
           d={`M728 ${milieu} H768`}
-          stroke="#1e6bf0"
+          stroke="#1583ec"
           strokeWidth="2"
           fill="none"
         />
         <path
           d={`M352 ${milieu + 40} V${milieu + 92}`}
-          stroke="#b4232e"
+          stroke="#e63946"
           strokeWidth="2"
           fill="none"
         />
 
         {/* sources */}
-        <g fontSize="13" fill="#122240">
+        <g fontSize="13" fill="#0f1c2e">
           {sources.map((source, i) => (
             <g key={source}>
               <rect
@@ -228,7 +228,7 @@ function Chaine({ chaine, donnees }: SchemaProps) {
                 height="40"
                 rx="7"
                 fill="#ffffff"
-                stroke="#c3d1e4"
+                stroke="#dce6f4"
               />
               <text x="20" y={35 + i * 58} fontWeight="500">
                 {source}
@@ -246,13 +246,13 @@ function Chaine({ chaine, donnees }: SchemaProps) {
             height="80"
             rx="8"
             fill="#ffffff"
-            stroke="#2a5fad"
+            stroke="#0a6bd4"
             strokeWidth="1.5"
           />
-          <text x="288" y={milieu - 6} fontSize="15" fontWeight="600" fill="#122240">
+          <text x="288" y={milieu - 6} fontSize="15" fontWeight="600" fill="#0f1c2e">
             Contrôle qualité
           </text>
-          <text x="288" y={milieu + 16} fontSize="12" fill="#43587a">
+          <text x="288" y={milieu + 16} fontSize="12" fill="#44566e">
             {nombre(lues)} lignes lues
           </text>
         </g>
@@ -265,28 +265,28 @@ function Chaine({ chaine, donnees }: SchemaProps) {
             width="168"
             height="72"
             rx="8"
-            fill="#fbedee"
-            stroke="#b4232e"
+            fill="#fdecee"
+            stroke="#e63946"
             strokeWidth="1.5"
           />
-          <text x="288" y={milieu + 121} fontSize="14" fontWeight="600" fill="#8e1a23">
+          <text x="288" y={milieu + 121} fontSize="14" fontWeight="600" fill="#a4242f">
             Quarantaine
           </text>
-          <text x="288" y={milieu + 142} fontSize="12" fill="#8e1a23">
+          <text x="288" y={milieu + 142} fontSize="12" fill="#a4242f">
             {nombre(rejetees)} lignes, {pourcent(qualite?.taux_rejet_pourcent, 3)}
           </text>
         </g>
 
         {/* entrepôt */}
         <g>
-          <rect x="496" y={milieu - 50} width="192" height="100" rx="8" fill="#122240" />
+          <rect x="496" y={milieu - 50} width="192" height="100" rx="8" fill="#0f1c2e" />
           <text x="518" y={milieu - 15} fontSize="16" fontWeight="600" fill="#ffffff">
             Entrepôt
           </text>
-          <text x="518" y={milieu + 9} fontSize="12.5" fill="#b9c9e2">
+          <text x="518" y={milieu + 9} fontSize="12.5" fill="#c8e2ff">
             {nombre(ventes?.commandes)} commandes
           </text>
-          <text x="518" y={milieu + 29} fontSize="12.5" fill="#b9c9e2">
+          <text x="518" y={milieu + 29} fontSize="12.5" fill="#c8e2ff">
             {montant(ventes?.chiffre_affaires)}
           </text>
         </g>
@@ -300,12 +300,12 @@ function Chaine({ chaine, donnees }: SchemaProps) {
             height="64"
             rx="8"
             fill="#ffffff"
-            stroke="#c3d1e4"
+            stroke="#dce6f4"
           />
-          <text x="790" y={milieu - 99} fontSize="14.5" fontWeight="600" fill="#122240">
+          <text x="790" y={milieu - 99} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
             Recherche
           </text>
-          <text x="790" y={milieu - 78} fontSize="12.5" fill="#43587a">
+          <text x="790" y={milieu - 78} fontSize="12.5" fill="#44566e">
             {nombre(jour?.recherches)} requêtes le {jour?.jour ?? "—"}
           </text>
         </g>
@@ -317,14 +317,14 @@ function Chaine({ chaine, donnees }: SchemaProps) {
             height="64"
             rx="8"
             fill="#ffffff"
-            stroke="#1e6bf0"
+            stroke="#1583ec"
             strokeWidth="1.5"
           />
-          <circle cx="792" cy={milieu - 8} r="4" fill="#1e6bf0" />
-          <text x="806" y={milieu - 3} fontSize="14.5" fontWeight="600" fill="#122240">
+          <circle cx="792" cy={milieu - 8} r="4" fill="#1583ec" />
+          <text x="806" y={milieu - 3} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
             Temps réel
           </text>
-          <text x="790" y={milieu + 18} fontSize="12.5" fill="#43587a">
+          <text x="790" y={milieu + 18} fontSize="12.5" fill="#44566e">
             {nombre(jour?.sessions)} sessions, {nombre(jour?.achats)} achats
           </text>
         </g>
@@ -336,12 +336,12 @@ function Chaine({ chaine, donnees }: SchemaProps) {
             height="64"
             rx="8"
             fill="#ffffff"
-            stroke="#c3d1e4"
+            stroke="#dce6f4"
           />
-          <text x="790" y={milieu + 89} fontSize="14.5" fontWeight="600" fill="#122240">
+          <text x="790" y={milieu + 89} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
             Modèle de réachat
           </text>
-          <text x="790" y={milieu + 110} fontSize="12.5" fill="#43587a">
+          <text x="790" y={milieu + 110} fontSize="12.5" fill="#44566e">
             {nombre(segment?.clients)} clients retenus
           </text>
         </g>
@@ -358,16 +358,18 @@ type VentesProps = Pick<IndicateursOut, "ventes" | "qualite" | "alerte">;
 function Ventes({ ventes, qualite, alerte }: VentesProps) {
   return (
     <section className="vg-rangee">
-      <div className="vg-panel vg-large">
+      <div className={`vg-large ${ventes ? "vg-heros-carte" : "vg-panel"}`}>
         {ventes ? (
           <div className="vg-figures">
             <div>
-              <div className="vg-figure vg-heros">{montant(ventes.chiffre_affaires)}</div>
+              <div className="vg-heros-etiquette">Chiffre d&apos;affaires, hors frais de port</div>
+              <div className="vg-figure vg-heros" style={{ marginTop: 12 }}>
+                {montant(ventes.chiffre_affaires)}
+              </div>
               <div className="vg-libelle">
-                Chiffre d&apos;affaires, hors frais de port
                 {ventes.premier_jour && ventes.dernier_jour
-                  ? ` · du ${ventes.premier_jour} au ${ventes.dernier_jour}`
-                  : ""}
+                  ? `du ${ventes.premier_jour} au ${ventes.dernier_jour}`
+                  : "sur l'ensemble de la période"}
               </div>
             </div>
             <div className="vg-figures-petites">
@@ -380,7 +382,7 @@ function Ventes({ ventes, qualite, alerte }: VentesProps) {
                 <div className="vg-libelle">Commandes retenues</div>
               </div>
               <div>
-                <div className="vg-figure vg-moyen" style={{ color: "var(--vg-vert)" }}>
+                <div className="vg-figure vg-moyen">
                   {pourcent(qualite?.taux_rejet_pourcent, 3)}
                 </div>
                 <div className="vg-libelle">Lignes écartées</div>
