@@ -1,7 +1,10 @@
 """Le lexique métier : il ajoute des mots, il n'en retire jamais."""
 
+import pytest
+
 from assistant.lexique import LEXIQUE, etendre
 from assistant.passages import charger
+from assistant.retrouveur import RetrouveurDepannage
 from assistant.texte import normaliser
 
 
@@ -36,3 +39,28 @@ def test_chaque_entree_n_ajoute_que_des_mots_presents_dans_la_foire_aux_question
         (cle, v) for cle, valeurs in LEXIQUE.items() for v in valeurs if v not in vocabulaire
     }
     assert not absents, absents
+
+
+# ----------------------------------------- les confusions que le lexique dénoue
+#
+# Ces quatre questions désignaient le passage VOISIN : le mot le plus fort de la
+# question appartenait à un autre passage que celui qui y répond. Chacune est ici
+# pour qu'un futur ajout au lexique ne les renvoie pas dans le mur.
+
+
+@pytest.mark.parametrize(
+    ("question", "attendu", "voisin_trompeur"),
+    [
+        ("Combien coûte un retour ?", "ret-04", "ret-01"),
+        ("Qui supporte le coût de renvoi du colis ?", "ret-04", "ret-01"),
+        ("Quand l'argent sort-il de mon compte ?", "pai-08", "ret-05"),
+        ("Comment obtenir un nouveau mot de passe ?", "cpt-02", "cpt-01"),
+    ],
+)
+def test_le_bon_passage_passe_devant_son_voisin(question, attendu, voisin_trompeur):
+    trouves = RetrouveurDepannage.depuis_faq().retrouver(question, k=3)
+    assert trouves, question
+    assert trouves[0].id == attendu, (
+        f"« {question} » devrait désigner {attendu}, pas {trouves[0].id} "
+        f"(voisin trompeur connu : {voisin_trompeur})"
+    )

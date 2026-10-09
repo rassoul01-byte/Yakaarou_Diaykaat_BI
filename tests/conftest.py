@@ -25,3 +25,14 @@ def _retrouveur_depannage(monkeypatch: pytest.MonkeyPatch) -> None:
     en mémoire). La couverture du retrouveur externe vit dans tests/integration/.
     """
     monkeypatch.setenv("ASSISTANT_RETROUVEUR", "depannage")
+
+
+@pytest.fixture(autouse=True)
+def _journal_isole(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """Aucun test n'écrit dans le journal du dépôt.
+
+    L'API journalise chaque échange ; sans ce redirigement, lancer la suite
+    salirait `data/assistant/journal.jsonl` avec des questions de test, qui
+    seraient ensuite chargées en base comme de l'usage réel.
+    """
+    monkeypatch.setenv("ASSISTANT_JOURNAL", str(tmp_path / "journal_de_test.jsonl"))

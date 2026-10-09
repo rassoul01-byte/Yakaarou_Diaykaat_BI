@@ -42,6 +42,15 @@ LEXIQUE: dict[str, tuple[str, ...]] = {
     "erreur": ("different", "produit"),
     "autre": ("echanger",),
     "modele": ("echanger", "produit"),
+    # « Combien coûte un retour ? » et « Qui supporte le coût du renvoi ? » visent
+    # ret-04, qui dit « Qui paie les frais » et « prend en charge les frais ».
+    "cout": ("frais", "paie"),
+    "coute": ("frais", "paie"),
+    "coutent": ("frais", "paie"),
+    "supporte": ("paie", "charge"),
+    # « délai de remboursement » : ret-01 contient « délai », ret-05 dit « sous combien
+    # de temps ». Sans ce mot, le délai de RETOUR gagne contre celui du REMBOURSEMENT.
+    "delai": ("temps",),
     # paiement
     "payer": ("paiement", "paiements"),
     "regler": ("paiement", "paiements"),
@@ -53,6 +62,9 @@ LEXIQUE: dict[str, tuple[str, ...]] = {
     "preleve": ("debite", "paiement"),
     "prelevement": ("debite", "paiement"),
     "debit": ("debite", "paiement"),
+    # « Quand l'argent sort-il de mon compte ? » vise pai-08 (« le débit a lieu »).
+    # Sans ce mot, « argent » seul envoie la question vers le remboursement.
+    "sort": ("debite", "debit"),
     # commande
     "annule": ("annulee", "annuler"),
     "annulation": ("annulee", "annuler"),
@@ -66,6 +78,9 @@ LEXIQUE: dict[str, tuple[str, ...]] = {
     "vendez": ("donnees", "personnelles", "protegees"),
     "revendez": ("donnees", "personnelles", "protegees"),
     "mdp": ("mot", "passe", "oublie"),
+    # « un NOUVEAU mot de passe » vise cpt-02 (« lien de réinitialisation »), pas
+    # cpt-01 (« créer un compte »), qui parle aussi de mot de passe.
+    "nouveau": ("reinitialisation",),
 }
 
 

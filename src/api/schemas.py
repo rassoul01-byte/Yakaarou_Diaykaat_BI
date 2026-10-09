@@ -7,14 +7,26 @@ des deux côtés dans la même PR.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 # --------------------------------------------------------------- assistant
 
 
 class AssistantIn(BaseModel):
+    """`origine` et `reformulation` ne changent pas la réponse : ils vont au journal.
+
+    Quand l'utilisateur clique une suggestion, la page renvoie la question du passage
+    en `question`, et SA formulation d'origine en `reformulation`. Le journal garde
+    ainsi le couple (ce qu'il a écrit, le passage qui lui a convenu) — voir
+    `assistant/journal.py`.
+    """
+
     question: str = Field(min_length=1, max_length=500)
     k: int = Field(default=3, ge=1, le=10)
+    origine: Literal["saisie", "exemple", "suggestion"] = "saisie"
+    reformulation: str | None = Field(default=None, max_length=500)
 
 
 class PassageOut(BaseModel):

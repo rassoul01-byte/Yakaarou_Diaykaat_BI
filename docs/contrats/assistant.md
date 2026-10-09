@@ -63,10 +63,23 @@ Conséquence : une réponse est exacte par construction. « Aucune réponse ne c
 | `suggestions` | Les questions proposées quand `motif` vaut `incertain` ; sinon vide |
 | `duree_ms` | Temps de traitement |
 
+**Ce que l'interface envoie** (`POST /api/assistant/ask`)
+
+| Champ | Contenu | Obligatoire |
+|---|---|---|
+| `question` | La question posée, 1 à 500 caractères | oui |
+| `k` | Nombre de passages à considérer (1 à 10, défaut 3) | non |
+| `origine` | `saisie`, `exemple` ou `suggestion` — d'où vient la question (défaut `saisie`) | non |
+| `reformulation` | Ce que l'utilisateur avait écrit avant de cliquer une suggestion | non |
+
+`origine` et `reformulation` **ne changent pas la réponse** : ils ne servent qu'au journal (§5). Quand l'utilisateur clique une suggestion, l'interface envoie la question du passage en `question` et **ses mots à lui** en `reformulation` ; ailleurs, `reformulation` est nulle, car la question *est* déjà sa formulation.
+
 **Règles pour l'interface**
 
 - **Afficher les passages utilisés** (thème, question, source) pour chaque réponse : c'est un garde-fou du livrable, pas un détail de présentation.
 - **Distinguer un refus d'une panne** : un refus est une réponse normale. Quand `suggestions` n'est pas vide, les afficher comme des choix.
+- **Les suggestions doivent être cliquables**, et le clic repose la question du passage avec `origine: "suggestion"`. Affichées en texte mort, elles montrent à l'utilisateur la réponse qu'il cherche sans lui donner le moyen de l'ouvrir — et le couple (ses mots, le passage qui lui convenait) est perdu.
+- **Les questions d'exemple de la page doivent être des questions que la recherche traite bien.** Une page qui propose une question qu'elle rate se discrédite seule.
 - **Passer par `assistant.repondre()`** (ou `python -m assistant --json`), jamais par une copie de la logique : c'est ce qui garantit que le journal voit tous les échanges, avec son masquage.
 - **Rien ne doit être chargé depuis Internet** : l'assistant est local.
 
@@ -102,8 +115,14 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 | `score_meilleur` | Score du passage cité, ou `null` |
 | `suggestions` | Identifiants proposés |
 | `duree_ms`, `retrouveur` | Temps de traitement et nom de la recherche |
+| `origine` | `saisie`, `exemple` ou `suggestion` (§3) |
+| `reformulation` | Les mots de l'utilisateur avant un clic sur une suggestion, **après masquage** ; `null` sinon |
 
-**Masquage avant écriture** : adresses e-mail, numéros de téléphone, identifiants (mots d'au moins 5 caractères contenant un chiffre) et nombres de 4 chiffres ou plus. Un client peut taper son numéro de commande dans la question : il n'atteint jamais le fichier (test automatique).
+**Masquage avant écriture** : adresses e-mail, numéros de téléphone, identifiants (mots d'au moins 5 caractères contenant un chiffre) et nombres de 4 chiffres ou plus. Un client peut taper son numéro de commande dans la question : il n'atteint jamais le fichier (test automatique). La `reformulation` est masquée de la même façon — c'est aussi du texte tapé par un client.
+
+**À quoi sert la provenance.** Sur le jeu gelé du 2026-10-07, la recherche trouve le bon passage pour la grande majorité des questions couvertes mais le seuil ne permet d'en affirmer qu'une fraction : pour les autres, l'assistant propose. Chaque clic sur une suggestion est donc une étiquette posée par un humain — *cette formulation voulait dire ce passage* — et c'est la seule source de vocabulaire **client** dont nous disposions. Les mots de la foire aux questions, eux, sont déjà dans l'index (`documentaire.mots_cles` les en extrait).
+
+**Rien n'entre dans `faq.jsonl` automatiquement.** La vue `staging.v_reformulations` sert à une relecture humaine, pour deux raisons : le masquage peut abîmer une formulation (`iphone13` devient `[identifiant]`), et un journal appliqué sans relecture serait une porte d'entrée — une phrase tapée exprès finirait indexée.
 
 **Taux de réponses ancrées** (dictionnaire) = échanges citant au moins un passage, plus les refus polis, divisé par les échanges. Il vaut 100 % **par construction** : il est mesuré sur le jeu de questions fixé, et le journal permet de le recalculer sur l'usage réel.
 
@@ -116,6 +135,15 @@ Une ligne JSON par échange, dans `data/assistant/journal.jsonl` (variable `ASSI
 | `usage` | Les questions posées à la main, par exemple en démonstration | Ajoute sans jamais doubler : une ligne déjà chargée (même empreinte) est ignorée |
 
 La question est masquée une seconde fois au chargement. Une ligne illisible est signalée avec son numéro, jamais ignorée en silence. Les vues `staging.v_taux_ancrage` (par jour) et `staging.v_taux_ancrage_global` donnent, pour chaque source : les échanges, les réponses directes, les refus et le taux. Comme il vaut 100 % par construction, la page doit montrer les **réponses directes et les refus**, pas seulement le pourcentage.
+
+La migration `023_journal_provenance.sql` ajoute les colonnes `origine` et `reformulation`, plus deux vues :
+
+| Vue | Contenu |
+|---|---|
+| `staging.v_reformulations` | Les paires (formulation du client, passage retenu), avec le nombre d'échanges : la liste à relire avant d'enrichir la foire aux questions |
+| `staging.v_part_suggestions` | La part des échanges servis via une suggestion plutôt que directement. C'est l'indicateur qui doit **baisser** à mesure que la base s'enrichit |
+
+Un journal écrit avant cette migration se charge sans erreur : l'origine manquante vaut `saisie`.
 
 ---
 ## 6. Seuils

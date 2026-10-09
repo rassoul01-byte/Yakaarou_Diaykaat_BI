@@ -19,9 +19,20 @@ export type Suggestion = {
   question: string;
 };
 
+/** D'où vient la question posée. Ne change pas la réponse : va au journal.
+ *
+ * `suggestion` signifie que l'utilisateur avait écrit autre chose, que l'assistant
+ * a hésité, et qu'il a cliqué une des suggestions. `reformulation` porte alors ce
+ * qu'il avait écrit — le couple (sa formulation, le passage retenu) est ce qui
+ * permet d'enrichir la base documentaire. Voir src/assistant/journal.py.
+ */
+export type Origine = "saisie" | "exemple" | "suggestion";
+
 export type AssistantIn = {
   question: string;
   k?: number;
+  origine?: Origine;
+  reformulation?: string | null;
 };
 
 export type AssistantOut = {

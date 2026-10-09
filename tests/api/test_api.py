@@ -4,6 +4,10 @@ La recherche est remplacée par un faux moteur : on teste le contrat HTTP
 (codes, formes, erreurs), pas la qualité de la recherche.
 """
 
+import json
+import os
+from pathlib import Path
+
 import pytest
 from elastic_transport import ConnectionError as EsConnectionError
 from elastic_transport import ConnectionTimeout
@@ -120,11 +124,60 @@ def test_assistant_refus_avec_suggestions(monkeypatch):
         {"question": "x" * 501},
         {"question": "ok", "k": 0},
         {"question": "ok", "k": 11},
+        {"question": "ok", "origine": "ailleurs"},
+        {"question": "ok", "reformulation": "x" * 501},
         {},
     ],
 )  # fmt: skip
 def test_assistant_valide_ses_entrees(corps):
     assert client.post("/api/assistant/ask", json=corps).status_code == 422
+
+
+# ------------------------------------------------- journal des échanges
+
+
+def _lignes_du_journal():
+    chemin = Path(os.environ["ASSISTANT_JOURNAL"])
+    if not chemin.exists():
+        return []
+    lignes = chemin.read_text(encoding="utf-8").splitlines()
+    return [json.loads(ligne) for ligne in lignes if ligne.strip()]
+
+
+def test_chaque_echange_est_journalise(monkeypatch):
+    avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.95)]))
+    client.post("/api/assistant/ask", json={"question": "Comment suivre ma commande ?"})
+    lignes = _lignes_du_journal()
+    assert len(lignes) == 1
+    assert lignes[0]["passages_cites"] == ["liv-03"]
+    assert lignes[0]["origine"] == "saisie" and lignes[0]["reformulation"] is None
+
+
+def test_une_suggestion_cliquee_journalise_la_formulation_du_client(monkeypatch):
+    """C'est l'étiquette que le coach demande : ce que le client a écrit, et ce qui l'a servi."""
+    avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.95)]))
+    r = client.post(
+        "/api/assistant/ask",
+        json={
+            "question": "Comment suivre ma commande ?",
+            "origine": "suggestion",
+            "reformulation": "ou en est mon paquet",
+        },
+    )
+    assert r.status_code == 200 and r.json()["refus"] is False
+    (ligne,) = _lignes_du_journal()
+    assert ligne["origine"] == "suggestion"
+    assert ligne["reformulation"] == "ou en est mon paquet"
+    assert ligne["passages_cites"] == ["liv-03"]
+
+
+def test_un_journal_inecrivable_ne_casse_pas_la_reponse(monkeypatch):
+    """Un disque plein est un problème de mesure, pas un problème de service."""
+    avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.95)]))
+    monkeypatch.setenv("ASSISTANT_JOURNAL", "/proc/interdit/journal.jsonl")
+    r = client.post("/api/assistant/ask", json={"question": "Comment suivre ma commande ?"})
+    assert r.status_code == 200
+    assert r.json()["refus"] is False
 
 
 @pytest.mark.parametrize(

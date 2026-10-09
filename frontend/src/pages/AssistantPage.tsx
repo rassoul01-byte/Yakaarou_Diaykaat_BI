@@ -1,28 +1,47 @@
 import { useState } from "react";
-import { AlertTriangle, Bot, Search, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Bot, ChevronRight, Search, ShieldCheck } from "lucide-react";
 
 import { ApiError, api } from "../api/client";
 import BoutonRetry from "../components/BoutonRetry";
 import { SkeletonAssistant } from "../components/Skeleton";
-import type { AssistantOut, Passage, Suggestion } from "../types/api";
+import type { AssistantOut, Origine, Passage, Suggestion } from "../types/api";
 
 const CLE_LOCALSTORAGE = "assistant.derniereQuestion";
+
+/** Questions d'exemple. Elles doivent être des questions que la recherche traite
+ *  bien : une page qui propose une question qu'elle rate se discrédite seule. */
+const EXEMPLES = [
+  "Comment suivre ma commande ?",
+  "Quels moyens de paiement sont acceptés ?",
+  "Puis-je payer en plusieurs fois ?",
+];
 
 export default function AssistantPage() {
   const [question, setQuestion] = useState(
     () => localStorage.getItem(CLE_LOCALSTORAGE) ?? "",
-  );  const [reponse, setReponse] = useState<AssistantOut | null>(null);
+  );
+  const [reponse, setReponse] = useState<AssistantOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  // Les mots de l'utilisateur, gardés pour les joindre à la suggestion qu'il clique.
+  const [derniereSaisie, setDerniereSaisie] = useState<string | null>(null);
 
-  async function demander(texte = question) {
+  async function demander(texte = question, origine: Origine = "saisie") {
     if (!texte.trim()) return;
     setQuestion(texte);
     localStorage.setItem(CLE_LOCALSTORAGE, texte);
+    if (origine === "saisie") setDerniereSaisie(texte);
     setLoading(true);
     setErreur(null);
     try {
-      const data = await api.askAssistant({ question: texte, k: 3 });
+      const data = await api.askAssistant({
+        question: texte,
+        k: 3,
+        origine,
+        // Ailleurs, la question EST la formulation : l'envoyer deux fois ferait
+        // compter chaque question comme sa propre reformulation.
+        reformulation: origine === "suggestion" ? derniereSaisie : null,
+      });
       setReponse(data);
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Erreur inconnue";
@@ -75,12 +94,12 @@ export default function AssistantPage() {
           </div>
 
           <div className="suggestions">
-            {[
-              "Comment suivre une commande ?",
-              "Quel est le délai de remboursement ?",
-              "Combien coûte un retour ?",
-            ].map((item) => (
-              <button key={item} onClick={() => demander(item)} disabled={loading}>
+            {EXEMPLES.map((item) => (
+              <button
+                key={item}
+                onClick={() => demander(item, "exemple")}
+                disabled={loading}
+              >
                 {item}
               </button>
             ))}
@@ -122,15 +141,22 @@ export default function AssistantPage() {
 
               {reponse.suggestions.length > 0 && (
                 <div className="sources">
-                  <div className="answer-label">SUGGESTIONS</div>
+                  <div className="answer-label">
+                    QUESTIONS PROCHES · CLIQUEZ POUR LA RÉPONSE
+                  </div>
                   {reponse.suggestions.map((s: Suggestion, i: number) => (
-                    <div
+                    <button
                       className="source-row"
                       key={s.id}
                       style={{ animationDelay: `${i * 60}ms` }}
+                      onClick={() => demander(s.question, "suggestion")}
+                      disabled={loading}
                     >
                       <strong>{s.question}</strong>
-                    </div>
+                      <span className="chevron" aria-hidden="true">
+                        <ChevronRight size={15} />
+                      </span>
+                    </button>
                   ))}
                 </div>
               )}
