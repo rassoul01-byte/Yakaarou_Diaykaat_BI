@@ -5,22 +5,22 @@
    reste de l'application (barre latérale, boutons) est un pas séparé. */
 
 .vg {
-  --vg-ground: #e9eff7;
+  --vg-ground: var(--c-fond);
   --vg-panel: #ffffff;
-  --vg-ink: #122240;
-  --vg-ink-2: #43587a;
-  --vg-ink-3: #7589a6;
+  --vg-ink: #0f1c2e;
+  --vg-ink-2: #44566e;
+  --vg-ink-3: #64748b;
   --vg-filet: var(--c-bordure);
-  --vg-filet-doux: #eef3fa;
-  --vg-bleu: #2a5fad;
-  --vg-bleu-pale: #93afd6;
-  --vg-bleu-vif: #1e6bf0;
-  --vg-rouge: #b4232e;
-  --vg-rouge-fond: #fbedee;
-  --vg-rouge-filet: #e8b9bd;
-  --vg-rouge-ink: #8e1a23;
-  --vg-vert: #13764f;
-  --vg-vert-fond: #e3f2eb;
+  --vg-filet-doux: #edf3fb;
+  --vg-bleu: #0a6bd4;
+  --vg-bleu-pale: #9cc4f5;
+  --vg-bleu-vif: #1583ec;
+  --vg-rouge: #e63946;
+  --vg-rouge-fond: #fdecee;
+  --vg-rouge-filet: #f3c9cc;
+  --vg-rouge-ink: #a4242f;
+  --vg-vert: #1e8449;
+  --vg-vert-fond: #e8f7ef;
 
   color: var(--vg-ink);
   display: flex;
@@ -91,6 +91,45 @@
   color: var(--vg-ink-3);
   line-height: 1.6;
   max-width: 78ch;
+}
+
+/* ----------------------------------------------------------- carte héros
+
+   Le chiffre d'affaires est la seule carte colorée de la page. Elle porte la
+   figure principale ; tout le reste est blanc et se tait. */
+
+.vg-heros-carte {
+  /* Le point le plus clair du dégradé est #0a6bd4 : au-delà, le blanc des
+     petits libellés tombe sous 4,5:1 (2,6:1 sur #4ca7f8). Le dégradé garde son
+     caractère, le texte reste lisible. */
+  background: linear-gradient(135deg, #073f82 0%, #0851a6 45%, #0a6bd4 100%);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(10, 107, 212, 0.26);
+  padding: 30px 32px;
+  color: #ffffff;
+  min-width: 0;
+}
+
+.vg-heros-carte .vg-figure,
+.vg-heros-carte strong {
+  color: #ffffff;
+}
+
+/* Blanc plein pour tout le texte de la carte : la hiérarchie vient de la
+   taille et de la graisse, pas d'un bleu pâle qui ne se lirait pas. */
+.vg-heros-carte .vg-libelle {
+  color: #ffffff;
+  opacity: 0.88;
+}
+
+.vg-heros-etiquette {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0.88;
+  text-transform: uppercase;
 }
 
 /* ----------------------------------------------------------- figures */
