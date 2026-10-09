@@ -1,0 +1,354 @@
+/* Vue générale — direction « Flux ».
+
+   Toutes les règles sont préfixées .vg- et vivent sous .vg : la page porte sa
+   propre palette sans toucher à celle des autres pages. L'harmonisation du
+   reste de l'application (barre latérale, boutons) est un pas séparé. */
+
+.vg {
+  --vg-ground: #e9eff7;
+  --vg-panel: #ffffff;
+  --vg-ink: #122240;
+  --vg-ink-2: #43587a;
+  --vg-ink-3: #7589a6;
+  --vg-filet: var(--c-bordure);
+  --vg-filet-doux: #eef3fa;
+  --vg-bleu: #2a5fad;
+  --vg-bleu-pale: #93afd6;
+  --vg-bleu-vif: #1e6bf0;
+  --vg-rouge: #b4232e;
+  --vg-rouge-fond: #fbedee;
+  --vg-rouge-filet: #e8b9bd;
+  --vg-rouge-ink: #8e1a23;
+  --vg-vert: #13764f;
+  --vg-vert-fond: #e3f2eb;
+
+  color: var(--vg-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.vg-panel,
+.vg-alerte {
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------- blocs */
+
+/* Exactement la même carte que `.panel` des autres pages : mêmes variables,
+   donc aucune dérive possible entre les trois écrans. */
+.vg-panel {
+  background: var(--carte-fond);
+  border: 1px solid var(--c-bordure);
+  border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
+  padding: var(--carte-padding);
+}
+
+.vg-rangee {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+}
+
+.vg-large {
+  flex: 999 1 540px;
+  min-width: 0;
+}
+
+.vg-etroit {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.vg h1 {
+  margin: 0 0 6px;
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.vg h2 {
+  margin: 0 0 18px;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.vg-chapeau {
+  margin: 0;
+  font-size: 14px;
+  color: var(--vg-ink-2);
+  max-width: 74ch;
+  line-height: 1.6;
+}
+
+.vg-note {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--vg-ink-3);
+  line-height: 1.6;
+  max-width: 78ch;
+}
+
+/* ----------------------------------------------------------- figures */
+
+.vg-figure {
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: proportional-nums;
+}
+
+.vg-heros {
+  font-size: clamp(34px, 5vw, 56px);
+}
+
+.vg-moyen {
+  font-size: 26px;
+}
+
+.vg-libelle {
+  font-size: 12.5px;
+  color: var(--vg-ink-3);
+  margin-top: 7px;
+}
+
+.vg-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 34px;
+  align-items: flex-end;
+}
+
+.vg-figures-petites {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding-bottom: 4px;
+}
+
+/* ----------------------------------------------------------- schéma */
+
+/* Sous 820 px, le schéma écrasé rendait son texte illisible : il défile
+   horizontalement plutôt que de rétrécir, comme les tableaux. */
+.vg-cadre-schema {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.vg-schema {
+  display: block;
+  width: 100%;
+  min-width: 820px;
+  max-height: 380px;
+  font-family: inherit;
+}
+
+/* ----------------------------------------------------------- tableaux */
+
+/* Un tableau a une largeur minimale dictée par ses colonnes : sur un écran
+   étroit, il poussait toute la page au lieu de se laisser faire. Il défile
+   maintenant dans son cadre, et seul lui. */
+.vg-defilant {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.vg-defilant .vg-table {
+  min-width: 480px;
+}
+
+.vg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.vg-table th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--vg-ink-3);
+  padding: 0 0 9px;
+  border-bottom: 1px solid var(--vg-filet-doux);
+}
+
+.vg-table td {
+  padding: 8px 0;
+  color: var(--vg-ink-2);
+  vertical-align: middle;
+}
+
+.vg-table tbody tr + tr td {
+  border-top: 1px solid var(--vg-filet-doux);
+}
+
+.vg-chiffre {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.vg-tete {
+  color: var(--vg-ink);
+  font-weight: 600;
+}
+
+/* Une série, une couleur : la longueur de la barre dit déjà le classement. */
+.vg-barre {
+  height: 14px;
+  border-radius: 0 4px 4px 0;
+  background: var(--vg-bleu-pale);
+}
+
+.vg-barre.vg-barre-tete {
+  background: var(--vg-bleu);
+}
+
+.vg-cell-barre {
+  padding: 8px 14px;
+  width: 100%;
+}
+
+/* ----------------------------------------------------------- alerte */
+
+.vg-alerte {
+  background: var(--vg-rouge-fond);
+  border: 1px solid var(--vg-rouge-filet);
+  border-left: 4px solid var(--vg-rouge);
+  border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
+  padding: var(--carte-padding);
+}
+
+.vg-alerte-tete {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.vg-alerte-nombre {
+  font-size: 44px;
+  font-weight: 600;
+  color: var(--vg-rouge);
+  letter-spacing: -0.035em;
+  line-height: 1;
+}
+
+.vg-alerte p {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--vg-rouge-ink);
+  line-height: 1.6;
+}
+
+/* ----------------------------------------------------------- jauge qualité */
+
+.vg-jauge {
+  display: flex;
+  height: 26px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--vg-vert);
+}
+
+.vg-jauge-reste {
+  flex: 1 1 auto;
+}
+
+.vg-jauge-rejet {
+  background: var(--vg-rouge);
+  min-width: 1px;
+}
+
+.vg-jauge-loupe {
+  height: 18px;
+  border-radius: 4px;
+}
+
+.vg-separateur {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vg-filet-doux);
+}
+
+/* ----------------------------------------------------------- étiquettes */
+
+.vg-puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  padding: 5px 11px;
+  border-radius: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vg-puce-vert {
+  color: var(--vg-vert);
+  background: var(--vg-vert-fond);
+}
+
+.vg-puce-neutre {
+  color: var(--vg-ink-2);
+  background: #eef3fa;
+}
+
+.vg-entete-bloc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 18px;
+}
+
+.vg-entete-bloc h2 {
+  margin: 0;
+}
+
+/* Six compteurs : trois par trois plutôt qu'une rangée de cinq et un orphelin. */
+.vg-compteurs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px 16px;
+}
+
+@media (max-width: 520px) {
+  .vg-compteurs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.vg-pipeline {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--vg-ink-3);
+  padding: 14px 0 7px;
+}
+
+.vg-vide {
+  font-size: 13.5px;
+  color: var(--vg-ink-3);
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .vg-panel,
+  .vg-alerte {
+    padding: 20px 18px;
+  }
+
+  .vg-figures,
+  .vg-figures-petites {
+    gap: 22px;
+  }
+}

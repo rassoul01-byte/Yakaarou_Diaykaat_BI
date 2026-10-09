@@ -50,7 +50,7 @@ export default function App() {
         <div className="content">
           {/* La clé force React à remonter le composant, ce qui relance l'animation */}
           <div key={page} className="page-enter">
-            {page === "dashboard" && <DashboardPage onNavigate={naviguer} />}
+            {page === "dashboard" && <DashboardPage />}
             {page === "recherche" && <RecherchePage />}
             {page === "assistant" && <AssistantPage />}
           </div>

@@ -17,26 +17,40 @@
   --c-alerte: #ef4444;
   --c-alerte-clair: #fef2f2;
 
-  /* Neutres */
-  --c-fond: #fafaf8;
+  /* Neutres — fond de page en bleu marine, cartes blanches par-dessus. */
+  --c-fond: #0d1f3c;
+  --c-fond-filet: #1b3254;
+  --c-fond-texte: #e6edf8;
+  --c-fond-texte-doux: #8ea3c4;
   --c-carte: #ffffff;
   --c-texte: #1a1a1a;
   --c-texte-doux: #6b7280;
   --c-texte-tres-doux: #9ca3af;
-  --c-bordure: #e8e6e1;
-  --c-bordure-forte: #d1cfc9;
+  --c-bordure: #e4eaf4;
+  --c-bordure-forte: #c9d5e6;
 
-  /* Sidebar — bleu royal */
-  --sidebar-bg: #1441e0;
-  --sidebar-bg-2: #0f35b8;         /* dégradé un peu plus profond */
+  /* Sidebar — marine profond, à plat (les deux arrêts sont identiques) */
+  --sidebar-bg: #081529;
+  --sidebar-bg-2: #081529;
   --sidebar-texte: #ffffff;
   --sidebar-texte-doux: rgba(255, 255, 255, 0.72);
   --sidebar-hover: rgba(255, 255, 255, 0.14);
   --sidebar-actif: rgba(255, 255, 255, 0.2);
   --sidebar-glow: rgba(255, 107, 53, 0.25);
 
+  /* Une seule police dans toute l'application. Deux grotesques voisines ne se
+     distinguent pas assez pour justifier d'en charger deux. */
+  --police: "Familjen Grotesk", system-ui, sans-serif;
+
+  /* La carte, définie une fois : même blanc, même rayon, même filet, même
+     ombre, sur les trois pages. Sur fond marine, l'ombre est ce qui fait
+     flotter la carte au lieu de la découper. */
+  --carte-fond: #ffffff;
+  --carte-ombre: 0 1px 2px rgba(8, 21, 41, 0.06), 0 14px 32px rgba(8, 21, 41, 0.22);
+  --carte-padding: 24px 26px;
+
   /* Formes */
-  --radius: 12px;
+  --radius: 14px;
   --radius-sm: 8px;
   --radius-lg: 18px;
 
@@ -51,7 +65,7 @@
   --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-lente: 320ms cubic-bezier(0.4, 0, 0.2, 1);
 
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: var(--police);
   color: var(--c-texte);
   background: var(--c-fond);
   font-synthesis: none;
@@ -74,11 +88,55 @@
   flex-direction: column;
 }
 
+/* Débordement horizontal, sur les trois pages et aux deux tailles.
+   `width: 100%` s'ajoutait au `padding` faute de `box-sizing: border-box`, ce
+   qui poussait 64 px hors de l'écran. Et `margin: 0 auto` sur un élément flex
+   annule l'étirement : sans largeur explicite, le bloc se dimensionne alors sur
+   son contenu, donc sur son plus large tableau. Les trois déclarations se
+   tiennent, il faut les garder ensemble. */
 .content {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   padding: 32px;
   max-width: 1500px;
-  width: 100%;
   margin: 0 auto;
+}
+
+/* Le peu de texte qui vit directement sur le fond marine : la barre de titre
+   et le chapeau des pages Recherche et Assistant. Tout le reste est posé dans
+   une carte blanche et garde son encre sombre. */
+.topbar h1,
+.page-intro h2 {
+  color: var(--c-fond-texte);
+}
+
+.topbar .eyebrow,
+.page-intro p {
+  color: var(--c-fond-texte-doux);
+}
+
+/* `width: fit-content` : sans lui, le chapeau est un bloc et sa pastille
+   s'étire sur toute la largeur, ce qui se lit comme une barre grise. */
+.page-intro .hero-kicker {
+  color: var(--c-fond-texte);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  width: fit-content;
+}
+
+body {
+  margin: 0;
+}
+
+/* Les éléments de formulaire n'héritent pas de la police : sans cette règle,
+   les libellés du menu — qui sont des boutons — s'affichaient en Arial pendant
+   que le reste de l'application était en Familjen Grotesk. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* ============================================================
@@ -115,7 +173,7 @@
 }
 
 .brand-title {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--police);
   font-weight: 700;
   font-size: 16px;
   letter-spacing: -0.01em;
@@ -275,8 +333,12 @@
 
 .topbar {
   height: 78px;
-  border-bottom: 1px solid var(--c-bordure);
-  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 1px solid var(--c-fond-filet);
+  /* La barre de titre appartient à la coque, pas au contenu : elle suit le
+     fond de page. Opaque à 0,97, sans quoi les grands chiffres de la vue
+     générale transparaissaient derrière le titre en défilant. */
+  background: rgba(13, 31, 60, 0.97);
+  color: var(--c-fond-texte);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 0 32px;
@@ -308,11 +370,11 @@
 }
 
 .topbar h1 {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--police);
   font-size: 21px;
   margin: 0;
   letter-spacing: -0.02em;
-  color: var(--c-texte);
+  color: var(--c-fond-texte);
 }
 
 .topbar-actions {
@@ -429,7 +491,7 @@
 
 .hero h2,
 .page-intro h2 {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--police);
   font-size: 30px;
   margin: 10px 0 10px;
   letter-spacing: -0.03em;
@@ -482,9 +544,10 @@
 
 .kpi-card,
 .panel {
-  background: var(--c-carte);
+  background: var(--carte-fond);
   border: 1px solid var(--c-bordure);
   border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
   transition: all var(--transition);
 }
 
@@ -533,7 +596,7 @@
 }
 
 .kpi-card strong {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--police);
   font-size: 24px;
   letter-spacing: -0.02em;
 }
@@ -551,7 +614,7 @@
 }
 
 .panel {
-  padding: 22px;
+  padding: var(--carte-padding);
 }
 
 .panel-header {
@@ -567,7 +630,7 @@
 }
 
 .panel h3 {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--police);
   margin: 0;
   font-size: 16px;
   letter-spacing: -0.01em;
@@ -653,7 +716,7 @@
 
 .quality-row strong {
   text-align: right;
-  font-family: "JetBrains Mono", monospace;
+  font-family: ui-monospace, monospace;
   font-size: 11px;
 }
 
@@ -828,8 +891,8 @@
   margin-top: 26px;
   border-radius: var(--radius);
   background: var(--c-primaire-clair);
-  padding: 18px;
-  border: 1px solid rgba(255, 107, 53, 0.12);
+  padding: var(--carte-padding);
+  border: 1px solid rgba(255, 107, 53, 0.18);
   animation: fadeInUp var(--transition-lente);
 }
 
