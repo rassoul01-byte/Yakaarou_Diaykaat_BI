@@ -33,6 +33,9 @@ export type AssistantIn = {
   k?: number;
   origine?: Origine;
   reformulation?: string | null;
+  /** Identifiant de la suggestion cliquée. Le seuil ne départage plus un passage
+   *  que l'utilisateur a lui-même choisi. */
+  passage?: string | null;
 };
 
 export type AssistantOut = {

@@ -54,6 +54,7 @@ def assistant_ask(payload: AssistantIn) -> AssistantOut:
             journal=_JournalTolerant(),
             origine=payload.origine,
             reformulation=payload.reformulation,
+            passage_choisi=payload.passage,
         )
     except ErreurCorpus as erreur:
         logger.exception("FAQ illisible")

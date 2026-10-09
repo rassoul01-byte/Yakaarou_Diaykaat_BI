@@ -26,7 +26,11 @@ export default function AssistantPage() {
   // Les mots de l'utilisateur, gardés pour les joindre à la suggestion qu'il clique.
   const [derniereSaisie, setDerniereSaisie] = useState<string | null>(null);
 
-  async function demander(texte = question, origine: Origine = "saisie") {
+  async function demander(
+    texte = question,
+    origine: Origine = "saisie",
+    passage: string | null = null,
+  ) {
     if (!texte.trim()) return;
     setQuestion(texte);
     localStorage.setItem(CLE_LOCALSTORAGE, texte);
@@ -41,6 +45,8 @@ export default function AssistantPage() {
         // Ailleurs, la question EST la formulation : l'envoyer deux fois ferait
         // compter chaque question comme sa propre reformulation.
         reformulation: origine === "suggestion" ? derniereSaisie : null,
+        // L'utilisateur a choisi ce passage : le seuil n'a plus à le départager.
+        passage,
       });
       setReponse(data);
     } catch (e) {
@@ -149,7 +155,7 @@ export default function AssistantPage() {
                       className="source-row"
                       key={s.id}
                       style={{ animationDelay: `${i * 60}ms` }}
-                      onClick={() => demander(s.question, "suggestion")}
+                      onClick={() => demander(s.question, "suggestion", s.id)}
                       disabled={loading}
                     >
                       <strong>{s.question}</strong>
