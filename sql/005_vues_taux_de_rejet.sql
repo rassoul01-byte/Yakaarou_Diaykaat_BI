@@ -22,7 +22,7 @@ SELECT
     COALESCE(e.lignes_rejetees, 0) AS lignes_rejetees,
     CASE
         WHEN COALESCE(e.lignes_lues, 0) = 0 THEN NULL
-        ELSE ROUND(100.0 * COALESCE(e.lignes_rejetees, 0) / e.lignes_lues, 2)
+        ELSE ROUND(100.0 * COALESCE(e.lignes_rejetees, 0) / e.lignes_lues, 3)
     END AS taux_rejet_pourcent
 FROM staging.execution_log AS e
 WHERE e.pipeline = 'qualite';
@@ -55,7 +55,7 @@ SELECT
     c.executions,
     CASE
         WHEN COALESCE(c.lignes_lues_total, 0) = 0 THEN NULL
-        ELSE ROUND(100.0 * c.lignes_rejetees_total / c.lignes_lues_total, 2)
+        ELSE ROUND(100.0 * c.lignes_rejetees_total / c.lignes_lues_total, 3)
     END AS taux_rejet_cumule_pourcent
 FROM derniere AS d
 JOIN cumul AS c USING (source);
