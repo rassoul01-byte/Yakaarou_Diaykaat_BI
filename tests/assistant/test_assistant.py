@@ -192,3 +192,59 @@ def test_aucune_reponse_ne_contient_un_mot_absent_du_passage_cite(reel):
                 reponse.reponse.removesuffix(f" [{reponse.passages[0].id}]")
                 == reponse.passages[0].reponse
             )
+
+
+# ------------------------------------- le passage choisi par l'utilisateur
+#
+# Mesuré sur la recherche vectorielle le 2026-10-09 : « Que faire si mon colis arrive
+# endommagé ? », qui est le texte EXACT de liv-08, sort première à 0,7993 — très loin
+# devant la deuxième (0,5719) — et reste sous le seuil de 0,84. Un clic sur une
+# suggestion menait donc à une seconde hésitation.
+
+
+def test_un_passage_choisi_est_servi_meme_sous_le_seuil():
+    """Le seuil départage ce que personne n'a départagé ; ici l'utilisateur l'a fait."""
+    sous_le_seuil = passage(score=0.2)  # seuils.reponse vaut 0,5 pour FauxRetrouveur
+    reponse = repondre("Quel délai ?", FauxRetrouveur([sous_le_seuil]), passage_choisi="ret-01")
+    assert not reponse.refus
+    assert [p.id for p in reponse.passages] == ["ret-01"]
+
+
+def test_un_passage_choisi_garde_son_vrai_score():
+    """On ne maquille pas la proximité en 1,0 sous prétexte que l'utilisateur a cliqué."""
+    reponse = repondre(
+        "Quel délai ?", FauxRetrouveur([passage(score=0.2)]), passage_choisi="ret-01"
+    )
+    assert reponse.passages[0].score == pytest.approx(0.2)
+
+
+def test_un_passage_choisi_reste_le_texte_exact_de_la_foire_aux_questions():
+    retenu = passage(score=0.2)
+    reponse = repondre("Quel délai ?", FauxRetrouveur([retenu]), passage_choisi="ret-01")
+    assert reponse.reponse == compositeur.composer(retenu)
+
+
+def test_un_identifiant_absent_des_resultats_ne_change_rien():
+    """On ne sert que ce que la recherche a rendu : pas de passage sorti de nulle part."""
+    reponse = repondre(
+        "Quel délai ?", FauxRetrouveur([passage(score=0.2)]), passage_choisi="cpt-99"
+    )
+    assert reponse.refus
+
+
+def test_un_passage_choisi_ne_contourne_pas_le_filtre_d_avant():
+    """Un clic ne doit pas servir de laissez-passer pour une question hors périmètre."""
+    reponse = repondre(
+        "Je veux être remboursé de 50 euros",
+        FauxRetrouveur([passage(score=0.9)]),
+        passage_choisi="ret-01",
+    )
+    assert reponse.refus and reponse.motif == garde_fous.REMBOURSEMENT_PERSONNALISE
+
+
+def test_cliquer_chaque_question_de_la_base_donne_sa_reponse(reel):
+    """Le cas d'usage réel : une suggestion cliquée répond toujours, pour les 40 passages."""
+    for p in charger():
+        reponse = repondre(p.question, reel, passage_choisi=p.id)
+        assert not reponse.refus, f"{p.id} refusée alors qu'elle a été choisie"
+        assert reponse.passages[0].id == p.id

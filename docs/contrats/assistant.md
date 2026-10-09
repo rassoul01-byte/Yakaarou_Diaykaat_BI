@@ -71,8 +71,15 @@ Conséquence : une réponse est exacte par construction. « Aucune réponse ne c
 | `k` | Nombre de passages à considérer (1 à 10, défaut 3) | non |
 | `origine` | `saisie`, `exemple` ou `suggestion` — d'où vient la question (défaut `saisie`) | non |
 | `reformulation` | Ce que l'utilisateur avait écrit avant de cliquer une suggestion | non |
+| `passage` | Identifiant de la suggestion cliquée | non |
 
 `origine` et `reformulation` **ne changent pas la réponse** : ils ne servent qu'au journal (§5). Quand l'utilisateur clique une suggestion, l'interface envoie la question du passage en `question` et **ses mots à lui** en `reformulation` ; ailleurs, `reformulation` est nulle, car la question *est* déjà sa formulation.
+
+`passage` **change** la réponse : le seuil ne s'applique plus au passage désigné. Le seuil départage des passages que personne n'a départagés ; quand l'utilisateur a cliqué, quelqu'un l'a fait.
+
+Sans cette règle, un clic peut mener à une **seconde hésitation**. Mesuré le 2026-10-09 sur la recherche vectorielle : « Que faire si mon colis arrive endommagé ? », qui est le texte exact de la question `liv-08`, sort première à **0,7993**, très loin devant la deuxième (0,5719), et reste sous le seuil de 0,84. L'assistant refusait sa propre question. Le phénomène vient de l'indexation : le vecteur porte `question + réponse` (`documentaire/schema.py`), donc une requête qui ne reprend que la question ne couvre que la moitié du texte indexé, et le score dépend de la ressemblance entre la question et sa réponse. Le jeu gelé ne l'avait pas vu parce qu'il ne contient que des reformulations, jamais les questions verbatim.
+
+Ce que la règle n'autorise pas : le passage doit figurer dans les résultats de la recherche, il est servi avec **son vrai score** — jamais maquillé en 1,0 — et la réponse reste son texte exact avec sa citation. Un identifiant absent des résultats retombe sur la décision ordinaire, et le filtre A du §2 s'applique toujours : un clic n'est pas un laissez-passer pour une question hors périmètre.
 
 **Règles pour l'interface**
 

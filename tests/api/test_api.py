@@ -171,6 +171,35 @@ def test_une_suggestion_cliquee_journalise_la_formulation_du_client(monkeypatch)
     assert ligne["passages_cites"] == ["liv-03"]
 
 
+def test_une_suggestion_cliquee_repond_meme_sous_le_seuil(monkeypatch):
+    """Sans ça, un clic peut mener à une seconde hésitation (cas liv-08, score 0,7993)."""
+    avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.2)]))
+    r = client.post(
+        "/api/assistant/ask",
+        json={
+            "question": "Comment suivre ma commande ?",
+            "origine": "suggestion",
+            "reformulation": "ou en est mon paquet",
+            "passage": "liv-03",
+        },
+    )
+    assert r.status_code == 200, r.text
+    corps = r.json()
+    assert corps["refus"] is False
+    assert [p["id"] for p in corps["passages"]] == ["liv-03"]
+    assert corps["passages"][0]["score"] == pytest.approx(0.2)
+
+
+def test_un_passage_inconnu_ne_force_aucune_reponse(monkeypatch):
+    avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.2)]))
+    r = client.post(
+        "/api/assistant/ask",
+        json={"question": "Comment suivre ma commande ?", "passage": "zzz-99"},
+    )
+    assert r.status_code == 200
+    assert r.json()["refus"] is True
+
+
 def test_un_journal_inecrivable_ne_casse_pas_la_reponse(monkeypatch):
     """Un disque plein est un problème de mesure, pas un problème de service."""
     avec_retrouveur(monkeypatch, FauxRetrouveur([passage(score=0.95)]))

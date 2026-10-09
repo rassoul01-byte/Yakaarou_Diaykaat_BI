@@ -18,15 +18,19 @@ class AssistantIn(BaseModel):
     """`origine` et `reformulation` ne changent pas la réponse : ils vont au journal.
 
     Quand l'utilisateur clique une suggestion, la page renvoie la question du passage
-    en `question`, et SA formulation d'origine en `reformulation`. Le journal garde
-    ainsi le couple (ce qu'il a écrit, le passage qui lui a convenu) — voir
-    `assistant/journal.py`.
+    en `question`, SA formulation d'origine en `reformulation`, et l'identifiant du
+    passage cliqué en `passage`. Le journal garde ainsi le couple (ce qu'il a écrit,
+    le passage qui lui a convenu) — voir `assistant/journal.py`.
+
+    `passage` est le seul des trois qui change la réponse : le seuil ne départage plus
+    un passage que l'utilisateur a lui-même choisi (voir `assistant.repondre`).
     """
 
     question: str = Field(min_length=1, max_length=500)
     k: int = Field(default=3, ge=1, le=10)
     origine: Literal["saisie", "exemple", "suggestion"] = "saisie"
     reformulation: str | None = Field(default=None, max_length=500)
+    passage: str | None = Field(default=None, max_length=32)
 
 
 class PassageOut(BaseModel):

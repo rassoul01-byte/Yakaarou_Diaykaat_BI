@@ -60,6 +60,17 @@ class Reponse:
         }
 
 
+def _choisi(passages: list[Passage], identifiant: str | None) -> garde_fous.Decision | None:
+    """La décision imposée par un clic de l'utilisateur, ou None s'il n'y en a pas.
+
+    None signifie « rien à imposer » : l'appelant retombe alors sur `garde_fous.decider`.
+    """
+    if not identifiant:
+        return None
+    retenu = next((p for p in passages if p.id == identifiant), None)
+    return garde_fous.Decision(retenu=retenu) if retenu else None
+
+
 def _refus(
     question: str, motif: str, debut: float, suggestions: list[Passage] | None = None
 ) -> Reponse:
@@ -82,6 +93,7 @@ def repondre(
     seuils: garde_fous.Seuils | None = None,
     origine: str = journal_module.ORIGINE_PAR_DEFAUT,
     reformulation: str | None = None,
+    passage_choisi: str | None = None,
 ) -> Reponse:
     """Répond à une question, ou refuse. Un refus est une réponse, pas une exception.
 
@@ -90,6 +102,18 @@ def repondre(
 
     `origine` et `reformulation` ne changent RIEN à la réponse : ils ne servent qu'au
     journal, pour savoir d'où venait la question (voir `journal.py`).
+
+    `passage_choisi` est l'identifiant d'une suggestion que l'utilisateur a cliquée. Le
+    seuil ne s'applique alors pas à ce passage : il départage des passages que PERSONNE
+    n'a départagés, et ici quelqu'un l'a fait. Sans cela, un clic peut mener à une
+    seconde hésitation — mesuré le 2026-10-09, `liv-08` interrogé par sa propre question
+    sort premier à 0,7993, loin devant le deuxième (0,5719), et reste sous le seuil
+    de 0,84 : l'assistant refusait sa propre question.
+
+    Ce que cela n'autorise pas : inventer. Le passage doit figurer dans les résultats de
+    la recherche, il est servi avec son vrai score, et la réponse reste son texte exact
+    avec sa citation. Un identifiant inconnu des résultats retombe sur la décision
+    ordinaire.
     """
     debut = time.perf_counter()
     texte = (question or "").strip()
@@ -98,7 +122,10 @@ def repondre(
     if motif:
         reponse = _refus(texte, motif, debut)
     else:
-        decision = garde_fous.decider(retrouveur.retrouver(texte, k), seuils or retrouveur.seuils)
+        trouves = retrouveur.retrouver(texte, k)
+        decision = _choisi(trouves, passage_choisi) or garde_fous.decider(
+            trouves, seuils or retrouveur.seuils
+        )
         if decision.retenu:
             reponse = Reponse(
                 question=texte,
