@@ -269,8 +269,34 @@ services:
       postgres: { condition: service_healthy }
       elasticsearch: { condition: service_started }
     networks: [dataflow]
-    
+
+  # Application web de démonstration (3 pages : vue générale, recherche, assistant).
+  #
+  # Le navigateur appelle l'API depuis la machine hôte, pas depuis le réseau
+  # Docker : VITE_API_BASE pointe donc sur localhost, et non sur le service `api`.
+  # L'origine servie doit rester 5173, seule autorisée par le CORS (src/api/main.py).
+  #
+  # node_modules est un volume anonyme : sans lui, le dossier du poste — installé
+  # sous Windows ou macOS — masquerait celui du conteneur, et les binaires natifs
+  # ne tourneraient pas sous Linux.
+  frontend:
+    # Valeur de repli : un `.env` qui date d'avant ce service ne doit pas
+    # faire échouer tout le `docker compose up` sur une image « node: » vide.
+    image: node:${NODE_VERSION:-22-alpine}
+    container_name: df_frontend
+    working_dir: /app
+    environment:
+      VITE_API_BASE: http://localhost:${FRONTEND_API_PORT:-8001}/api
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173"
+    ports: ["127.0.0.1:${FRONTEND_PORT:-5173}:5173"]
+    depends_on: [api]
+    networks: [dataflow]
+
 volumes:
+  frontend_node_modules:
   postgres_data:
   mongo_data:
   es_data:

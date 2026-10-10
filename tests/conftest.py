@@ -8,11 +8,21 @@ import pytest
 
 
 def pytest_collection_modifyitems(config, items):
+    """Écarte les tests d'intégration, sauf demande explicite.
+
+    `item.get_closest_marker` et non `"integration" in item.keywords` : le sac
+    de mots-clés contient aussi les noms des nœuds parents, donc le nom du
+    DOSSIER. Tout ce qui vivait sous `tests/integration/` était écarté, qu'il
+    porte un marqueur ou non — y compris les tests de la correspondance, qui
+    n'ouvrent aucune connexion et tournent en un dixième de seconde. Ils
+    étaient donc absents de l'intégration continue sans que personne l'ait
+    décidé.
+    """
     if config.getoption("-m"):
         return
     passer = pytest.mark.skip(reason="test d'intégration : lancer avec -m integration")
     for item in items:
-        if "integration" in item.keywords:
+        if item.get_closest_marker("integration") is not None:
             item.add_marker(passer)
 
 

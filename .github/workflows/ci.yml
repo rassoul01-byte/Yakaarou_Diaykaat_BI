@@ -1,9 +1,22 @@
 name: CI
 
 # Déclenchée à chaque envoi sur une branche et à chaque demande de fusion vers develop.
-# Contrôle de forme (mêmes réglages que le projet : pyproject.toml), puis tests
-# qui n'ont besoin d'aucun service. Les tests « integration » restent locaux
-# (voir la section CI/CD du dossier de conception ; à revoir au Sprint 4).
+#
+# Deux travaux indépendants, qui échouent séparément : le back (forme, analyse
+# statique, tests) et le front (types, construction). Les séparer évite qu'une
+# erreur TypeScript masque un test en échec, et chacun ne s'installe que ce qu'il
+# lui faut.
+#
+# Trois travaux indépendants : le back, le front, et les tests d'intégration
+# qui n'ont besoin que de PostgreSQL.
+#
+# Ce troisième travail a été ajouté le 2026-10-10, après que quatre défauts de
+# migration ont atteint la base du projet alors que la suite était verte : ils
+# n'étaient visibles que sur une vraie base. Il couvre le chargement de
+# l'entrepôt, l'historisation SCD2, les indicateurs et les migrations elles-mêmes.
+#
+# Restent hors CI les tests qui exigent Elasticsearch, Kafka ou MinIO : c'est
+# la dette qui subsiste, inscrite au dossier de conception.
 on:
   push:
   pull_request:
@@ -50,3 +63,103 @@ jobs:
       # -m "not integration" écarte les tests qui exigent les services.
       - name: Tests
         run: pytest -m "not integration"
+
+  integration-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # Même version majeure que le service `postgres` de docker-compose.yml
+    # (POSTGRES_VERSION=16). Les identifiants sont ceux de .env.example : rien
+    # de secret, une base jetable qui vit le temps du travail.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: dataflow
+          POSTGRES_PASSWORD: changeme_en_local
+          POSTGRES_DB: dataflow360
+        ports:
+          - 5432:5432
+        # Sans ce contrôle, les tests démarrent avant que la base accepte les
+        # connexions et échouent pour une raison qui n'est pas la leur.
+        options: >-
+          --health-cmd "pg_isready -U dataflow -d dataflow360"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            requirements.lock
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt -r requirements-dev.txt -c requirements.lock
+
+      # Les deux mêmes commandes qu'à l'installation : le fichier joué par le
+      # conteneur PostgreSQL à son premier démarrage, puis les migrations. Les
+      # tests de `tests/quality/` interrogent la base du projet et supposent
+      # donc ces deux étapes faites.
+      #
+      # Cette étape est elle-même un contrôle : c'est `appliquer_sql.py` qui a
+      # échoué trois fois le 2026-10-09, et aucun test ne le lançait.
+      - name: Initialiser la base
+        env:
+          PGPASSWORD: changeme_en_local
+        run: |
+          psql -h localhost -U dataflow -d dataflow360 -v ON_ERROR_STOP=1 \
+               -f docker/postgres/init/01-databases.sql
+
+      - name: Appliquer les migrations
+        env:
+          POSTGRES_DSN: postgresql://dataflow:changeme_en_local@localhost:5432/dataflow360
+          PYTHONPATH: src
+        run: python scripts/appliquer_sql.py
+
+      # Les trois dossiers dont les tests d'intégration ne demandent que
+      # PostgreSQL. `tests/integration` et `tests/indicateurs` bâtissent leurs
+      # schémas dans une base séparée, depuis les vraies migrations ;
+      # `tests/quality` lit celle du projet, montée juste au-dessus.
+      - name: Tests d'intégration (PostgreSQL)
+        env:
+          POSTGRES_DSN: postgresql://dataflow:changeme_en_local@localhost:5432/dataflow360
+        run: pytest -m integration tests/integration tests/indicateurs tests/quality
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      # Même version que le service `frontend` de docker-compose.yml.
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # `npm ci` installe exactement le package-lock, sans le réécrire.
+      - name: Installer les dépendances
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      # Les types TypeScript sont le miroir déclaré des schémas Pydantic
+      # (frontend/src/types/api.ts) : une divergence doit faire échouer la CI.
+      - name: Types (tsc)
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Construction (vite build)
+        working-directory: frontend
+        run: npm run build
