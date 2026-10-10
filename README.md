@@ -308,13 +308,13 @@ Si PostgreSQL ou MongoDB sont déjà installés sur votre ordinateur, ils occupe
 Sous **Windows**, dans PowerShell :
 
 ```powershell
-netstat -ano | findstr ":5432 :27017 :9200 :8080 :29092 :8010"
+netstat -ano | findstr ":5432 :27017 :9200 :8080 :29092 :8010 :8001 :5173"
 ```
 
 Sous **Linux** ou **macOS** :
 
 ```bash
-ss -ltn | grep -E ':(5432|27017|9200|8080|29092|8010)\b'
+ss -ltn | grep -E ':(5432|27017|9200|8080|29092|8010|8001|5173)\b'
 ```
 
 Chaque ligne affichée correspond à un port déjà pris. Changez-le **dans votre `.env`**, jamais dans `docker-compose.yml` :
@@ -327,6 +327,8 @@ Chaque ligne affichée correspond à un port déjà pris. Changez-le **dans votr
 | 9200 | `ES_PORT=9201` |
 | 29092 | `KAFKA_PORT=29093` |
 | 8010 | `REFERENTIEL_PORT=8011` (à ajouter dans `.env`) |
+
+Les ports **8001** (API) et **5173** (application web) ne se changent pas dans `.env` : 8001 est fixé dans `docker-compose.yml`, et 5173 est la seule origine autorisée par le CORS de l'API. S'ils sont pris, libérez-les.
 
 Sous Windows, modifiez `.env` avec VS Code plutôt qu'avec une commande PowerShell, qui peut changer l'encodage du fichier.
 
@@ -402,7 +404,7 @@ docker compose exec app python -m integration.verifier
 
 L'identifiant d'ingestion `<id>` est celui du dossier le plus récent de `data/raw/lots/<source>/`, ou celui que `python -m zone_brute lister` affiche.
 
-La base documentaire de l'assistant ne fait pas partie du DAG. Pour l'alimenter :
+La base documentaire de l'assistant est alimentée chaque jour par la tâche `indexation_passages` du DAG. Pour l'alimenter à la main :
 
 ```bash
 docker compose exec app python -m documentaire.verifier
