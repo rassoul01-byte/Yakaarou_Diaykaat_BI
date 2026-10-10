@@ -15,8 +15,8 @@ from airflow.operators.bash import BashOperator
 PY = "/home/airflow/venv-projet/bin/python"
 PREFIXE = f"cd /opt/airflow && {PY}"
 
-# Seuil de rejet lu dans une variable Airflow, 5 par défaut :
-#   airflow variables set seuil_rejet 0.05
+# Seuil de rejet lu dans une variable Airflow, en pourcentage, 5 par défaut :
+#   airflow variables set seuil_rejet 5
 SEUIL = "{{ var.value.get('seuil_rejet', '5') }}"
 
 
