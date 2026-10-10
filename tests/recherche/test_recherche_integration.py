@@ -68,6 +68,11 @@ PIEGES = [
 @pytest.mark.parametrize(("tape", "voisin"), PIEGES)
 def test_un_mot_voisin_n_est_pas_confondu(client, tape, voisin):
     reponse = rechercher(client, tape, taille=20)
+    # Sans cette assertion, le test passait sur un moteur qui ne ramène RIEN :
+    # `confondus` est alors vide, et l'absence de confusion s'obtient par
+    # l'absence de résultat. Un test qu'une recherche cassée ne fait pas
+    # échouer ne teste rien.
+    assert reponse.aboutit, f"« {tape} » ne ramène aucun résultat"
     confondus = [
         r.designation
         for r in reponse.resultats
@@ -83,12 +88,19 @@ def test_le_filtre_par_categorie_ne_ramene_que_cette_categorie(client):
     assert {r.categorie_code for r in reponse.resultats} == {categorie}
 
 
-def test_le_filtre_par_langue_ne_ramene_que_cette_langue(client):
-    reponse = rechercher(client, "chaise", langue="fr", taille=20)
-    assert reponse.aboutit
-    # `langue` n'est pas rendue dans le résultat : on vérifie par le nombre.
+def test_le_filtre_par_langue_reduit_bien_l_ensemble(client):
+    """`total <= tout` seul est tautologique : un filtre ne peut qu'abaisser le
+    total, donc le test passait même si `langue` était entièrement ignorée.
+
+    On compare donc les deux langues : leurs totaux doivent se partager
+    l'ensemble, ce qu'un filtre ignoré ne produit jamais.
+    """
     tout = rechercher(client, "chaise", taille=1).total
-    assert reponse.total <= tout
+    francais = rechercher(client, "chaise", langue="fr", taille=1).total
+    anglais = rechercher(client, "chaise", langue="en", taille=1).total
+
+    assert francais < tout, "le filtre par langue ne change rien : il est ignoré"
+    assert francais + anglais <= tout
 
 
 def test_une_chaine_absurde_ne_ramene_rien(client):

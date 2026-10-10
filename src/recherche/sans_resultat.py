@@ -38,7 +38,7 @@ from .moteur import rechercher_plusieurs
 TAILLE_LOT = 50  # requêtes par envoi : assez pour aller vite, peu pour ménager la mémoire
 
 # Le regroupement par requête, toutes journées confondues, est une vue
-# versionnée (sql/016_vue_requetes_frequentes.sql) : le calcul ne vit pas dans
+# versionnée (sql/017_vue_requetes_frequentes.sql) : le calcul ne vit pas dans
 # le code. Ce module ne fait que la lire, puis rejouer les requêtes.
 REQUETE_JOURNAL = """
     SELECT requete, occurrences, jours

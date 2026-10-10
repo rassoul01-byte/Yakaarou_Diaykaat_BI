@@ -1,0 +1,30 @@
+# Identités Git de l'équipe — GROUPE 2, DataFlow360
+#
+# Git identifie un auteur par le couple nom + adresse. Une casse différente ou
+# une seconde adresse crée donc un contributeur de plus, et le graphe des
+# contributions du dépôt devient faux : une même personne y apparaît deux ou
+# trois fois, chacune avec une part de son travail.
+#
+# Ce fichier donne la forme qui fait foi pour chaque membre. Git le lit tout
+# seul : `git shortlog -sne`, `git log`, `git blame` et la page des
+# contributeurs de GitHub affichent désormais une ligne par personne.
+# Aucun commit n'est modifié — c'est un affichage, pas une réécriture.
+#
+# Les noms retenus sont ceux de docs/ROLES.md, pour que le dépôt et le dossier
+# de conception désignent les membres de la même façon.
+#
+# Format :  Nom retenu <adresse retenue> Nom du commit <adresse du commit>
+
+# --- Ndeye Penda SARR : deux graphies et trois adresses -----------------
+Ndeye Penda SARR <ndasarr884@gmail.com> <ndasarr884@gmail.com>
+Ndeye Penda SARR <ndasarr884@gmail.com> Ndeye Penda Sarr <noreply@example.com>
+Ndeye Penda SARR <ndasarr884@gmail.com> <ndeyependasarr239@gmail.com>
+
+# --- Bachir DEME : pseudonyme GitHub, et l'adresse masquée de GitHub ----
+Bachir DEME <demebachir65@gmail.com> demeBachir01 <demebachir65@gmail.com>
+Bachir DEME <demebachir65@gmail.com> <148017641+demeBachir01@users.noreply.github.com>
+
+# --- Les trois autres : une seule identité, nom normalisé ---------------
+Seydina WADE <rassoulw01@gmail.com> Seydina Wade <rassoulw01@gmail.com>
+Mouhameth DIOP <momojoop84@gmail.com> Mouhameth Diop <momojoop84@gmail.com>
+Aissata DIALLO <diallo.aissata@uam.edu.sn> Aissata Diallo <diallo.aissata@uam.edu.sn>

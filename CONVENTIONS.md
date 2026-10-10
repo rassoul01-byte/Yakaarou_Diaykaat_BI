@@ -42,6 +42,15 @@ Chaque commit doit représenter une unité logique de travail cohérente et resp
 
 **Ne pas confondre `feat` et `test` pour la qualité.** Écrire une règle de qualité, c'est livrer une fonctionnalité du backlog : c'est un `feat`. Écrire le test qui vérifie que cette règle rejette bien ce qu'elle doit rejeter, c'est un `test`. La distinction est la même que dans la section CI/CD du dossier de conception.
 
+**Son identité Git, une fois pour toutes.** Git reconnaît un auteur par le couple nom + adresse. Une graphie différente ou une seconde adresse crée un contributeur de plus, et le travail d'une même personne se retrouve éparpillé sur plusieurs lignes du graphe des contributions. Chacun vérifie la sienne :
+
+```bash
+git config user.name    # doit être le nom tel qu'il figure dans docs/ROLES.md
+git config user.email   # toujours la même adresse, sur tous ses postes
+```
+
+Le fichier `.mailmap`, à la racine, réunit les identités déjà utilisées — il en existait neuf pour cinq personnes. Toute nouvelle variante doit y être ajoutée, ou mieux, évitée en réglant `user.name` et `user.email` correctement.
+
 ---
 
 ### 3. Comment ouvrir et faire relire une demande de fusion (Pull Request) ?

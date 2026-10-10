@@ -1,0 +1,889 @@
+/* ============================================================
+   Leeral — système de styles
+   Bleu profond + marine, cartes blanches par-dessus.
+
+   Trois changements structurants par rapport à la version précédente.
+
+   1. LA TYPOGRAPHIE PASSE PAR UNE ÉCHELLE. Ce fichier portait vingt tailles
+      en dur, de 9 px à 56 px, et les deux tiers du texte vivaient entre 10 et
+      13 px : lisible sur un portable à cinquante centimètres, illisible au
+      vidéoprojecteur depuis le fond d'une salle. Les crans sont nommés par
+      leur rôle, pas par leur taille, et le plancher est 12,5 px — réservé aux
+      étiquettes en capitales, qui sont courtes et espacées.
+
+   2. LES CLASSES MORTES SONT PARTIES. Quarante-six classes de ce fichier
+      n'étaient référencées par aucun composant : la barre latérale remplacée
+      par la barre du haut, les cartes d'indicateurs remplacées par celles de
+      la vue générale, le héros remplacé par `.page-intro`. Elles ont été
+      retirées après vérification que plus aucun `className`, y compris
+      construit dynamiquement, ne les nommait.
+
+   3. L'ANIMATION EST UN SYSTÈME, PAS UN ORNEMENT. Une seule famille de
+      mouvements — monter et apparaître — déclinée en cascade, et une règle
+      `prefers-reduced-motion` qui éteint tout en laissant l'état final.
+   ============================================================ */
+
+:root {
+  /* ---------------------------------------------------------- couleurs */
+  --c-primaire: #0a6bd4;
+  --c-primaire-sombre: #0852a3;
+  --c-primaire-clair: #e7f0fd;
+  --c-primaire-glow: rgba(10, 107, 212, 0.18);
+
+  --c-accent: #4ca7f8;
+  --c-succes: #1e8449;
+  --c-succes-clair: #e8f7ef;
+  --c-alerte: #e63946;
+  --c-alerte-clair: #fdecee;
+
+  --c-fond: #eef4fc;
+  --c-carte: #ffffff;
+  --c-texte: #0f1c2e;
+  --c-texte-doux: #44566e;
+  /* #7c8da4 ne donnait que 3,4:1 sur blanc : les étiquettes en capitales
+     passaient sous le seuil. #64748b en donne 4,76. */
+  --c-texte-tres-doux: #64748b;
+  --c-bordure: #dce6f4;
+  --c-bordure-forte: #c0d2e8;
+
+  /* ------------------------------------------------------ typographie */
+
+  /* Une seule police dans toute l'application. Deux grotesques voisines ne se
+     distinguent pas assez pour justifier d'en charger deux. Elle est servie
+     avec l'application (voir src/main.tsx), pas depuis un domaine tiers. */
+  --police: "Familjen Grotesk Variable", "Familjen Grotesk", system-ui, sans-serif;
+
+  /* L'échelle. Changer une taille se fait ici, pas dans les cent endroits qui
+     la lisaient. */
+  --t-etiquette: 12.5px; /* capitales espacées : kicker, puce, étiquette */
+  --t-petit: 14px; /* légendes, libellé sous un chiffre, note de bloc */
+  --t-base: 15.5px; /* le texte courant, les cellules de tableau */
+  --t-moyen: 17px; /* chapeau, paragraphe d'introduction */
+  --t-sous-titre: 21px; /* titre de bloc */
+  --t-titre: 29px; /* titre de page */
+
+  /* Les chiffres ne suivent pas l'échelle du texte : ils sont la raison d'être
+     de la page et portent leur propre hiérarchie. */
+  --t-figure-petite: 22px;
+  --t-figure: 32px;
+  --t-figure-geante: clamp(40px, 5.5vw, 62px);
+
+  --interligne-texte: 1.6;
+  --interligne-titre: 1.15;
+
+  /* ----------------------------------------------------------- formes */
+
+  /* La carte, définie une fois : même blanc, même rayon, même filet, même
+     ombre, sur les trois pages. */
+  --carte-fond: #ffffff;
+  --carte-ombre: 0 1px 2px rgba(15, 28, 46, 0.04), 0 6px 18px rgba(15, 28, 46, 0.06);
+  --carte-padding: 26px 28px;
+
+  --radius: 14px;
+  --radius-sm: 8px;
+  --radius-lg: 18px;
+
+  --ombre: 0 2px 8px rgba(26, 26, 26, 0.06);
+  --ombre-md: 0 10px 26px rgba(15, 28, 46, 0.1);
+  --ombre-primaire: 0 8px 24px var(--c-primaire-glow);
+
+  /* ------------------------------------------------------- mouvements */
+
+  /* Deux courbes, et pas une de plus. `--sortie` ralentit à l'arrivée : c'est
+     celle de tout ce qui apparaît. `--ressort` dépasse légèrement puis revient,
+     réservée aux chiffres et aux barres, qui ont le droit d'avoir du poids. */
+  --sortie: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ressort: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --transition: 180ms var(--sortie);
+  --transition-lente: 420ms var(--sortie);
+
+  /* Le pas de la cascade. Six blocs à 90 ms : le dernier entre à 540 ms, soit
+     avant qu'on ait fini de lire le premier titre. Au-delà, l'attente se voit. */
+  --pas-cascade: 90ms;
+
+  font-family: var(--police);
+  font-size: var(--t-base);
+  color: var(--c-texte);
+  background: var(--c-fond);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   Layout général
+   ============================================================ */
+
+body {
+  margin: 0;
+  font-size: var(--t-base);
+  line-height: var(--interligne-texte);
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Débordement horizontal, sur les trois pages et aux deux tailles.
+   `width: 100%` s'ajoutait au `padding` faute de `box-sizing: border-box`, ce
+   qui poussait 64 px hors de l'écran. Et `margin: 0 auto` sur un élément flex
+   annule l'étirement : sans largeur explicite, le bloc se dimensionne alors sur
+   son contenu, donc sur son plus large tableau. Les trois déclarations se
+   tiennent, il faut les garder ensemble. */
+.content {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 34px 32px 56px;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+/* Les éléments de formulaire n'héritent pas de la police : sans cette règle,
+   les libellés du menu — qui sont des boutons — s'affichaient en Arial pendant
+   que le reste de l'application était en Familjen Grotesk. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* ============================================================
+   Barre du haut
+   ============================================================ */
+
+.topbar {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(12px) saturate(1.4);
+  border-bottom: 1px solid var(--c-bordure);
+  padding: 0 32px;
+  min-height: 76px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  animation: descendre 520ms var(--sortie);
+}
+
+.topbar-gauche {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.topbar-droite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.marque {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: var(--c-texte);
+}
+
+.marque-pastille {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: linear-gradient(140deg, var(--c-primaire), var(--c-accent));
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px var(--c-primaire-glow);
+  transition: transform var(--transition-lente);
+}
+
+.marque:hover .marque-pastille {
+  transform: rotate(-8deg) scale(1.06);
+}
+
+.marque-nom {
+  font-size: var(--t-sous-titre);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.marque-nom span {
+  color: var(--c-primaire);
+  font-weight: 500;
+}
+
+.topnav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.topnav-item {
+  border: 0;
+  background: transparent;
+  color: var(--c-texte-doux);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: var(--t-base);
+  position: relative;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* Le soulignement glisse d'un onglet à l'autre au lieu d'apparaître :
+   `transform` sur un pseudo-élément, donc rien à recalculer pour le navigateur. */
+.topnav-item::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--c-primaire);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 260ms var(--sortie);
+}
+
+.topnav-item:hover {
+  background: var(--c-primaire-clair);
+  color: var(--c-primaire-sombre);
+}
+
+.topnav-item.actif {
+  background: var(--c-primaire-clair);
+  color: var(--c-primaire-sombre);
+  font-weight: 600;
+}
+
+.topnav-item.actif::after {
+  transform: scaleX(1);
+}
+
+.etat {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--t-petit);
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 22px;
+  color: var(--c-texte-doux);
+  background: #f1f5fb;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition);
+}
+
+.etat-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  position: relative;
+}
+
+.etat-vert {
+  color: var(--c-succes);
+  background: var(--c-succes-clair);
+}
+
+/* L'anneau ne bat que quand l'API répond : un point qui pulse en permanence
+   ne dit plus rien. */
+.etat-vert .etat-point::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: anneau 2.4s var(--sortie) infinite;
+}
+
+.etat-rouge {
+  color: var(--c-alerte);
+  background: var(--c-alerte-clair);
+}
+
+.bouton-recharger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--c-bordure);
+  background: #ffffff;
+  color: var(--c-texte-doux);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: var(--t-petit);
+  font-weight: 500;
+  min-height: 40px;
+  transition: all var(--transition);
+}
+
+.bouton-recharger:hover {
+  border-color: var(--c-primaire);
+  color: var(--c-primaire);
+  box-shadow: var(--ombre);
+}
+
+.bouton-recharger:hover svg {
+  animation: tourner 700ms var(--sortie);
+}
+
+.bouton-recharger:active {
+  transform: scale(0.97);
+}
+
+/* ============================================================
+   Introduction de page
+   ============================================================ */
+
+.page-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+/* `width: fit-content` : sans lui, le kicker est un bloc et sa pastille
+   s'étire sur toute la largeur, ce qui se lit comme une barre grise. */
+.page-intro .hero-kicker {
+  width: fit-content;
+}
+
+.hero-kicker,
+.panel-kicker,
+.answer-label {
+  font-size: var(--t-etiquette);
+  letter-spacing: 0.13em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hero-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--c-primaire);
+}
+
+.page-intro h2 {
+  font-size: var(--t-titre);
+  margin: 12px 0 10px;
+  letter-spacing: -0.03em;
+  line-height: var(--interligne-titre);
+}
+
+.page-intro p {
+  margin: 0;
+  line-height: var(--interligne-texte);
+  max-width: 76ch;
+  color: var(--c-texte-doux);
+  font-size: var(--t-moyen);
+}
+
+/* ============================================================
+   Cartes
+   ============================================================ */
+
+.panel {
+  background: var(--carte-fond);
+  border: 1px solid var(--c-bordure);
+  border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
+  padding: var(--carte-padding);
+  transition: border-color var(--transition), box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.panel:hover {
+  border-color: var(--c-bordure-forte);
+  box-shadow: var(--ombre-md);
+  transform: translateY(-2px);
+}
+
+.panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panel-kicker {
+  color: var(--c-texte-tres-doux);
+  margin-bottom: 7px;
+}
+
+.panel h3 {
+  margin: 0;
+  font-size: var(--t-sous-titre);
+  letter-spacing: -0.02em;
+  line-height: var(--interligne-titre);
+}
+
+.panel-tag {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--c-primaire-clair);
+  color: var(--c-primaire-sombre);
+  font-size: var(--t-etiquette);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Encadré d'erreur
+   ============================================================ */
+
+.warning-box {
+  display: flex;
+  gap: 13px;
+  padding: 18px;
+  margin-top: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--c-alerte-clair);
+  color: #8e2730;
+  border: 1px solid rgba(230, 57, 70, 0.22);
+  animation: monter 380ms var(--sortie);
+}
+
+.warning-box strong,
+.warning-box span {
+  display: block;
+}
+
+.warning-box strong {
+  font-size: var(--t-base);
+}
+
+.warning-box span {
+  font-size: var(--t-petit);
+  line-height: var(--interligne-texte);
+  margin-top: 5px;
+  opacity: 0.9;
+}
+
+/* ============================================================
+   Recherche et assistant
+   ============================================================ */
+
+.question-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.question-row input {
+  flex: 1;
+  border: 1px solid var(--c-bordure);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  outline: none;
+  font-size: var(--t-base);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  background: var(--c-carte);
+}
+
+.question-row input:focus {
+  border-color: var(--c-primaire);
+  box-shadow: 0 0 0 3px var(--c-primaire-glow);
+}
+
+.question-row button {
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 0 24px;
+  background: var(--c-primaire);
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--t-base);
+  box-shadow: 0 2px 8px var(--c-primaire-glow);
+  transition: background var(--transition), box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.question-row button:hover:not(:disabled) {
+  background: var(--c-primaire-sombre);
+  transform: translateY(-1px);
+  box-shadow: var(--ombre-primaire);
+}
+
+.question-row button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.question-row button:disabled,
+.suggestions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.suggestions button {
+  border: 1px solid var(--c-bordure);
+  background: var(--c-carte);
+  border-radius: 999px;
+  padding: 9px 15px;
+  color: var(--c-texte-doux);
+  font-size: var(--t-petit);
+  transition: all var(--transition);
+}
+
+.suggestions button:hover:not(:disabled) {
+  border-color: var(--c-primaire);
+  color: var(--c-primaire);
+  background: var(--c-primaire-clair);
+  transform: translateY(-1px);
+}
+
+.answer-card {
+  margin-top: 26px;
+  border-radius: var(--radius);
+  background: var(--c-primaire-clair);
+  padding: var(--carte-padding);
+  border: 1px solid rgba(10, 107, 212, 0.18);
+  animation: monter var(--transition-lente);
+}
+
+.answer-label {
+  color: var(--c-primaire-sombre);
+}
+
+.answer-card p {
+  line-height: 1.7;
+  font-size: var(--t-base);
+  margin: 12px 0 20px;
+  color: var(--c-texte);
+}
+
+.sources {
+  border-top: 1px solid rgba(10, 107, 212, 0.18);
+  padding-top: 16px;
+}
+
+.source-row {
+  display: grid;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--c-carte);
+  border: 1px solid var(--c-bordure);
+  animation: monter 340ms var(--sortie) backwards;
+}
+
+.source-row span {
+  font-size: var(--t-etiquette);
+  color: var(--c-texte-tres-doux);
+}
+
+.source-row strong {
+  font-size: var(--t-base);
+  color: var(--c-texte);
+}
+
+/* Une suggestion est une question que l'assistant SAIT traiter. Elle doit donc se
+   cliquer : affichée en texte mort, l'utilisateur voit la bonne réponse sans pouvoir
+   l'ouvrir, et doit la recopier à la main. */
+button.source-row {
+  width: 100%;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  transition: border-color var(--transition), background var(--transition),
+    transform var(--transition);
+}
+
+button.source-row:hover:not(:disabled) {
+  border-color: var(--c-primaire);
+  background: var(--c-primaire-clair);
+  transform: translateX(3px);
+}
+
+button.source-row:hover:not(:disabled) strong {
+  color: var(--c-primaire-sombre);
+}
+
+button.source-row:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+button.source-row .chevron {
+  display: flex;
+  color: var(--c-primaire);
+  transition: transform var(--transition);
+}
+
+button.source-row:hover:not(:disabled) .chevron {
+  transform: translateX(3px);
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: 1.45fr 0.55fr;
+  gap: 22px;
+}
+
+.assistant-main {
+  min-height: 520px;
+}
+
+.assistant-head {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--c-bordure);
+}
+
+.assistant-head strong,
+.assistant-head span {
+  display: block;
+}
+
+.assistant-head strong {
+  font-size: var(--t-moyen);
+  font-weight: 600;
+}
+
+.assistant-head span {
+  color: var(--c-texte-tres-doux);
+  font-size: var(--t-petit);
+  margin-top: 3px;
+}
+
+.bot-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--c-primaire), var(--c-accent));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px var(--c-primaire-glow);
+  flex-shrink: 0;
+}
+
+.assistant-side p {
+  color: var(--c-texte-doux);
+  line-height: var(--interligne-texte);
+  font-size: var(--t-petit);
+}
+
+.assistant-rule {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--c-bordure);
+  font-size: var(--t-petit);
+  color: var(--c-texte);
+}
+
+.assistant-rule svg {
+  color: var(--c-primaire);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   Squelettes de chargement
+   ============================================================ */
+
+.skeleton {
+  background: linear-gradient(90deg, #e4ecf7 0%, #f4f8fd 50%, #e4ecf7 100%);
+  background-size: 200% 100%;
+  animation: miroitement 1.4s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeleton-ligne {
+  height: 14px;
+  margin-bottom: 10px;
+}
+
+.skeleton-ligne.court {
+  width: 40%;
+}
+
+.skeleton-ligne.moyen {
+  width: 70%;
+}
+
+.skeleton-bloc {
+  height: 92px;
+  margin-bottom: 14px;
+}
+
+.skeleton-carte {
+  height: 66px;
+  margin-bottom: 11px;
+  border-radius: var(--radius);
+}
+
+/* ============================================================
+   Mouvements
+
+   Une seule famille : ça monte et ça apparaît. Les variantes ne changent que
+   l'amplitude et le point de départ.
+   ============================================================ */
+
+@keyframes monter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes descendre {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes miroitement {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes anneau {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+@keyframes tourner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Le changement de page. La clé `key={page}` dans App remonte le composant,
+   ce qui relance l'animation sans état à gérer. */
+.page-enter {
+  animation: monter var(--transition-lente);
+}
+
+/* La cascade. Un enfant direct de `.cascade` entre après son prédécesseur ;
+   au-delà du huitième, le délai se stabilise pour ne pas faire attendre.
+   `backwards` tient l'élément invisible pendant son délai — sans lui, tout
+   apparaît d'un coup puis saute. */
+.cascade > * {
+  animation: monter 520ms var(--sortie) backwards;
+}
+
+.cascade > *:nth-child(1) { animation-delay: 0ms; }
+.cascade > *:nth-child(2) { animation-delay: var(--pas-cascade); }
+.cascade > *:nth-child(3) { animation-delay: calc(var(--pas-cascade) * 2); }
+.cascade > *:nth-child(4) { animation-delay: calc(var(--pas-cascade) * 3); }
+.cascade > *:nth-child(5) { animation-delay: calc(var(--pas-cascade) * 4); }
+.cascade > *:nth-child(6) { animation-delay: calc(var(--pas-cascade) * 5); }
+.cascade > *:nth-child(n + 7) { animation-delay: calc(var(--pas-cascade) * 6); }
+
+/* ------------------------------------------------------------
+   Mouvement réduit
+
+   Le réglage système « réduire les animations » n'est pas une préférence
+   esthétique : il existe pour les personnes que le mouvement rend malades.
+   Tout s'éteint, et l'état final reste — la page est identique, elle arrive
+   simplement sans transition.
+   ------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 1050px) {
+  .assistant-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .content,
+  .topbar {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .page-intro {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .page-intro h2 {
+    font-size: 24px;
+  }
+
+  .question-row {
+    flex-direction: column;
+  }
+
+  .question-row button {
+    padding: 14px;
+  }
+
+  .content {
+    padding: 22px 18px 40px;
+  }
+}

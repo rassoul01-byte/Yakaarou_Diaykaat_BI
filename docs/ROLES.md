@@ -1,7 +1,7 @@
 # Rôles et responsabilités — GROUPE 2
 
 **Projet :** DataFlow360 — plateforme data d'un e-commerçant
-**Arrêté le :** Sprint 0
+**Arrêté le :** Sprint 0 — révisé au Sprint 5 (§4.3)
 **Révision :** toute modification est validée en réunion de sprint et reportée dans ce fichier.
 
 Ce document fixe qui fait quoi et qui décide quoi. Il complète la section consacrée à l'organisation dans le dossier de conception, dont il est la version de travail : en cas d'écart, c'est ce fichier qui fait foi, et le dossier est mis à jour.
@@ -12,11 +12,11 @@ Ce document fixe qui fait quoi et qui décide quoi. Il complète la section cons
 
 | Membre | Rôle de conduite | Périmètre technique | Dossier dans `src/` |
 |---|---|---|---|
-| **Bachir DEME** | Product Owner | Recherche, Machine Learning et intelligence artificielle | `search/`, `ml/` |
-| **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements | `acquisition/`, `streaming/` |
-| **Ndeye Penda SARR** | Conception et documentation | Orchestration et restitution décisionnelle | `dags/`, `common/` |
-| **Seydina WADE** | — | Stockage, qualité des données et intégration continue | `quality/`, `.github/workflows/` |
-| **Aissata DIALLO** | — | Transformation et intégration | `transformation/`, `integration/` |
+| **Bachir DEME** | Product Owner | Recherche, historique d'achat et assistant | `recherche/`, `assistant/` |
+| **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements | `acquisition/`, `generateur/`, `compteurs/` |
+| **Ndeye Penda SARR** | Conception et documentation | Orchestration, restitution décisionnelle et modèle de ré-achat | `dags/`, `common/`, `prediction/`, `dashboards/` |
+| **Seydina WADE** | — | Stockage, qualité des données, base documentaire et intégration continue | `quality/`, `documentaire/`, `.github/workflows/` |
+| **Aissata DIALLO** (a quitté le projet, §4.3) | — | Transformation et intégration | `transformation/`, `integration/` |
 
 Les rôles de conduite s'ajoutent au périmètre technique, ils ne le remplacent pas. Bachir et Mouhameth développent au même titre que les autres.
 
@@ -75,13 +75,13 @@ Cette règle sert la contribution de chacun plutôt qu'elle ne la limite : si to
 
 | Membre | Ce dont il ou elle répond | Fonctionnalités portées | Nombre |
 |---|---|---|---|
-| **Bachir DEME** | Composition des conteneurs, recherche en texte libre et filtres, modèle de prédiction du ré-achat, analyse de sentiment, chaîne complète de l'assistant | F3.2, F3.3, F3.4, F3.5, F3.6, F4.2, F4.3, F4.5, F4.7, F5.3, F5.4, F5.5, F5.6, F6.4 | 14 |
-| **Ndeye Penda SARR** | Orchestration quotidienne et reprises, dictionnaire des indicateurs, tableau de bord, alertes, journalisation des exécutions | F2.1, F2.2, F2.3, F2.6, F2.7, F3.7, F4.6, F5.7, F6.1, F6.2, F6.3 | 11 |
+| **Bachir DEME** | Composition des conteneurs, recherche en texte libre et filtres, historique d'achat par client, analyse de sentiment, chaîne complète de l'assistant | F3.1, F4.2, F4.3, F4.5, F4.7, F5.3, F5.4, F5.5, F5.6, F6.4 | 10 |
+| **Ndeye Penda SARR** | Orchestration quotidienne et reprises, dictionnaire des indicateurs, tableau de bord, alertes, journalisation des exécutions, modèle de prédiction du ré-achat | F2.1, F2.2, F2.3, F2.6, F2.7, F3.2, F3.3, F3.4, F3.5, F3.6, F3.7, F4.6, F5.7, F6.1, F6.2, F6.3 | 16 |
 | **Seydina WADE** | Zones de stockage et leurs schémas, règles de validation, quarantaine, taux de rejet, base documentaire, intégration continue et tests automatisés | F1.4, F1.5, F1.6, F1.11, F5.1, F5.2, F6.5 | 7 |
-| **Aissata DIALLO** | Normalisation, décodage du balisage, détection de langue, déduplication, correspondance des produits, schéma en étoile, indexation du catalogue | F1.7, F1.8, F1.9, F1.10, F3.1, F4.1, F5.1 | 7 |
+| **Aissata DIALLO** (a quitté le projet) | Normalisation, décodage du balisage, détection de langue, déduplication, correspondance des produits, schéma en étoile, indexation du catalogue — livrés avant son départ | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | 6 |
 | **Mouhameth DIOP** | Chargement par lots, générateur d'événements, rejeu chronologique, bus d'événements, consommateur, compteurs du jour, journal des recherches | F1.1, F1.2, F1.3, F2.4, F2.5, F4.4 | 6 |
 
-**Tâche partagée :** la rédaction de la foire aux questions (F5.1) est confiée à Seydina WADE et Aissata DIALLO. Elle est délibérément confiée à deux membres qui ne développent pas l'assistant, pour qu'elle ne dépende pas du calendrier de Bachir.
+**Tâche partagée (livrée) :** la rédaction de la foire aux questions (F5.1) est confiée à Seydina WADE et Aissata DIALLO. Elle est délibérément confiée à deux membres qui ne développent pas l'assistant, pour qu'elle ne dépende pas du calendrier de Bachir.
 
 ### 4.1 Rééquilibrage effectué en conception
 
@@ -107,6 +107,21 @@ Bachir conserve le cœur de son périmètre : la recherche en texte libre et ses
 
 Répartition finale : Bachir 14, Ndeye Penda 11, Seydina 7, Aissata 7, Mouhameth 6.
 
+### 4.3 Révision du Sprint 5
+
+Aissata DIALLO a quitté le projet au Sprint 3 : Ndeye Penda SARR a repris sa part des Sprints 3 et 4. Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
+
+| Code | Fonctionnalité | De → vers | Motif |
+|---|---|---|---|
+| F3.1 | Historique d'achat par client et variables du modèle | Aissata DIALLO → Bachir DEME | Départ d'Aissata DIALLO en cours de projet. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs de ventes du Sprint 3 |
+| F3.2 à F3.6 | Modèle de ré-achat : entraînement, rééquilibrage, évaluation | Mouhameth DIOP → Ndeye Penda SARR | Le livrable, attribué à Bachir dans la version précédente de ce fichier, était prévu pour Mouhameth DIOP à la répartition du Sprint 5. Il n'a pas été réalisé par lui ; Ndeye Penda SARR l'a repris et réalisé. Elle tient le dictionnaire des indicateurs : elle est la mieux placée pour mesurer le modèle honnêtement |
+
+Mouhameth DIOP reste membre de l'équipe et Scrum Master ; seule sa part du modèle de ré-achat est concernée.
+
+**Conséquence.** Quatre personnes livrent le périmètre de cinq. Les deux chaînes du Sprint 5 ne sont plus parallèles : Bachir DEME est au départ des deux (variables, puis assistant) et Ndeye Penda SARR à l'arrivée des deux (modèle, segment, tableau de bord). Voir le point de vigilance du §9.
+
+Répartition après révision : Ndeye Penda 16, Bachir 10, Seydina 7, Mouhameth 6, Aissata 6 (livrées avant son départ).
+
 ---
 
 ## 5. Qui décide quoi
@@ -128,15 +143,7 @@ En cas de désaccord persistant, la décision est prise à la réunion de sprint
 
 ## 6. Suppléance
 
-Chaque périmètre a un suppléant désigné, capable de reprendre les tâches en cours en cas d'empêchement. Le suppléant est le relecteur privilégié des demandes de fusion du périmètre : c'est ainsi qu'il en garde la connaissance sans effort supplémentaire.
-
-| Périmètre | Responsable | Suppléant | Raison |
-|---|---|---|---|
-| Recherche, ML et IA | Bachir DEME | Aissata DIALLO | Elle porte déjà l'indexation du catalogue et l'historique client |
-| Acquisition et flux | Mouhameth DIOP | Seydina WADE | La collecte alimente directement les zones de stockage |
-| Stockage et qualité | Seydina WADE | Mouhameth DIOP | Réciproque du précédent |
-| Transformation et intégration | Aissata DIALLO | Ndeye Penda SARR | L'entrepôt est la source des indicateurs |
-| Orchestration et restitution | Ndeye Penda SARR | Aissata DIALLO | Réciproque du précédent |
+Il n'y a pas de suppléant désigné. Aissata DIALLO, suppléante de deux périmètres au Sprint 0, a quitté le projet au Sprint 3. La relecture croisée du §7 (une demande de fusion est relue par un membre d'un autre périmètre) reste en vigueur.
 
 ---
 
@@ -164,11 +171,11 @@ Aucun périmètre n'est étanche.
 
 ## 9. Point de vigilance
 
-Bachir DEME cumule le rôle de Product Owner et le périmètre qui porte les livrables les plus visibles de la démonstration finale : la recherche, le modèle et l'assistant. Le rééquilibrage de la section 4.1 a réduit sa charge, qui reste toutefois la plus élevée de l'équipe, et la concentration des livrables de démonstration demeure.
+*Révisé au Sprint 5.* Au Sprint 0, la vigilance portait sur Bachir DEME, qui cumule Product Owner et livrables les plus visibles. Sa charge est désormais de 10 fonctionnalités. Celle de Ndeye Penda SARR passe à 16, la plus élevée de l'équipe, et les deux chaînes du Sprint 5 se croisent sur elles deux :
 
-Deux mesures restent en vigueur :
+- **Bachir est au départ des deux chaînes** (variables, puis assistant) : s'il prend du retard sur les variables, tout s'arrête. Mesure : il livre les variables en premier, en trois jours maximum, et alerte immédiatement si elles ne sont pas livrées au jour 4.
+- **Ndeye Penda est à l'arrivée des deux** (modèle, segment, tableau de bord) : si elle prend du retard, rien ne se termine. Mesure : elle avance sur un jeu fabriqué aux mêmes colonnes et sur la documentation, qui ne dépendent de personne ; le branchement est la dernière étape.
+- **La tâche de priorité P3 F3.6 est désormais dans le périmètre de Ndeye Penda** et reste désignée comme abandonnable si le calendrier se tend. Le modèle est volontairement simple, avec bascule possible vers une règle documentée.
+- **La documentation n'est pas sacrifiée** : elle est dans le sprint, et la dernière semaine lui est réservée.
 
-1. La tâche de priorité P3 qui reste dans son périmètre (F3.6) est désignée comme abandonnable si le calendrier se tend.
-2. Aissata DIALLO, sa suppléante, porte désormais l'indexation du catalogue et l'historique client : elle connaît donc déjà une partie de la chaîne et peut en reprendre davantage si nécessaire.
-
-Ces dispositions sont arrêtées à froid, en début de projet, précisément pour ne pas avoir à les décider dans l'urgence.
+Ces dispositions sont arrêtées à froid, pour ne pas avoir à les décider dans l'urgence. Un départ en cours de projet s'explique : il est consigné ici et dans le dossier de conception, il ne se découvre pas à la soutenance.

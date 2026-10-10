@@ -61,9 +61,16 @@ contrôlé. Le rapport affiche `—` et un avertissement.
 | **Seuil d'alerte** | **5 %**, comme le taux par source |
 
 **Pourquoi il existe.** Le tableau de bord affichait la **moyenne des taux par
-source** — 0,04 % —, qui donne le même poids à une source de 1,5 million de
-lignes et à une source de 85 000. Le taux global, lui, se calcule sur le total
-des lignes : **0,066 %**. Un taux ne se moyenne pas, il se recalcule.
+source** — 0,02 % avec les trois sources actuelles —, qui donne le même poids à
+une source de 1,5 million de lignes et à une source de 85 000. Le taux global,
+lui, se calcule sur le total des lignes : **0,062 %**. Un taux ne se moyenne
+pas, il se recalcule.
+
+**Un doublon à connaître.** `catalogue` et `rakuten` déposent le même fichier
+sous deux noms : ses 84 916 lignes comptent deux fois au dénominateur. Compté
+une seule fois, le taux global serait de 0,066 %. L'écart est faible ; le
+chiffre affiché est celui de `quarantaine.v_taux_rejet_global`, sur les trois
+sources.
 
 **Ce qu'il ne dit pas.** Il ne remplace pas le taux par source : une source
 isolée peut dépasser 5 % sans que le global bouge, parce qu'elle pèse peu. **Le
@@ -207,8 +214,9 @@ compte pas ici : le total ne correspond donc pas au nombre de lignes de
 | **Calcul** | Mêmes vues |
 
 **Ce qu'il ne dit pas.** Ce n'est pas ce qu'un client dépense : une personne
-peut avoir passé plusieurs commandes. La dépense par client viendra avec
-l'historique d'achat, au Sprint 5.
+peut avoir passé plusieurs commandes. La dépense par client n'est pas un
+indicateur publié ; seul l'historique d'achat (`montant_total` de
+`dwh.v_historique_client`) la porte, pour le segment du Sprint 5.
 
 ### Produits et catégories les plus vendus
 
@@ -334,6 +342,29 @@ pas.
 
 ---
 
+### Requêtes sans résultat
+
+| | |
+|---|---|
+| **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
+| **Formule** | `recherches sans résultat ÷ recherches analysées × 100` — pondéré par la **fréquence**, pas par requête distincte : une requête tapée cent fois pèse cent fois. C'est ce que calcule `src/recherche/sans_resultat.py`, et un test le verrouille |
+| **Granularité** | Par requête, classée par fréquence |
+| **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
+| **Calcul** | `python -m recherche.sans_resultat` |
+| **Seuil d'alerte** | Aucun |
+
+**À quoi il sert.** Une requête fréquente qui ne ramène rien signale soit un
+manque du catalogue, soit une faiblesse du moteur. C'est la matière de
+l'assistant : ce qu'on ne trouve pas aujourd'hui est ce qu'il faudra savoir
+répondre demain.
+
+**Ce qu'il ne dit pas.** Les requêtes viennent d'un générateur qui les tire des
+désignations du catalogue : ce sont des fragments de titres, pas des recherches
+humaines. **Le dispositif est juste, les requêtes ne le sont pas** — et le taux
+mesuré n'a donc aucune valeur commerciale.
+
+---
+
 ### Retard du flux
 
 | | |
@@ -388,10 +419,24 @@ sur le trafic simulé** : il mesure les exécutions réelles de la plateforme.
 | | |
 |---|---|
 | **Définition** | Signalement déclenché quand le **nombre d'achats** du jour s'écarte à la baisse de ce qu'on observe habituellement le même jour de la semaine |
-| **Formule** | `achats du jour ÷ moyenne des quatre mêmes jours de semaine précédents × 100` |
-| **Granularité** | Journée en cours |
-| **Source des données** | Compteurs du jour |
+| **Formule** | `achats du jour ÷ moyenne des mêmes jours de semaine précédents × 100` |
+| **Calcul** | `staging.v_alerte_ventes` (`sql/026_verdict_de_l_alerte.sql`), qui publie `niveau_pourcent`, `comparable`, `sous_le_seuil` et `jour_complet`. La règle de midi reste dans `src/compteurs/alerte.py` : elle dépend du moment où l'on pose la question, pas de la donnée |
+| **Granularité** | Journée |
+| **Source des données** | `staging.v_achats_par_jour`, alimentée par `staging.evenements_du_jour` |
+| **Consultation** | `python -m compteurs.surveiller_ventes`, page « Temps réel » du tableau de bord, et `GET /api/indicateurs` |
 | **Seuil d'alerte** | **En dessous de 60 % de la moyenne**, et seulement après 12 h |
+| **Historique minimum** | **2 jours** de référence (`JOURS_MINIMUM`). La fenêtre en couvre jusqu'à 4, mais l'alerte se prononce dès 2 ; le nombre réellement comparé est publié dans `jours_compares` et affiché |
+
+**La fenêtre porte sur les quatre dernières *lignes*, pas les quatre dernières
+semaines.** Si un jour de semaine manque — aucun événement ce jour-là, donc
+aucune ligne — la moyenne remonte plus loin dans le temps sans que
+`jours_compares` le signale. C'est la raison pour laquelle ce compteur est
+affiché à côté du niveau.
+
+**Le seuil n'est écrit qu'une fois**, dans `sql/026`. Un test
+(`test_le_seuil_sql_et_le_seuil_python_sont_le_meme`) interdit que la constante
+Python s'en écarte : deux définitions d'un même indicateur finissent toujours
+par diverger.
 
 **Pourquoi le nombre d'achats et non le chiffre d'affaires.** Les événements ne
 portent aucun montant : il n'existe pas de chiffre d'affaires temps réel.
@@ -410,10 +455,141 @@ qu'une baisse réelle** — un consommateur arrêté fait tomber les compteurs �
 zéro. L'alerte se lit donc toujours **avec le retard du flux** : c'est leur
 lecture conjointe qui distingue un problème technique d'un problème commercial.
 
+**Zéro achat et zéro événement ne sont pas le même cas.** Un jour sans aucun
+événement ne produit **aucune ligne** dans `v_achats_par_jour` : il n'y a alors
+rien à comparer, et l'alerte se taisait au lieu de parler. Depuis `sql/026` et
+`compteurs.alerte.flux_interrompu`, un dernier jour connu trop ancien est
+signalé séparément — « aucun flux depuis N jours » — et fait sortir la commande
+en erreur. Une absence de données n'est pas une absence de chute.
+
 ⚠️ **Sur trafic simulé, cette alerte ne détecte rien de réel.** Ce qu'elle
 démontre, c'est le dispositif : une anomalie fabriquée la déclenche, une journée
 normale ne la déclenche pas. **Les deux cas doivent être montrés en
 démonstration** — le second est le plus important.
+
+---
+
+## Indicateurs de prédiction et d'assistance — Sprint 5
+
+> ⚠️ **Deux indicateurs de ce sprint mesurent un modèle, pas une réalité.** La
+> probabilité de ré-achat décrit une ressemblance avec des clients passés ; le
+> taux de réponses ancrées décrit un dispositif, pas la justesse des réponses.
+> Les lire autrement serait une erreur, et chaque entrée dit laquelle.
+
+### Probabilité de ré-achat
+
+| | |
+|---|---|
+| **Définition** | **Score de classement** entre 0 et 1, qui ordonne les clients du plus au moins susceptible de passer une nouvelle commande dans les 180 jours. **Ce n'est pas une probabilité** : le modèle est entraîné avec des classes pondérées, qui recalibrent sur un *a priori* de 50 % au lieu du taux réel de 1,58 %. Un score de 0,63 ne signifie pas « 63 % de chances de revenir ». Il ne se lit qu'en rang |
+| **Formule** | Sortie du modèle entraîné selon `docs/contrats/modele.md` |
+| **Granularité** | Un score par client, identifié par `customer_unique_id` |
+| **Source des données** | Historique d'achat par client, calculé sur l'entrepôt (`dwh.v_historique_client`) |
+| **Calcul** | `src/prediction/`, commande `python -m prediction.scorer` |
+| **Seuil d'alerte** | Aucun. Le segment retenu ci-dessous n'utilise pas ce score |
+
+**Ce qu'il ne dit pas.** Le score **n'explique pas pourquoi** un client partirait :
+il mesure une ressemblance avec des clients qui ne sont pas revenus. Une
+ressemblance n'est pas une cause, et un score élevé n'autorise aucune
+conclusion sur les intentions d'une personne.
+
+**Il est daté et situé.** Le modèle est entraîné sur un marchand brésilien
+entre 2016 et 2018. Les comportements d'achat y sont ceux de ce marché et de
+cette période.
+
+**Une commande unique est la norme dans ce jeu**, pas une anomalie : Olist
+regroupe de nombreux vendeurs et beaucoup d'acheteurs n'y passent qu'une fois.
+Un rappel faible peut signaler un comportement peu prévisible plutôt qu'un
+mauvais modèle.
+
+---
+
+### Segment à retenir
+
+| | |
+|---|---|
+| **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_socle_client`, à la date publiée par `dwh.v_date_segment` (**2017-09-30**). Cette date est un choix documenté, pas le maximum des fenêtres d'évaluation : élargir `v_dates_reference` ne déplace plus le segment (`sql/024`) |
+| **Granularité** | Une ligne par client (`customer_unique_id`) avec `date_reference`, `commandes`, `montant_total` et `recence_jours` ; l'effectif total se compte sur la vue |
+| **Source des données** | `dwh.v_socle_client`, le socle que lit aussi `dwh.v_historique_client` : le nombre de commandes d'une personne est calculé à un seul endroit. Le segment n'utilise pas le score du modèle, et depuis `sql/028` il ne passe plus par les variables du modèle non plus |
+| **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`, date fixée par `sql/024`, assise sur le socle par `sql/028`) |
+| **Consultation** | `SELECT * FROM dwh.v_segment_a_retenir` |
+| **Seuil retenu** | Aucun seuil de score : filtre déterministe, sans graine ni réentraînement |
+
+**Ce que ce segment coûte.** Il contient **711 clients**, soit 2,7 % des 26 190
+clients de la date de référence. Dans les 180 jours suivants, **32 ont recommandé
+et 679 seront sollicités pour rien** : 4,5 % de réussite, contre 1,58 % en prenant
+des clients au hasard, soit **2,85 fois mieux**.
+
+**Ce qu'il ne couvre pas.** Il ne retrouve que 7,7 % des 413 retours observés :
+plus de 92 % des clients qui reviennent n'en font pas partie, parce qu'ils n'avaient
+commandé qu'une fois. Le segment est petit et peu précis ; il convient à une action
+ciblée, pas à une campagne de masse.
+
+**Pourquoi cette règle plutôt que le modèle.** C'était la référence naïve du
+protocole, définie avant toute mesure. À nombre de clients signalés égal (711), elle
+retrouve 32 retours contre 18 pour le modèle (voir `docs/contrats/modele.md`). Elle
+s'explique en une phrase et ne dépend pas des 75 retours d'entraînement, trop peu
+nombreux pour un modèle stable. Le classement du modèle reste un livrable, avec ses
+limites : il contient un signal faible (13,6 % des retours dans les 10 % les mieux
+classés, pour 10 % attendus au hasard).
+
+**Alternative écartée.** Retenir les 250 clients aux scores les plus élevés du modèle
+(score ≥ 0,6335) donnait 14 retours sur 250 (5,6 %, 3,5 fois mieux que le hasard).
+Elle est plus précise, mais elle repose sur 14 clients seulement et sur un modèle
+instable : quelques clients de plus ou de moins la font varier sensiblement.
+
+**Un choix fait après avoir vu l'évaluation.** La règle existait avant les résultats,
+mais la décision de la retenir a été prise après lecture de l'évaluation du
+2017-09-30. L'écart avec le modèle est petit en valeur absolue (14 retours sur 413) :
+il est suggestif, pas démontré, et une seule date d'évaluation a été mesurée.
+
+**Ce qu'il ne dit pas.** Ce n'est **pas une liste de clients perdus** ni de clients
+qui risquent de partir : c'est une liste de clients à qui il vaudrait peut-être la
+peine de s'adresser. Un client du segment n'est pas sûr de revenir (95,5 % ne sont
+pas revenus), et un client hors segment n'est pas sûr de ne pas revenir.
+
+**Les clients sans historique n'y figurent pas.** Un client dont la première
+commande est postérieure à la date de référence n'a pas de passé à analyser : il est
+hors du jeu, et non « à faible risque ».
+
+---
+
+### Taux de réponses ancrées
+
+| | |
+|---|---|
+| **Définition** | Part des réponses de l'assistant qui s'appuient sur au moins un passage cité de la base documentaire |
+| **Formule** | `(réponses citant au moins un passage + refus) ÷ réponses totales × 100`. Un refus compte comme ancré (voir ci-dessous) ; c'est ce que calcule `assistant.evaluer` |
+| **Granularité** | Sur un jeu de questions fixé et gelé (date et empreinte : `docs/contrats/assistant.md`, §6) |
+| **Source des données** | Journal des réponses de l'assistant (fichier `.jsonl`, `docs/contrats/assistant.md`, §5), chargé dans `staging.journal_assistant` |
+| **Calcul** | `python -m assistant.evaluer`, avec la recherche `RetrouveurExterne`. Pour Power BI : `python -m assistant.evaluer --journal`, puis `python -m assistant.charger_journal --source evaluation` |
+| **Vue SQL** | `staging.v_taux_ancrage` (par source et par jour) et `staging.v_taux_ancrage_global` (toute la période, une ligne par source). La source `evaluation` est la mesure ci-dessous ; `usage` compte les questions posées à la main |
+| **Dernière mesure** | **100 % (62/62)**, relevée le 2026-10-08 avec `RetrouveurExterne` (seuils 0,84 / 0,20 / 0,00) sur le jeu gelé le 2026-10-07 : 62 questions, empreinte SHA256 `786dada1…e0dbd`. Détail : **6 réponses directes citant un passage et 56 refus** (23 avec la bonne suggestion, 31 corrects hors base, 2 faux refus) |
+| **Seuil d'alerte** | **100 %**. Une réponse sans source est un défaut, pas une statistique |
+
+**Pourquoi le seuil est à 100 %.** Un refus poli — « je n'ai pas cette
+information » — **compte comme une réponse ancrée** : il est conforme au
+contrat de l'assistant. Ce qui ne doit jamais arriver, c'est une réponse
+affirmative sans passage à l'appui. Tolérer 95 % reviendrait à accepter qu'une
+réponse sur vingt soit inventée.
+
+**Ce qu'il ne dit pas.** Il **ne mesure pas la justesse** des réponses : une
+réponse peut citer un passage et le résumer de travers. Il mesure que
+l'assistant **ne parle pas sans source** — c'est nécessaire, ce n'est pas
+suffisant.
+
+**Il vaut 100 % par construction.** L'assistant sélectionne et cite des passages, il
+ne rédige rien : une réponse sans citation ne peut pas être construite. Une mesure
+à 100 % confirme donc le dispositif, elle ne prouve pas la qualité de la recherche.
+Ce qui renseigne sur cette qualité — réponses données à tort, mauvais passage cité,
+faux refus — est calculé par `assistant.evaluer` (voir `docs/contrats/assistant.md`)
+mais ne figure pas parmi les indicateurs publiés : pour être présenté, un de ces
+chiffres doit d'abord être ajouté ici.
+
+**Le jeu de questions est fixé à l'avance** et versionné, avec des questions
+couvertes par la base et des questions qui ne le sont pas, dont dix questions
+pièges écrites par une personne qui ne connaissait pas les seuils. Mesurer sur des
+exemples choisis après coup ne mesurerait rien.
 
 ---
 
@@ -430,12 +606,15 @@ document existe pour empêcher.
 
 ---
 
-## À venir
+## Non documentés à ce jour
 
-| Sprint | Indicateurs |
+| Indicateur | Statut |
 |---|---|
-| 4 | Qualité de la recherche : requêtes sans résultat |
-| 5 | Délai de livraison moyen, note moyenne, probabilité de nouvel achat, part des réponses de l'assistant appuyées sur une source |
+| Délai de livraison moyen | Annoncé pour le Sprint 5, **non écrit**. Le document du sprint n'autorise pas d'ajout : à écrire, ou à inscrire en dette dans le dossier de conception |
+| Note moyenne | Idem |
 
-Les indicateurs des Sprints 4 et 5 portant sur la navigation reposeront sur un
-**trafic simulé** : la mention devra apparaître partout où ils s'affichent.
+Ces deux indicateurs ne doivent apparaître ni dans un rapport, ni dans le tableau
+de bord, ni en soutenance tant qu'ils n'ont pas d'entrée ici.
+
+Les indicateurs de navigation (Sprint 4) reposent sur un **trafic simulé** : la
+mention doit apparaître partout où ils s'affichent.

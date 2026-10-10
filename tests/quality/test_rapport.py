@@ -28,8 +28,16 @@ def test_le_taux_est_la_part_des_lignes_rejetees():
     assert taux_pourcent(1000, 50) == 5.0
 
 
-def test_le_taux_est_arrondi_au_centieme():
-    assert taux_pourcent(99441, 775) == 0.78
+def test_le_taux_est_arrondi_comme_la_vue():
+    """Trois décimales, celles de `quarantaine.v_taux_rejet_par_source`.
+
+    Le dictionnaire des indicateurs désigne la vue comme le calcul du taux :
+    la fonction Python ne peut pas arrondir autrement, sinon le même
+    indicateur vaut deux choses selon qu'on le lit en base ou dans le rapport.
+    """
+    assert taux_pourcent(99441, 775) == 0.779
+    # Le cas qui faisait échouer le test d'intégration : 20,21 contre 20,213.
+    assert taux_pourcent(94, 19) == 20.213
 
 
 def test_sans_ligne_lue_le_taux_n_existe_pas():
@@ -276,6 +284,33 @@ def test_les_complements_se_lisent_en_base():
 def test_le_rapport_s_execute_sans_seuil(capsys):
     assert main([]) == 0
     assert "Taux de rejet par source" in capsys.readouterr().out
+
+
+def test_un_rapport_sans_aucune_mesure_echoue_au_lieu_de_passer_au_vert(monkeypatch, capsys):
+    """Une absence de mesure n'est pas une absence de rejet.
+
+    `v_taux_rejet_par_source` est vide dès que `staging.execution_log` l'est —
+    et cette table n'est créée par aucune migration, seulement par le script
+    d'initialisation du premier démarrage. Le garde-fou du DAG sortait alors 0
+    et la chaîne chargeait l'entrepôt sans qu'aucun taux ait été évalué.
+    """
+    from quality import rapport
+
+    monkeypatch.setattr(rapport, "collecter", lambda *a, **k: ([], [], []))
+    monkeypatch.setattr(rapport, "collecter_complements", lambda *a, **k: ([], []))
+
+    assert main(["--seuil", "5"]) == 1
+    assert "AUCUNE MESURE DE QUALITÉ" in capsys.readouterr().err
+
+
+def test_un_rapport_sans_mesure_et_sans_seuil_ne_fait_pas_echouer(monkeypatch):
+    """Sans seuil, la commande ne garde rien : elle affiche, c'est tout."""
+    from quality import rapport
+
+    monkeypatch.setattr(rapport, "collecter", lambda *a, **k: ([], [], []))
+    monkeypatch.setattr(rapport, "collecter_complements", lambda *a, **k: ([], []))
+
+    assert main([]) == 0
 
 
 @pytest.mark.integration

@@ -12,6 +12,11 @@ from integration.chargement import charger
 from integration.verifier import Controle, code_sortie, verifier
 from tests.integration.aides import lire
 
+# Ces tests chargent réellement l'entrepôt : ils exigent PostgreSQL. Le
+# marqueur était jusqu'ici implicite — le nom du dossier suffisait à les
+# écarter — ce qui écartait aussi les tests qui n'ont besoin d'aucun service.
+pytestmark = pytest.mark.integration
+
 JOUR_1 = date(2026, 10, 1)
 
 

@@ -1,0 +1,551 @@
+/* Vue générale — direction « Flux ».
+
+   Toutes les règles sont préfixées .vg- et vivent sous .vg : la page porte sa
+   propre palette sans toucher à celle des autres pages. Les tailles de texte,
+   en revanche, viennent de l'échelle de index.css : une page qui redéfinit ses
+   tailles dérive de l'application au premier changement. */
+
+.vg {
+  --vg-panel: #ffffff;
+  --vg-ink: #0f1c2e;
+  --vg-ink-2: #44566e;
+  --vg-ink-3: #64748b;
+  --vg-filet: var(--c-bordure);
+  --vg-filet-doux: #edf3fb;
+  --vg-bleu: #0a6bd4;
+  --vg-bleu-pale: #9cc4f5;
+  --vg-bleu-vif: #1583ec;
+  --vg-rouge: #e63946;
+  --vg-rouge-fond: #fdecee;
+  --vg-rouge-filet: #f3c9cc;
+  --vg-rouge-ink: #a4242f;
+  --vg-vert: #1e8449;
+  --vg-vert-fond: #e8f7ef;
+
+  color: var(--vg-ink);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+}
+
+.vg-panel,
+.vg-alerte {
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------- blocs */
+
+/* Exactement la même carte que `.panel` des autres pages : mêmes variables,
+   donc aucune dérive possible entre les trois écrans. */
+.vg-panel {
+  background: var(--carte-fond);
+  border: 1px solid var(--c-bordure);
+  border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
+  padding: var(--carte-padding);
+  transition: border-color var(--transition), box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.vg-panel:hover {
+  border-color: var(--c-bordure-forte);
+  box-shadow: var(--ombre-md);
+  transform: translateY(-2px);
+}
+
+/* `flex-start` plutôt que l'étirement par défaut : les deux cartes d'une
+   rangée n'ont pas la même quantité de contenu, et les étirer à la même
+   hauteur laissait trois cents pixels de blanc au bas de la plus courte.
+   Chacune prend maintenant la hauteur de ce qu'elle a à dire. */
+.vg-rangee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.vg-large {
+  flex: 999 1 560px;
+  min-width: 0;
+}
+
+.vg-etroit {
+  flex: 1 1 340px;
+  min-width: 0;
+}
+
+.vg h1 {
+  margin: 0 0 8px;
+  font-size: var(--t-titre);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: var(--interligne-titre);
+}
+
+.vg h2 {
+  margin: 0 0 20px;
+  font-size: var(--t-sous-titre);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: var(--interligne-titre);
+}
+
+/* Le titre du bloc est suivi d'un chapeau : la marge du h2 ferait un trou. */
+.vg h2 + .vg-chapeau {
+  margin-top: -8px;
+}
+
+.vg-chapeau {
+  margin: 0;
+  font-size: var(--t-moyen);
+  color: var(--vg-ink-2);
+  max-width: 76ch;
+  line-height: var(--interligne-texte);
+}
+
+.vg-note {
+  margin: 16px 0 0;
+  font-size: var(--t-petit);
+  color: var(--vg-ink-3);
+  line-height: var(--interligne-texte);
+  max-width: 82ch;
+}
+
+/* ----------------------------------------------------------- carte héros
+
+   Le chiffre d'affaires est la seule carte colorée de la page. Elle porte la
+   figure principale ; tout le reste est blanc et se tait. */
+
+.vg-heros-carte {
+  /* Le point le plus clair du dégradé est #0a6bd4 : au-delà, le blanc des
+     petits libellés tombe sous 4,5:1 (2,6:1 sur #4ca7f8). Le dégradé garde son
+     caractère, le texte reste lisible. */
+  background: linear-gradient(135deg, #073f82 0%, #0851a6 45%, #0a6bd4 100%);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: 0 14px 34px rgba(10, 107, 212, 0.26);
+  padding: 32px 34px;
+  color: #ffffff;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Une lueur qui dérive lentement en diagonale. Elle ne porte aucune
+   information : elle fait que la carte principale n'est pas un rectangle mort
+   pendant qu'on parle devant. 18 s, donc invisible comme mouvement. */
+.vg-heros-carte::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  right: -20%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 68%);
+  pointer-events: none;
+  animation: vgDeriver 18s ease-in-out infinite alternate;
+}
+
+.vg-heros-carte .vg-figure,
+.vg-heros-carte strong {
+  color: #ffffff;
+}
+
+/* Blanc plein pour tout le texte de la carte : la hiérarchie vient de la
+   taille et de la graisse, pas d'un bleu pâle qui ne se lirait pas. */
+.vg-heros-carte .vg-libelle {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+.vg-heros-etiquette {
+  font-size: var(--t-etiquette);
+  letter-spacing: 0.17em;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0.9;
+  text-transform: uppercase;
+  position: relative;
+}
+
+/* ----------------------------------------------------------- figures */
+
+/* `inline-block` : la figure est rendue par un `<span>` (le composant qui
+   l'anime), et un span en ligne n'a pas de hauteur propre — le libellé qui le
+   suit remontait de quelques pixels. */
+.vg-figure {
+  display: inline-block;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  position: relative;
+}
+
+/* `tabular-nums` sur un chiffre qui défile : sans lui, chaque pas du compteur
+   change la largeur du nombre et la carte tremble pendant toute la montée. */
+
+.vg-heros {
+  font-size: var(--t-figure-geante);
+}
+
+.vg-moyen {
+  font-size: var(--t-figure);
+}
+
+.vg-libelle {
+  font-size: var(--t-petit);
+  color: var(--vg-ink-3);
+  margin-top: 9px;
+}
+
+.vg-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 38px;
+  align-items: flex-end;
+}
+
+.vg-figures-petites {
+  display: flex;
+  gap: 36px;
+  flex-wrap: wrap;
+  padding-bottom: 5px;
+}
+
+/* ----------------------------------------------------------- schéma */
+
+/* Sous 820 px, le schéma écrasé rendait son texte illisible : il défile
+   horizontalement plutôt que de rétrécir, comme les tableaux. */
+.vg-cadre-schema {
+  overflow-x: auto;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 18px;
+}
+
+.vg-schema {
+  display: block;
+  width: 100%;
+  min-width: 900px;
+  max-height: 440px;
+  font-family: inherit;
+}
+
+/* Les liaisons se tracent au chargement, dans le sens de la lecture : les
+   sources entrent, puis le contrôle, puis l'entrepôt, puis les usages. C'est
+   le seul endroit de l'application où l'animation PORTE une information —
+   l'ordre du mouvement est l'ordre du pipeline.
+
+   Chaque tracé porte `pathLength="1"` dans le SVG : la longueur du chemin est
+   alors normalisée à 1, et le même `stroke-dashoffset` convient à un trait de
+   quarante pixels comme à un rail de trois cents. Sans ça, il faudrait mesurer
+   chaque chemin en JavaScript. */
+.vg-liaison {
+  stroke-dasharray: 1;
+  animation: vgTracer 900ms var(--sortie) backwards;
+}
+
+.vg-liaison-1 { animation-delay: 120ms; }
+.vg-liaison-2 { animation-delay: 320ms; }
+.vg-liaison-3 { animation-delay: 520ms; }
+.vg-liaison-4 { animation-delay: 720ms; }
+
+/* Le chemin principal, entre l'entrepôt et les usages : un pointillé qui
+   avance en permanence. C'est le « flux » du nom de la direction. */
+.vg-flux {
+  stroke-dasharray: 7 7;
+  animation: vgCouler 900ms linear infinite;
+}
+
+/* Le trait rouge vers la quarantaine. Il descend après les autres, pour qu'on
+   le voie partir du contrôle qualité. */
+.vg-rejet {
+  stroke-dasharray: 1;
+  animation: vgTracer 700ms var(--sortie) 900ms backwards;
+}
+
+.vg-boite {
+  animation: vgApparaitre 520ms var(--sortie) backwards;
+}
+
+.vg-boite-source { animation-delay: 60ms; }
+.vg-boite-controle { animation-delay: 300ms; }
+.vg-boite-entrepot { animation-delay: 520ms; }
+.vg-boite-usage { animation-delay: 740ms; }
+.vg-boite-quarantaine { animation-delay: 1100ms; }
+
+/* ----------------------------------------------------------- tableaux */
+
+/* Un tableau a une largeur minimale dictée par ses colonnes : sur un écran
+   étroit, il poussait toute la page au lieu de se laisser faire. Il défile
+   maintenant dans son cadre, et seul lui. */
+.vg-defilant {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.vg-defilant .vg-table {
+  min-width: 520px;
+}
+
+.vg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-base);
+}
+
+.vg-table th {
+  text-align: left;
+  font-size: var(--t-petit);
+  font-weight: 600;
+  color: var(--vg-ink-3);
+  padding: 0 0 11px;
+  border-bottom: 1px solid var(--vg-filet-doux);
+}
+
+.vg-table td {
+  padding: 11px 0;
+  color: var(--vg-ink-2);
+  vertical-align: middle;
+}
+
+.vg-table tbody tr + tr td {
+  border-top: 1px solid var(--vg-filet-doux);
+}
+
+.vg-table tbody tr {
+  transition: background var(--transition);
+}
+
+.vg-table tbody tr:hover td {
+  background: #f7fafe;
+}
+
+.vg-chiffre {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.vg-tete {
+  color: var(--vg-ink);
+  font-weight: 600;
+}
+
+/* Une série, une couleur : la longueur de la barre dit déjà le classement.
+   Elle pousse depuis la gauche au chargement — `scaleX` plutôt que `width`,
+   pour que le navigateur n'ait rien à recalculer et que la largeur finale
+   reste exactement celle que le style inline a posée. */
+.vg-barre {
+  height: 16px;
+  border-radius: 0 4px 4px 0;
+  background: var(--vg-bleu-pale);
+  transform-origin: left center;
+  animation: vgPousser 800ms var(--sortie) 260ms backwards;
+}
+
+.vg-barre.vg-barre-tete {
+  background: var(--vg-bleu);
+}
+
+.vg-cell-barre {
+  padding: 11px 16px;
+  width: 100%;
+}
+
+/* ----------------------------------------------------------- alerte */
+
+.vg-alerte {
+  background: var(--vg-rouge-fond);
+  border: 1px solid var(--vg-rouge-filet);
+  border-left: 4px solid var(--vg-rouge);
+  border-radius: var(--radius);
+  box-shadow: var(--carte-ombre);
+  padding: var(--carte-padding);
+}
+
+.vg-alerte-tete {
+  display: flex;
+  align-items: baseline;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.vg-alerte-nombre {
+  font-size: 52px;
+  font-weight: 600;
+  color: var(--vg-rouge);
+  letter-spacing: -0.035em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.vg-alerte p {
+  margin: 16px 0 0;
+  font-size: var(--t-base);
+  color: var(--vg-rouge-ink);
+  line-height: var(--interligne-texte);
+}
+
+/* ----------------------------------------------------------- jauge qualité */
+
+.vg-jauge {
+  display: flex;
+  height: 30px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--vg-vert);
+}
+
+.vg-jauge-reste {
+  flex: 1 1 auto;
+}
+
+.vg-jauge-rejet {
+  background: var(--vg-rouge);
+  min-width: 2px;
+  transform-origin: left center;
+  animation: vgPousser 900ms var(--sortie) 400ms backwards;
+}
+
+.vg-jauge-loupe {
+  height: 20px;
+  border-radius: 5px;
+}
+
+.vg-separateur {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--vg-filet-doux);
+}
+
+/* ----------------------------------------------------------- étiquettes */
+
+.vg-puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--t-petit);
+  padding: 6px 13px;
+  border-radius: 22px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.vg-puce-vert {
+  color: var(--vg-vert);
+  background: var(--vg-vert-fond);
+}
+
+.vg-puce-neutre {
+  color: var(--vg-ink-2);
+  background: #eef3fa;
+}
+
+.vg-entete-bloc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+}
+
+.vg-entete-bloc h2 {
+  margin: 0;
+}
+
+/* Six compteurs : trois par trois plutôt qu'une rangée de cinq et un orphelin. */
+.vg-compteurs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 26px 18px;
+}
+
+.vg-pipeline {
+  font-size: var(--t-petit);
+  font-weight: 600;
+  color: var(--vg-ink-3);
+  padding: 16px 0 8px;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.vg-vide {
+  font-size: var(--t-base);
+  color: var(--vg-ink-3);
+  line-height: var(--interligne-texte);
+  margin: 0;
+}
+
+/* ----------------------------------------------------------- mouvements */
+
+@keyframes vgPousser {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes vgTracer {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes vgCouler {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+@keyframes vgApparaitre {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vgDeriver {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-60px, 40px);
+  }
+}
+
+/* ----------------------------------------------------------- responsive */
+
+@media (max-width: 520px) {
+  .vg-compteurs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .vg-panel,
+  .vg-alerte {
+    padding: 22px 18px;
+  }
+
+  .vg-figures,
+  .vg-figures-petites {
+    gap: 24px;
+  }
+
+  .vg-alerte-nombre {
+    font-size: 42px;
+  }
+}

@@ -42,6 +42,8 @@ REELLES = {
     "correspondance",
     "chargement",
     "verification",
+    "indexation_passages",
+    "scores_reachat",
 }
 
 COMMANDES = {
@@ -69,9 +71,25 @@ COMMANDES = {
     # deux avancent donc en parallèle — une réindexation lente ne doit pas
     # retarder les chiffres de vente.
     "reindexation": f"{PREFIXE} -m recherche.indexer",
+    # `recherche.indexer` écrase les fiches par leur identifiant, mais ne
+    # supprime jamais celles qui ont disparu de la source : son contrôle de
+    # conformité compare « envoyé » à « en base », deux fois le même nombre.
+    # `recherche.etat` compare l'index à la source et sort 1 si l'un dépasse
+    # l'autre — c'est la seule tâche qui voit un document orphelin.
+    "etat_index": f"{PREFIXE} -m recherche.etat",
     "correspondance": f"{PREFIXE} -m integration.correspondance",
     "chargement": f"{PREFIXE} -m integration.chargement",
     "verification": f"{PREFIXE} -m integration.verifier",
+    # Base documentaire de l'assistant : on vérifie la FAQ avant de l'indexer.
+    # L'indexation est idempotente (l'identifiant du passage écrase) ; elle ne
+    # dépend d'aucune autre tâche, seulement du fichier faq.jsonl et d'Elasticsearch.
+    "indexation_passages": (
+        f"{PREFIXE} -m documentaire.verifier && {PREFIXE} -m documentaire.indexer"
+    ),
+    # Scores de ré-achat de tous les clients, lus dans dwh.v_historique_client :
+    # la tâche suit la vérification de l'entrepôt. --top 0 : rien à afficher,
+    # le CSV (non versionné, data/ est ignoré) contient tous les scores.
+    "scores_reachat": f"{PREFIXE} -m prediction.scorer --top 0 --csv data/scores_reachat.csv",
 }
 
 # Un rapport qui dépasse le seuil est un échec métier : le rejouer ne sert à rien.
@@ -104,13 +122,18 @@ with DAG(
     rapport_rejet = tache("rapport_rejet")
     transformation = tache("transformation")
     reindexation = tache("reindexation")
+    etat_index = tache("etat_index")
     correspondance = tache("correspondance")
     chargement = tache("chargement")
     verification = tache("verification")
+    # Sans dépendance amont : elle part en même temps que les deux acquisitions.
+    indexation_passages = tache("indexation_passages")
+    scores_reachat = tache("scores_reachat")
 
     acquisition >> controle_olist
     acquisition_catalogue >> controle_catalogue
     [controle_olist, controle_catalogue] >> rapport_rejet
     rapport_rejet >> transformation
     transformation >> [correspondance, reindexation]
-    correspondance >> chargement >> verification
+    reindexation >> etat_index
+    correspondance >> chargement >> verification >> scores_reachat

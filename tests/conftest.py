@@ -8,9 +8,41 @@ import pytest
 
 
 def pytest_collection_modifyitems(config, items):
+    """Écarte les tests d'intégration, sauf demande explicite.
+
+    `item.get_closest_marker` et non `"integration" in item.keywords` : le sac
+    de mots-clés contient aussi les noms des nœuds parents, donc le nom du
+    DOSSIER. Tout ce qui vivait sous `tests/integration/` était écarté, qu'il
+    porte un marqueur ou non — y compris les tests de la correspondance, qui
+    n'ouvrent aucune connexion et tournent en un dixième de seconde. Ils
+    étaient donc absents de l'intégration continue sans que personne l'ait
+    décidé.
+    """
     if config.getoption("-m"):
         return
     passer = pytest.mark.skip(reason="test d'intégration : lancer avec -m integration")
     for item in items:
-        if "integration" in item.keywords:
+        if item.get_closest_marker("integration") is not None:
             item.add_marker(passer)
+
+
+@pytest.fixture(autouse=True)
+def _retrouveur_depannage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Les tests unitaires ne dépendent pas d'Elasticsearch.
+
+    Le retrouveur par défaut de l'assistant (RetrouveurExterne) exige un index
+    ES joignable, ce qui n'a pas de sens en test. On force le dépannage (TF-IDF
+    en mémoire). La couverture du retrouveur externe vit dans tests/integration/.
+    """
+    monkeypatch.setenv("ASSISTANT_RETROUVEUR", "depannage")
+
+
+@pytest.fixture(autouse=True)
+def _journal_isole(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """Aucun test n'écrit dans le journal du dépôt.
+
+    L'API journalise chaque échange ; sans ce redirigement, lancer la suite
+    salirait `data/assistant/journal.jsonl` avec des questions de test, qui
+    seraient ensuite chargées en base comme de l'usage réel.
+    """
+    monkeypatch.setenv("ASSISTANT_JOURNAL", str(tmp_path / "journal_de_test.jsonl"))
