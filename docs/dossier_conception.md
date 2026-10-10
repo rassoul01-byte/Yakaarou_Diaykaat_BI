@@ -269,14 +269,18 @@ Une table par fichier source, nommée d'après lui, plus les tables de travail d
 
 Schéma en étoile : deux tables de faits, quatre dimensions.
 
-| Table | Nature | Particularité |
-|---|---|---|
-| `fait_commande` | Fait | Une ligne par commande, montant payé agrégé |
-| `fait_ligne_commande` | Fait | Une ligne par article vendu |
-| `dim_client` | Dimension historisée (SCD2) | Bâtie sur `customer_unique_id`, la **personne**, jamais `customer_id` |
-| `dim_produit` | Dimension historisée (SCD2) | Porte la correspondance et la langue |
-| `dim_vendeur` | Dimension historisée (SCD2) | |
-| `dim_date` | Dimension fixe | Porte `annee`, `annee_iso`, `semaine_iso`, `trimestre`, `mois` |
+Volumes relevés après le chargement du 10 octobre 2026, à l'exécution de `python -m integration.chargement`.
+
+| Table | Nature | Lignes | Particularité |
+|---|---|---|---|
+| `fait_commande` | Fait | **99 433** | Une ligne par commande, montant payé agrégé |
+| `fait_ligne_commande` | Fait | **112 642** | Une ligne par article vendu |
+| `dim_client` | Dimension historisée (SCD2) | **96 096** | Bâtie sur `customer_unique_id`, la **personne**, jamais `customer_id` |
+| `dim_produit` | Dimension historisée (SCD2) | **32 951** | Porte la correspondance et la langue |
+| `dim_vendeur` | Dimension historisée (SCD2) | **3 095** | |
+| `dim_date` | Dimension fixe | **883** | Porte `annee`, `annee_iso`, `semaine_iso`, `trimestre`, `mois` |
+
+L'écart avec les volumes d'entrée du §3.2 — 99 441 commandes lues, 99 433 chargées — est le fait du contrôle qualité : huit commandes n'ont pas passé une règle bloquante. Le même écart se retrouve sur les lignes d'articles.
 
 Chaque dimension porte une **ligne « inconnu » d'identifiant 0**, permanente, jamais fermée : un fait dont la référence manque y pointe plutôt que d'être perdu. Le détail est dans `contrats/entrepot.md`.
 
@@ -543,7 +547,7 @@ Trois niveaux de surveillance, chacun avec sa commande.
 
 Quatre corrections récentes des vues de supervision méritent d'être citées, parce qu'elles disent ce qu'est une vue de supervision juste : un statut NULL compte désormais comme un échec (une panne brutale n'écrit pas son statut) ; le volume par jour est calculé en UTC et ne dépend plus du fuseau de la session qui interroge ; les exécutions à égalité d'horodatage sont départagées de la même façon partout. Voir `sql/027_supervision_corrections.sql`.
 
-**Ce qui n'est pas surveillé automatiquement** : ni le flux d'événements ni la supervision ne sont dans un DAG. Ils se lancent à la main (§25).
+**Ce qui n'est pas surveillé automatiquement.** Les trois niveaux ci-dessus fonctionnent et sont testés, mais **aucun n'est déclenché par l'orchestrateur** : ils se lancent à la main. La conséquence est concrète — personne n'est prévenu d'une chute des ventes ou d'un retard du flux ; l'alerte n'est calculée que si quelqu'un tape la commande (§15 et §25).
 
 ---
 
@@ -567,7 +571,25 @@ Trois décisions d'orchestration :
 - **La réindexation du catalogue avance en parallèle du chargement**, pour qu'une indexation lente ne retarde pas les chiffres de vente.
 - **Le seuil se règle par une variable Airflow** (`airflow variables set seuil_rejet 5`), pas par une modification du code.
 
-L'entraînement et l'évaluation du modèle (`python -m prediction`) restent **lancés à la main** : un réentraînement quotidien sans surveillance humaine n'aurait pas de sens pour un modèle dont le résultat est négatif.
+### 15.1 Ce qui est orchestré, et ce qui ne l'est pas
+
+La distinction est nette, et il vaut mieux l'énoncer que la laisser deviner.
+
+| | Orchestré par le DAG `quotidien` | Lancé à la main |
+|---|---|---|
+| **Voie par lots** | Acquisition, contrôle, rapport de rejet, transformation, correspondance, chargement, vérification | — |
+| **Voie documentaire** | Réindexation du catalogue et son contrôle `etat_index`, indexation des passages | — |
+| **Prédiction** | `scores_reachat`, après la vérification | **Entraînement et évaluation** (`python -m prediction`) |
+| **Voie continue** | — | `compteurs` (consommation du bus), `zone_brute` (archivage horaire) |
+| **Supervision** | — | `supervision`, `supervision.surveiller_flux`, `compteurs.surveiller_ventes` |
+
+**Un seul fichier dans `dags/`** : `quotidien.py`. Les cinq commandes de droite fonctionnent et sont testées, mais rien ne les déclenche.
+
+Deux choix volontaires et une dette dans ce tableau :
+
+- *Volontaire* — l'entraînement du modèle reste manuel : un réentraînement quotidien sans surveillance humaine n'aurait pas de sens pour un modèle dont le résultat est négatif.
+- *Volontaire* — la voie continue ne traverse pas ce DAG : elle tourne en permanence, pas une fois par jour. L'orchestrer demanderait un second DAG à la minute, ou un service résident.
+- *Dette* — **la supervision et l'alerte, elles, devraient être déclenchées** et ne le sont pas. C'est la ligne la plus visible du §25 : l'alerte sur chute des ventes existe, fonctionne, est testée — et ne se calcule que si quelqu'un la demande.
 
 ---
 
@@ -796,7 +818,7 @@ Ces vingt-cinq jours ne couvrent que la **réalisation**. Le travail de concepti
 
 | Conséquence | Ce qu'on y voit |
 |---|---|
-| Le flux d'événements et la supervision ne sont dans **aucun DAG** | L'automatisation a été la première chose repoussée : les commandes existent, leur orchestration non |
+| La voie par lots est orchestrée ; **la voie continue et la supervision ne le sont pas** | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent, les cinq commandes du flux et de la surveillance restent manuelles |
 | **42 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
 | La **pertinence de la recherche n'est pas mesurée** | Construire un jeu de jugements demande du temps calme ; il n'y en a pas eu |
 
@@ -1026,7 +1048,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 
 | Dette | Conséquence | Statut |
 |---|---|---|
-| Le flux d'événements et la supervision ne sont dans **aucun DAG** | Le consommateur, l'archivage horaire et la surveillance se lancent à la main | Assumée |
+| **La voie continue et la supervision ne sont pas orchestrées.** La voie par lots l'est : le DAG `quotidien` enchaîne ses 13 tâches | Cinq commandes restent manuelles — `compteurs`, `compteurs.surveiller_ventes`, `supervision`, `supervision.surveiller_flux`, `zone_brute`. **Personne n'est prévenu automatiquement d'une chute des ventes** | Assumée |
 | Les rejets du flux d'événements ne sont **jamais persistés** | Ils partent sur `navigation.rebut`, 30 jours de rétention, sans consommateur : zéro ligne du flux en quarantaine | Assumée, `zones_stockage.md` |
 | La pertinence de la recherche produits n'est **pas mesurée** | 6 cas de non-régression et une latence ; ni rappel, ni précision@k, ni jeu de jugements | Assumée |
 | Le seuil de rejet se calcule sur un dénominateur **toutes tables confondues** | Avec ~1,5 M de lignes lues, franchir 5 % exigerait ~75 000 rejets : le garde-fou ne peut pas se déclencher | Assumée |
