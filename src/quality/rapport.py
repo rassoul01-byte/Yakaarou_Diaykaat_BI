@@ -94,17 +94,30 @@ class Depassement:
 # --------------------------------------------------------------------------- #
 
 
+# Le dictionnaire des indicateurs désigne `quarantaine.v_taux_rejet_par_source`
+# comme le **calcul** du taux de rejet. Cette fonction est l'écriture Python de
+# la même formule : elle doit arrondir comme la vue, sinon le même indicateur
+# vaut deux choses selon qui le lit. La vue arrondit à trois décimales
+# (sql/005, sql/011) ; ce nombre est ici pour qu'on ne le change que d'un côté.
+DECIMALES_DU_TAUX = 3
+
+
 def taux_pourcent(lignes_lues: int | None, lignes_rejetees: int | None) -> float | None:
     """Part des lignes rejetées, en pourcentage.
 
     Renvoie None quand aucune ligne n'a été lue : un taux n'a alors pas de sens,
     et afficher 0 % laisserait croire que tout va bien alors que rien n'a été
     contrôlé.
+
+    L'arrondi est celui de la vue, à trois décimales. Avec deux, 19 lignes
+    rejetées sur 94 donnaient 20,21 ici et 20,213 en base : deux valeurs pour
+    un seul indicateur, et une comparaison au seuil qui pouvait basculer d'un
+    côté à l'autre selon l'endroit où le taux avait été calculé.
     """
     lues = lignes_lues or 0
     if lues <= 0:
         return None
-    return round(100.0 * (lignes_rejetees or 0) / lues, 2)
+    return round(100.0 * (lignes_rejetees or 0) / lues, DECIMALES_DU_TAUX)
 
 
 def depassements(lignes: list[dict], seuil: float) -> list[Depassement]:
@@ -341,6 +354,23 @@ def main(argv: list[str] | None = None) -> int:
 
     if arguments.seuil is None:
         return 0
+
+    # Une absence de mesure n'est pas un succès. Sans ce contrôle, un garde-fou
+    # qui n'a RIEN mesuré sortait 0 et laissait la chaîne charger l'entrepôt :
+    # `v_taux_rejet_par_source` est vide dès que `staging.execution_log` l'est,
+    # et cette table n'est créée par aucune migration — seulement par le script
+    # d'initialisation du premier démarrage. Sur une base reconstruite par
+    # `scripts/appliquer_sql.py`, le rapport passait donc au vert sans rien voir.
+    if not par_source:
+        print(
+            "\n  AUCUNE MESURE DE QUALITÉ : la vue quarantaine.v_taux_rejet_par_source\n"
+            "  est vide. Le seuil ne peut pas être vérifié, et une absence de mesure\n"
+            "  n'est pas une absence de rejet.\n"
+            "  Lancer un contrôle (python -m quality.controle --source ...), et\n"
+            "  vérifier que staging.execution_log existe et est alimentée.\n",
+            file=sys.stderr,
+        )
+        return 1
 
     au_dessus = depassements(par_source, arguments.seuil)
     if not au_dessus:
