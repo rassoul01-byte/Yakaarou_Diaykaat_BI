@@ -31,7 +31,13 @@ CREATE TABLE IF NOT EXISTS dwh.dim_date (
     semaine_iso  INTEGER NOT NULL,
     jour         INTEGER NOT NULL,
     nom_jour     TEXT    NOT NULL,
-    nom_mois     TEXT    NOT NULL
+    nom_mois     TEXT    NOT NULL,
+    -- `semaine_iso` appartient à l'annee ISO, pas a l'annee civile : le
+    -- 2017-01-01 est en semaine 52 de l'annee ISO 2016. Les deux colonnes vont
+    -- ensemble ; voir sql/025. Elle est declaree EN DERNIER pour que la table
+    -- ait la meme forme qu'elle soit batie ici ou completee par sql/025, qui
+    -- l'ajoute par ALTER sur les bases deja installees.
+    annee_iso    INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS dwh.dim_client (
@@ -137,9 +143,12 @@ CREATE INDEX IF NOT EXISTS idx_fait_ligne_date      ON dwh.fait_ligne_commande (
 -- dimensions historisées, cette ligne est permanente : valide depuis 1900,
 -- jamais fermée — ce n'est pas une entité métier qui pourrait changer.
 
+-- `annee_iso` vaut 0 comme les autres parties de la date : la ligne « inconnu »
+-- ne prétend pas etre le 1er janvier 1900, cette date n'est qu'un remplissage.
 INSERT INTO dwh.dim_date
-    (date_id, date, annee, trimestre, mois, semaine_iso, jour, nom_jour, nom_mois)
-VALUES (0, '1900-01-01', 0, 0, 0, 0, 0, 'inconnu', 'inconnu')
+    (date_id, date, annee, trimestre, mois, semaine_iso, jour, nom_jour, nom_mois,
+     annee_iso)
+VALUES (0, '1900-01-01', 0, 0, 0, 0, 0, 'inconnu', 'inconnu', 0)
 ON CONFLICT (date_id) DO NOTHING;
 
 INSERT INTO dwh.dim_client
