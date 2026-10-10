@@ -50,9 +50,17 @@ sources confondues, d'une seule requête.
 
 ### Qui y écrit, qui la lit
 
-- **Écriture** : le contrôle de conformité (F1.5, Sprint 2) et la
-  validation du flux d'événements (`src/common/evenements.py`, niveau 4
-  de la stratégie de qualité) y insèrent chaque rejet.
+- **Écriture** : le contrôle de conformité (F1.5, Sprint 2) y insère
+  chaque rejet, source par source.
+- **Le flux d'événements n'y écrit pas** — et c'est une limite assumée,
+  pas un oubli silencieux. `src/common/bus.py` écarte les événements
+  invalides vers le sujet Kafka `navigation.rebut`, qui a **30 jours de
+  rétention et aucun consommateur**. Le clickstream a donc zéro ligne en
+  quarantaine et ne pèse pas dans le taux de rejet. Les reprendre
+  demanderait un consommateur de `navigation.rebut` écrivant dans
+  `quarantaine.rejets` : c'est la suite naturelle, elle n'est pas faite.
+  La valeur `navigation.evenements` de la colonne `source` est donc
+  prévue par le schéma mais jamais produite aujourd'hui.
 - **Lecture** : le calcul du taux de rejet (F1.11) et toute
   investigation manuelle sur un rejet précis.
 - **Jamais de suppression ni de mise à jour** : conforme à la règle

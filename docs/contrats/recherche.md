@@ -50,7 +50,7 @@ La commande refuse donc explicitement `--prix-min` et `--prix-max` avec un messa
 
 ## 4. Les requêtes sans résultat (F4.5)
 
-`python -m recherche.sans_resultat` lit `staging.v_requetes_frequentes` (le journal regroupé par requête, toutes journées confondues ; migration `sql/016_vue_requetes_frequentes.sql`), rejoue chaque requête avec **la même recherche que l'acheteur** (même fonction de construction), et rend celles qui ne ramènent rien, classées par fréquence décroissante.
+`python -m recherche.sans_resultat` lit `staging.v_requetes_frequentes` (le journal regroupé par requête, toutes journées confondues ; migration `sql/017_vue_requetes_frequentes.sql`), rejoue chaque requête avec **la même recherche que l'acheteur** (même fonction de construction), et rend celles qui ne ramènent rien, classées par fréquence décroissante.
 
 Une requête en erreur n'est **pas** comptée comme « sans résultat » : l'analyse échoue plutôt que de mentir.
 
