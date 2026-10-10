@@ -802,15 +802,27 @@ Ces vingt-cinq jours ne couvrent que la **réalisation**. Le travail de concepti
 | **42 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
 | La **pertinence de la recherche n'est pas mesurée** | Construire un jeu de jugements demande du temps calme ; il n'y en a pas eu |
 
-**Ce que l'historique du dépôt confirme.** 305 contributions sur **21 jours actifs**, du 16 septembre au 9 octobre 2026. Le rythme n'est pas régulier : une poignée de contributions par jour jusqu'à fin septembre, puis une accélération continue — 33 le 2 octobre, 30 le 5, **58 le 7 et 48 le 8**. Les deux journées les plus chargées du projet sont les deux dernières avant la clôture du Sprint 5. C'est la signature d'un calendrier comprimé, et elle est lisible par quiconque ouvre `git log`.
+**Ce que l'historique du dépôt confirme.** Relevé le 10 octobre 2026 : **333 contributions sur 22 jours actifs**, pour 25 jours calendaires. Trois jours seulement sans aucune contribution — les 18, 19 et 20 septembre, un vendredi et le week-end qui suit, juste après la clôture du Sprint 0.
+
+Le rythme n'est pas régulier, et c'est là que se lit la compression :
+
+| Période | Contributions | Part |
+|---|---|---|
+| Du 16 au 30 septembre | 85 | 26 % |
+| Du 1<sup>er</sup> au 10 octobre | 248 | **74 %** |
+| *dont du 4 au 10 octobre* | *191* | ***57 % en sept jours*** |
+
+Les deux journées les plus denses du projet sont le **7 octobre (61 contributions)** et le **8 octobre (48)** — les deux dernières avant la clôture du Sprint 5. Plus de la moitié du dépôt a été écrite dans la dernière semaine. C'est la signature d'un calendrier comprimé, et elle est lisible par quiconque ouvre `git log`.
 
 | Contributeur | Contributions |
 |---|---|
-| Ndeye Penda SARR | 148 |
-| Bachir DEME | 74 |
-| Seydina WADE | 59 |
+| Ndeye Penda SARR | 168 |
+| Bachir DEME | 75 |
+| Seydina WADE | 61 |
+| Aissata DIALLO | 17 *(départ au Sprint 3)* |
 | Mouhameth DIOP | 12 |
-| Aissata DIALLO | 12 *(départ au Sprint 3)* |
+
+Ces chiffres se reproduisent par `git shortlog -sne --all` et évoluent à chaque contribution.
 
 Le nombre de contributions n'est pas une mesure de contribution — une migration SQL de cinq lignes et un module de recherche comptent chacun pour un. Il recoupe néanmoins la charge du §22.4 : la personne à 16 fonctionnalités est celle qui a le plus contribué.
 
