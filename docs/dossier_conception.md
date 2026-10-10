@@ -245,17 +245,15 @@ C'est cette contrainte qui produit trois des écarts du §23 : le rattachement a
 
 ### 4.1 Volumes à l'entrée
 
-| Jeu | Lignes | Remarque |
-|---|---|---|
-| Commandes Olist | 99 224 | dont 96 470 retenues après contrôle |
-| Clients Olist | 99 441 | 96 096 personnes distinctes (`customer_unique_id`) |
-| Lignes d'articles | 112 650 | |
-| Paiements | 103 886 | une commande peut porter plusieurs paiements |
-| Avis clients | 99 224 | note et commentaire facultatif |
-| Géolocalisation | 1 000 163 | doublons stricts supprimés en contrôle |
-| Catalogue Rakuten | 84 916 | 32 951 produits après déduplication |
+Le détail par source est au **§3.2** et n'est pas répété ici : deux tableaux de volumes dans un même document divergent à la première mise à jour. Trois repères suffisent à situer l'échelle.
 
-Ces volumes sont ceux des jeux publics Olist et Rakuten utilisés comme sources. Le total lu par le contrôle qualité est de l'ordre de **1,5 million de lignes** par exécution complète — chiffre qui explique la dette du seuil de rejet au §25.
+| | |
+|---|---|
+| Commandes | **99 441**, pour 112 650 lignes d'articles |
+| Personnes distinctes | **96 096** — à ne pas confondre avec les 99 441 identifiants de commande (§3.5) |
+| Lignes lues par exécution complète du contrôle | **≈ 1,5 million** — c'est ce chiffre qui explique la dette du seuil de rejet au §25 |
+
+Un seul taux de rejet est mesuré sur une source réelle et écrit dans un contrat : les avis clients, **99 224 lignes lues, 98 167 valides, 1 057 rejetées, soit 1,07 %** (`contrats/avis.md`). Les autres sources n'ont pas de taux publié dans le dépôt.
 
 ### 4.2 Tables de la zone intermédiaire (`staging`)
 
