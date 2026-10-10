@@ -46,6 +46,18 @@ def passage(id_="liv-03", score=0.9):
     )  # fmt: skip
 
 
+@pytest.fixture(autouse=True)
+def _client_es_neuf():
+    """Le client Elasticsearch du router est mis en cache pour toute la durée
+    du service. En test, chacun doit repartir d'un client neuf, sinon le
+    premier qui l'obtient le fige pour les suivants.
+
+    Vidé à l'entrée seulement : à la sortie, `client_es` peut encore être le
+    remplaçant posé par un `monkeypatch` que pytest n'a pas défait.
+    """
+    router_recherche.client_es.cache_clear()
+
+
 def avec_retrouveur(monkeypatch, retrouveur):
     monkeypatch.setattr(router_assistant, "creer_retrouveur", lambda: retrouveur)
 
@@ -281,6 +293,17 @@ def test_recherche_elasticsearch_injoignable_donne_503(monkeypatch):
 
     monkeypatch.setattr(router_recherche, "connexion", panne)
     assert client.post("/api/recherche", json={"q": "colis"}).status_code == 503
+
+
+def test_une_requete_faite_d_espaces_est_une_entree_invalide_pas_une_panne(monkeypatch):
+    """`min_length=1` compte les espaces : sans ce traitement, c'était un 500.
+
+    Le front protège, mais la documentation interactive de l'API est publique
+    et c'est le premier bouton qu'un visiteur presse. Le vrai moteur est
+    conservé : c'est lui qui refuse la requête, avant tout appel au service.
+    """
+    monkeypatch.setattr(router_recherche, "client_es", lambda: None)
+    assert client.post("/api/recherche", json={"q": "   "}).status_code == 422
 
 
 @pytest.mark.parametrize(
