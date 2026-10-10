@@ -237,7 +237,10 @@ services:
       - ./data:/app/data
       - ./tests:/app/tests
       - ./sql:/app/sql
-      - ./docs:/app/docs:ro
+      # Lus par les tests : tests/dags (le DAG) et test_migrations_sur_base_reelle
+      # (le script d'initialisation de PostgreSQL).
+      - ./dags:/app/dags:ro
+      - ./docker/postgres/init:/app/docker/postgres/init:ro
       - ./pyproject.toml:/app/pyproject.toml:ro
     depends_on:
       postgres: { condition: service_healthy }
