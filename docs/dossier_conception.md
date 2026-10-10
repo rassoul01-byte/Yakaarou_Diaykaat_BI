@@ -280,7 +280,17 @@ Volumes relevés après le chargement du 10 octobre 2026, à l'exécution de `py
 | `dim_vendeur` | Dimension historisée (SCD2) | **3 095** | |
 | `dim_date` | Dimension fixe | **883** | Porte `annee`, `annee_iso`, `semaine_iso`, `trimestre`, `mois` |
 
-L'écart avec les volumes d'entrée du §3.2 — 99 441 commandes lues, 99 433 chargées — est le fait du contrôle qualité : huit commandes n'ont pas passé une règle bloquante. Le même écart se retrouve sur les lignes d'articles.
+**Trois nombres de commandes, et chacun répond à une question différente.** C'est la source de confusion la plus fréquente sur ce projet, donc la chaîne est écrite ici une fois pour toutes :
+
+| Nombre | Ce qu'il compte | Pourquoi il diminue |
+|---|---|---|
+| **99 441** | Commandes lues à la source | — |
+| **99 433** | Commandes chargées dans `fait_commande` | 8 n'ont pas passé une règle bloquante du contrôle qualité |
+| **98 191** | Commandes du **chiffre d'affaires** (`v_ventes_totales`) | Les commandes `canceled` et `unavailable` sont exclues du périmètre, et une commande sans ligne d'article pèse zéro |
+
+Les 1 242 commandes d'écart entre les deux derniers ne sont pas perdues : elles existent dans l'entrepôt, marquées, et restent interrogeables. Elles n'entrent simplement pas dans un chiffre d'affaires — c'est la définition du dictionnaire, pas un effet de bord.
+
+**Relevé de vérification du 10 octobre 2026.** Après un rechargement complet, `v_ventes_totales` rend **13 493 151,56** pour **98 191 commandes** — strictement identique au relevé d'avant le rechargement. C'est la démonstration du « rejeu sans effet » exigé par `contrats/workflow.md`.
 
 Chaque dimension porte une **ligne « inconnu » d'identifiant 0**, permanente, jamais fermée : un fait dont la référence manque y pointe plutôt que d'être perdu. Le détail est dans `contrats/entrepot.md`.
 
