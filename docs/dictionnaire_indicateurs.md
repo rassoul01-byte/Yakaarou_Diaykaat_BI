@@ -508,10 +508,10 @@ mauvais modèle.
 | | |
 |---|---|
 | **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
-| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date publiée par `dwh.v_date_segment` (**2017-09-30**). Cette date est un choix documenté, pas le maximum des fenêtres d'évaluation : élargir `v_dates_reference` ne déplace plus le segment (`sql/024`) |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_socle_client`, à la date publiée par `dwh.v_date_segment` (**2017-09-30**). Cette date est un choix documenté, pas le maximum des fenêtres d'évaluation : élargir `v_dates_reference` ne déplace plus le segment (`sql/024`) |
 | **Granularité** | Une ligne par client (`customer_unique_id`) avec `date_reference`, `commandes`, `montant_total` et `recence_jours` ; l'effectif total se compte sur la vue |
-| **Source des données** | `dwh.v_historique_client` — le segment n'utilise pas le score du modèle |
-| **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`) |
+| **Source des données** | `dwh.v_socle_client`, le socle que lit aussi `dwh.v_historique_client` : le nombre de commandes d'une personne est calculé à un seul endroit. Le segment n'utilise pas le score du modèle, et depuis `sql/028` il ne passe plus par les variables du modèle non plus |
+| **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`, date fixée par `sql/024`, assise sur le socle par `sql/028`) |
 | **Consultation** | `SELECT * FROM dwh.v_segment_a_retenir` |
 | **Seuil retenu** | Aucun seuil de score : filtre déterministe, sans graine ni réentraînement |
 
