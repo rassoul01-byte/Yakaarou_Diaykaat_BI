@@ -27,10 +27,10 @@ export default function Topbar({ page, onNavigate, onRecharger, apiOnline }: Pro
           }}
         >
           <span className="marque-pastille">
-            <Activity size={17} />
+            <Activity size={19} />
           </span>
           <span className="marque-nom">
-            DataFlow<span>360</span>
+            Leeral<span> · Yakaarou Diaykaat BI</span>
           </span>
         </a>
 

@@ -11,6 +11,7 @@ import { AlertTriangle, Check, Minus, X } from "lucide-react";
 import { api, ApiError } from "../api/client";
 import BoutonRetry from "../components/BoutonRetry";
 import { SkeletonBloc, SkeletonLigne } from "../components/Skeleton";
+import { useCompteur } from "../components/useCompteur";
 import type { Etape, IndicateursOut } from "../types/api";
 import "./DashboardPage.css";
 
@@ -67,6 +68,35 @@ function duree(secondes: number | null): string {
 function jourCourt(horodatage: string | null): string {
   if (!horodatage) return "—";
   return horodatage.slice(0, 10);
+}
+
+// --------------------------------------------------------------- chiffres
+
+type Formateur = (valeur: number | null | undefined) => string;
+
+/** Un chiffre qui monte, dans son format définitif.
+ *
+ * Un composant plutôt qu'un appel direct à `useCompteur` : il y a dix chiffres
+ * animés sur cette page, et dix appels de hook alignés dans un même composant
+ * se lisent mal et se réordonnent mal.
+ */
+function Chiffre({
+  valeur,
+  format,
+  className,
+  style,
+}: {
+  valeur: number | null | undefined;
+  format: Formateur;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const anime = useCompteur(valeur);
+  return (
+    <span className={className} style={style}>
+      {format(anime)}
+    </span>
+  );
 }
 
 // --------------------------------------------------------------- page
@@ -132,10 +162,27 @@ export default function DashboardPage() {
 
   const { ventes, categories, qualite, motifs_de_rejet, jour, alerte, segment, chaine } = donnees;
 
+  /* L'ordre compte. Le chiffre d'affaires passe AVANT le schéma : le schéma
+     explique comment la plateforme fonctionne, le chiffre dit ce qu'elle
+     produit, et c'est le second qu'on doit voir sans dérouler. Le schéma
+     occupait six cents pixels de haut, ce qui poussait la figure principale
+     sous la ligne de flottaison en 1440 × 900.
+
+     `cascade` fait entrer les blocs l'un après l'autre, à 90 ms d'écart (voir
+     index.css) ; le dernier arrive à 540 ms, avant qu'on ait fini de lire le
+     premier titre. */
   return (
-    <div className="vg">
-      <Chaine chaine={chaine} donnees={donnees} />
+    <div className="vg cascade">
+      <header>
+        <h1>Yakaarou Diaykaat BI, en un écran</h1>
+        <p className="vg-chapeau">
+          Les ventes, la qualité des données et l&apos;activité du jour. Chaque chiffre de cette
+          page vient d&apos;une vue de l&apos;entrepôt : la page les met en forme, elle n&apos;en
+          recalcule aucun.
+        </p>
+      </header>
       <Ventes ventes={ventes} qualite={qualite} alerte={alerte} />
+      <Chaine chaine={chaine} donnees={donnees} />
       <Categories categories={categories} />
       <Qualite qualite={qualite} motifs={motifs_de_rejet} />
       <Journee jour={jour} simule={donnees.trafic_simule} segment={segment} />
@@ -162,13 +209,21 @@ function Chaine({ chaine, donnees }: SchemaProps) {
   const lues = qualite?.lignes_lues ?? null;
   const rejetees = qualite?.lignes_rejetees ?? null;
 
-  const hauteurSources = Math.max(sources.length, 1) * 58;
-  const hauteur = Math.max(hauteurSources, 300);
+  /* Géométrie du schéma. Tout est dérivé de `milieu` : les boîtes grandissent
+     avec la typographie sans qu'aucune coordonnée soit à reprendre à la main.
+
+     La hauteur a un plancher de 400 plutôt que 300 : la quarantaine descend à
+     `milieu + 184` et le premier usage monte à `milieu - 135`, donc il faut
+     388 d'espace même avec deux sources. */
+  const hauteurSources = Math.max(sources.length, 1) * 62;
+  const hauteur = Math.max(hauteurSources, 400);
   const milieu = hauteur / 2;
+  const railHaut = Math.min(32, milieu);
+  const railBas = Math.max(32 + (sources.length - 1) * 62, milieu);
 
   return (
     <section className="vg-panel">
-      <h1>Ce que la plateforme a traité</h1>
+      <h2>Ce que la plateforme a traité</h2>
       <p className="vg-chapeau">
         Les sources entrent à gauche, passent le contrôle qualité, et ressortent à droite dans
         les trois usages. Ce qui ne passe pas descend en quarantaine.
@@ -177,7 +232,7 @@ function Chaine({ chaine, donnees }: SchemaProps) {
       <div className="vg-cadre-schema">
       <svg
         className="vg-schema"
-        viewBox={`0 0 1240 ${hauteur + 30}`}
+        viewBox={`0 0 1300 ${hauteur + 30}`}
         role="img"
         preserveAspectRatio="xMidYMid meet"
       >
@@ -186,51 +241,91 @@ function Chaine({ chaine, donnees }: SchemaProps) {
           quarantaine, l&apos;entrepôt et les trois usages
         </title>
 
-        {/* liaisons */}
-        <g stroke="#b8cde6" strokeWidth="1.25" fill="none">
+        {/* Les liaisons. `pathLength="1"` normalise la longueur de chaque
+            chemin : un seul `stroke-dashoffset` suffit alors à tracer un trait
+            de quarante pixels comme un rail de trois cents (voir le CSS). Les
+            classes `vg-liaison-1` à `-4` donnent l'ordre du tracé, qui est
+            l'ordre du pipeline. */}
+        <g stroke="#b8cde6" strokeWidth="1.5" fill="none">
           {sources.map((_, i) => (
-            <path key={i} d={`M168 ${30 + i * 58} H208`} />
+            <path
+              key={i}
+              className="vg-liaison vg-liaison-1"
+              pathLength="1"
+              d={`M192 ${32 + i * 62} H232`}
+            />
           ))}
           {/* Le rail vertical doit atteindre la dérivation vers la porte :
               avec peu de sources, il s'arrêtait quatre pixels trop haut et la
               liaison paraissait coupée. */}
           <path
-            d={`M208 ${Math.min(30, milieu)} V${Math.max(30 + (sources.length - 1) * 58, milieu)}`}
+            className="vg-liaison vg-liaison-1"
+            pathLength="1"
+            d={`M232 ${railHaut} V${railBas}`}
           />
-          <path d={`M208 ${milieu} H268`} />
-          <path d={`M436 ${milieu} H496`} />
-          <path d={`M688 ${milieu} H728`} />
-          <path d={`M728 ${milieu - 94} V${milieu + 94}`} />
-          <path d={`M728 ${milieu - 94} H768`} />
-          <path d={`M728 ${milieu + 94} H768`} />
+          <path
+            className="vg-liaison vg-liaison-2"
+            pathLength="1"
+            d={`M232 ${milieu} H286`}
+          />
+          <path
+            className="vg-liaison vg-liaison-3"
+            pathLength="1"
+            d={`M476 ${milieu} H534`}
+          />
+          <path
+            className="vg-liaison vg-liaison-4"
+            pathLength="1"
+            d={`M792 ${milieu - 100} V${milieu + 100}`}
+          />
+          <path
+            className="vg-liaison vg-liaison-4"
+            pathLength="1"
+            d={`M792 ${milieu - 100} H840`}
+          />
+          <path
+            className="vg-liaison vg-liaison-4"
+            pathLength="1"
+            d={`M792 ${milieu + 100} H840`}
+          />
         </g>
+
+        {/* Le chemin de l'entrepôt vers les usages : un pointillé qui avance
+            en permanence. C'est le « flux » du nom de la direction, et le seul
+            mouvement de la page qui ne s'arrête jamais. */}
         <path
-          d={`M728 ${milieu} H768`}
+          className="vg-flux"
+          d={`M744 ${milieu} H840`}
           stroke="#1583ec"
-          strokeWidth="2"
+          strokeWidth="2.5"
           fill="none"
         />
+
+        {/* La descente vers la quarantaine, tracée après tout le reste : on
+            doit la voir partir du contrôle qualité. */}
         <path
-          d={`M352 ${milieu + 40} V${milieu + 92}`}
+          className="vg-rejet"
+          pathLength="1"
+          d={`M381 ${milieu + 44} V${milieu + 104}`}
           stroke="#e63946"
-          strokeWidth="2"
+          strokeWidth="2.5"
           fill="none"
         />
 
         {/* sources */}
-        <g fontSize="13" fill="#0f1c2e">
+        <g fontSize="16" fill="#0f1c2e">
           {sources.map((source, i) => (
-            <g key={source}>
+            <g key={source} className="vg-boite vg-boite-source">
               <rect
                 x="8"
-                y={10 + i * 58}
-                width="160"
-                height="40"
-                rx="7"
+                y={10 + i * 62}
+                width="184"
+                height="44"
+                rx="8"
                 fill="#ffffff"
                 stroke="#dce6f4"
               />
-              <text x="20" y={35 + i * 58} fontWeight="500">
+              <text x="22" y={38 + i * 62} fontWeight="500">
                 {source}
               </text>
             </g>
@@ -238,110 +333,110 @@ function Chaine({ chaine, donnees }: SchemaProps) {
         </g>
 
         {/* contrôle qualité */}
-        <g>
+        <g className="vg-boite vg-boite-controle">
           <rect
-            x="268"
-            y={milieu - 40}
-            width="168"
-            height="80"
-            rx="8"
+            x="286"
+            y={milieu - 44}
+            width="190"
+            height="88"
+            rx="9"
             fill="#ffffff"
             stroke="#0a6bd4"
-            strokeWidth="1.5"
+            strokeWidth="1.75"
           />
-          <text x="288" y={milieu - 6} fontSize="15" fontWeight="600" fill="#0f1c2e">
+          <text x="306" y={milieu - 8} fontSize="18" fontWeight="600" fill="#0f1c2e">
             Contrôle qualité
           </text>
-          <text x="288" y={milieu + 16} fontSize="12" fill="#44566e">
+          <text x="306" y={milieu + 18} fontSize="15" fill="#44566e">
             {nombre(lues)} lignes lues
           </text>
         </g>
 
         {/* quarantaine */}
-        <g>
+        <g className="vg-boite vg-boite-quarantaine">
           <rect
-            x="268"
-            y={milieu + 92}
-            width="168"
-            height="72"
-            rx="8"
+            x="286"
+            y={milieu + 104}
+            width="190"
+            height="80"
+            rx="9"
             fill="#fdecee"
             stroke="#e63946"
-            strokeWidth="1.5"
+            strokeWidth="1.75"
           />
-          <text x="288" y={milieu + 121} fontSize="14" fontWeight="600" fill="#a4242f">
+          <text x="306" y={milieu + 134} fontSize="17" fontWeight="600" fill="#a4242f">
             Quarantaine
           </text>
-          <text x="288" y={milieu + 142} fontSize="12" fill="#a4242f">
+          <text x="306" y={milieu + 158} fontSize="15" fill="#a4242f">
             {nombre(rejetees)} lignes, {pourcent(qualite?.taux_rejet_pourcent, 3)}
           </text>
         </g>
 
         {/* entrepôt */}
-        <g>
-          <rect x="496" y={milieu - 50} width="192" height="100" rx="8" fill="#0f1c2e" />
-          <text x="518" y={milieu - 15} fontSize="16" fontWeight="600" fill="#ffffff">
+        <g className="vg-boite vg-boite-entrepot">
+          <rect x="534" y={milieu - 54} width="210" height="108" rx="9" fill="#0f1c2e" />
+          <text x="556" y={milieu - 18} fontSize="19" fontWeight="600" fill="#ffffff">
             Entrepôt
           </text>
-          <text x="518" y={milieu + 9} fontSize="12.5" fill="#c8e2ff">
+          <text x="556" y={milieu + 8} fontSize="15.5" fill="#c8e2ff">
             {nombre(ventes?.commandes)} commandes
           </text>
-          <text x="518" y={milieu + 29} fontSize="12.5" fill="#c8e2ff">
+          <text x="556" y={milieu + 32} fontSize="15.5" fill="#c8e2ff">
             {montant(ventes?.chiffre_affaires)}
           </text>
         </g>
 
         {/* usages */}
-        <g>
+        <g className="vg-boite vg-boite-usage">
           <rect
-            x="768"
-            y={milieu - 126}
-            width="412"
-            height="64"
-            rx="8"
+            x="840"
+            y={milieu - 135}
+            width="452"
+            height="70"
+            rx="9"
             fill="#ffffff"
             stroke="#dce6f4"
           />
-          <text x="790" y={milieu - 99} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
+          <text x="864" y={milieu - 105} fontSize="17" fontWeight="600" fill="#0f1c2e">
             Recherche
           </text>
-          <text x="790" y={milieu - 78} fontSize="12.5" fill="#44566e">
+          <text x="864" y={milieu - 81} fontSize="15" fill="#44566e">
             {nombre(jour?.recherches)} requêtes le {jour?.jour ?? "—"}
           </text>
         </g>
-        <g>
+        <g className="vg-boite vg-boite-usage">
           <rect
-            x="768"
-            y={milieu - 32}
-            width="412"
-            height="64"
-            rx="8"
+            x="840"
+            y={milieu - 35}
+            width="452"
+            height="70"
+            rx="9"
             fill="#ffffff"
             stroke="#1583ec"
-            strokeWidth="1.5"
+            strokeWidth="1.75"
           />
-          <circle cx="792" cy={milieu - 8} r="4" fill="#1583ec" />
-          <text x="806" y={milieu - 3} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
+          <circle cx="866" cy={milieu - 9} r="5" fill="#1583ec" />
+          <text x="882" y={milieu - 3} fontSize="17" fontWeight="600" fill="#0f1c2e">
             Temps réel
           </text>
-          <text x="790" y={milieu + 18} fontSize="12.5" fill="#44566e">
+          <text x="864" y={milieu + 21} fontSize="15" fill="#44566e">
             {nombre(jour?.sessions)} sessions, {nombre(jour?.achats)} achats
           </text>
         </g>
-        <g>
+        <g className="vg-boite vg-boite-usage">
           <rect
-            x="768"
-            y={milieu + 62}
-            width="412"
-            height="64"
-            rx="8"
+            x="840"
+            y={milieu + 65}
+            width="452"
+            height="70"
+            rx="9"
             fill="#ffffff"
             stroke="#dce6f4"
           />
-          <text x="790" y={milieu + 89} fontSize="14.5" fontWeight="600" fill="#0f1c2e">
+          <text x="864" y={milieu + 95} fontSize="17" fontWeight="600" fill="#0f1c2e">
             Modèle de réachat
           </text>
-          <text x="790" y={milieu + 110} fontSize="12.5" fill="#44566e">
+          <text x="864" y={milieu + 119} fontSize="15" fill="#44566e">
             {nombre(segment?.clients)} clients retenus
           </text>
         </g>
@@ -363,8 +458,12 @@ function Ventes({ ventes, qualite, alerte }: VentesProps) {
           <div className="vg-figures">
             <div>
               <div className="vg-heros-etiquette">Chiffre d&apos;affaires, hors frais de port</div>
-              <div className="vg-figure vg-heros" style={{ marginTop: 12 }}>
-                {montant(ventes.chiffre_affaires)}
+              <div style={{ marginTop: 14 }}>
+                <Chiffre
+                  className="vg-figure vg-heros"
+                  valeur={ventes.chiffre_affaires}
+                  format={montant}
+                />
               </div>
               <div className="vg-libelle">
                 {ventes.premier_jour && ventes.dernier_jour
@@ -374,17 +473,27 @@ function Ventes({ ventes, qualite, alerte }: VentesProps) {
             </div>
             <div className="vg-figures-petites">
               <div>
-                <div className="vg-figure vg-moyen">{montant(ventes.panier_moyen)}</div>
+                <Chiffre
+                  className="vg-figure vg-moyen"
+                  valeur={ventes.panier_moyen}
+                  format={montant}
+                />
                 <div className="vg-libelle">Panier moyen</div>
               </div>
               <div>
-                <div className="vg-figure vg-moyen">{nombre(ventes.commandes)}</div>
+                <Chiffre
+                  className="vg-figure vg-moyen"
+                  valeur={ventes.commandes}
+                  format={nombre}
+                />
                 <div className="vg-libelle">Commandes retenues</div>
               </div>
               <div>
-                <div className="vg-figure vg-moyen">
-                  {pourcent(qualite?.taux_rejet_pourcent, 3)}
-                </div>
+                <Chiffre
+                  className="vg-figure vg-moyen"
+                  valeur={qualite?.taux_rejet_pourcent}
+                  format={(v) => pourcent(v, 3)}
+                />
                 <div className="vg-libelle">Lignes écartées</div>
               </div>
             </div>
@@ -399,9 +508,9 @@ function Ventes({ ventes, qualite, alerte }: VentesProps) {
       {alerte ? (
         <div className="vg-alerte vg-etroit">
           <div className="vg-alerte-tete">
-            <AlertTriangle size={18} color="var(--vg-rouge)" aria-hidden />
-            <span className="vg-alerte-nombre">{nombre(alerte.achats)}</span>
-            <span style={{ fontSize: 15, color: "var(--vg-rouge-ink)" }}>
+            <AlertTriangle size={22} color="var(--vg-rouge)" aria-hidden />
+            <Chiffre className="vg-alerte-nombre" valeur={alerte.achats} format={nombre} />
+            <span style={{ fontSize: "var(--t-base)", color: "var(--vg-rouge-ink)" }}>
               achats, contre {decimale(alerte.achats_habituels)} d&apos;habitude
             </span>
           </div>
@@ -441,7 +550,9 @@ function Categories({ categories }: Pick<IndicateursOut, "categories">) {
       <table className="vg-table">
         <thead>
           <tr>
-            <th style={{ width: 210 }}>Catégorie</th>
+            {/* 250 et non 210 : à la taille de texte actuelle,
+                « informatica_acessorios » touchait sa barre. */}
+            <th style={{ width: 250, paddingRight: 18 }}>Catégorie</th>
             <th aria-label="Part relative" />
             <th className="vg-chiffre">Chiffre d&apos;affaires</th>
           </tr>
@@ -449,14 +560,20 @@ function Categories({ categories }: Pick<IndicateursOut, "categories">) {
         <tbody>
           {categories.map((categorie, rang) => (
             <tr key={categorie.categorie ?? rang}>
-              <td className={rang === 0 ? "vg-tete" : undefined}>
+              <td
+                className={rang === 0 ? "vg-tete" : undefined}
+                style={{ paddingRight: 18 }}
+              >
                 {categorie.categorie ?? "inconnu"}
               </td>
               <td className="vg-cell-barre">
+                {/* Les barres poussent de haut en bas, 60 ms d'écart : le
+                    classement se lit dans l'ordre où il s'installe. */}
                 <div
                   className={`vg-barre${rang === 0 ? " vg-barre-tete" : ""}`}
                   style={{
                     width: `${(((categorie.chiffre_affaires ?? 0) / maximum) * 100).toFixed(1)}%`,
+                    animationDelay: `${260 + rang * 60}ms`,
                   }}
                 />
               </td>
@@ -533,7 +650,13 @@ function Qualite({ qualite, motifs }: QualiteProps) {
                     <td>
                       <span className="vg-tete">{motif.regle}</span>
                       {motif.gravite ? (
-                        <div style={{ fontSize: 11.5, color: "var(--vg-ink-3)", marginTop: 2 }}>
+                        <div
+                          style={{
+                            fontSize: "var(--t-petit)",
+                            color: "var(--vg-ink-3)",
+                            marginTop: 3,
+                          }}
+                        >
                           {motif.gravite}
                         </div>
                       ) : null}
@@ -581,29 +704,35 @@ function Journee({ jour, segment, simule }: JourneeProps) {
         {jour ? (
           <div className="vg-compteurs">
             <div>
-              <div className="vg-figure vg-moyen">{nombre(jour.sessions)}</div>
+              <Chiffre className="vg-figure vg-moyen" valeur={jour.sessions} format={nombre} />
               <div className="vg-libelle">Sessions</div>
             </div>
             <div>
-              <div className="vg-figure vg-moyen">{nombre(jour.pages_vues)}</div>
+              <Chiffre className="vg-figure vg-moyen" valeur={jour.pages_vues} format={nombre} />
               <div className="vg-libelle">Pages vues</div>
             </div>
             <div>
-              <div className="vg-figure vg-moyen">{nombre(jour.recherches)}</div>
+              <Chiffre className="vg-figure vg-moyen" valeur={jour.recherches} format={nombre} />
               <div className="vg-libelle">Recherches</div>
             </div>
             <div>
-              <div className="vg-figure vg-moyen">{nombre(jour.ajouts_panier)}</div>
+              <Chiffre
+                className="vg-figure vg-moyen"
+                valeur={jour.ajouts_panier}
+                format={nombre}
+              />
               <div className="vg-libelle">Paniers</div>
             </div>
             <div>
-              <div className="vg-figure vg-moyen">{nombre(jour.achats)}</div>
+              <Chiffre className="vg-figure vg-moyen" valeur={jour.achats} format={nombre} />
               <div className="vg-libelle">Achats</div>
             </div>
             <div>
-              <div className="vg-figure vg-moyen">
-                {pourcent(jour.taux_conversion_pourcent)}
-              </div>
+              <Chiffre
+                className="vg-figure vg-moyen"
+                valeur={jour.taux_conversion_pourcent}
+                format={(v) => pourcent(v)}
+              />
               <div className="vg-libelle">
                 Conversion sur {nombre(jour.sessions_avec_achat)} sessions
               </div>
@@ -629,11 +758,14 @@ function Journee({ jour, segment, simule }: JourneeProps) {
         <h2>Le segment à retenir</h2>
         {segment ? (
           <>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 11 }}>
-              <span className="vg-figure" style={{ fontSize: 40, color: "var(--vg-bleu)" }}>
-                {nombre(segment.clients)}
-              </span>
-              <span style={{ fontSize: 13.5, color: "var(--vg-ink-2)" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+              <Chiffre
+                className="vg-figure"
+                style={{ fontSize: 48, color: "var(--vg-bleu)" }}
+                valeur={segment.clients}
+                format={nombre}
+              />
+              <span style={{ fontSize: "var(--t-base)", color: "var(--vg-ink-2)" }}>
                 clients ayant commandé deux fois
               </span>
             </div>

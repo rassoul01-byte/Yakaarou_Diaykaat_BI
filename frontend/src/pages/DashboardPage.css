@@ -1,11 +1,11 @@
 /* Vue générale — direction « Flux ».
 
    Toutes les règles sont préfixées .vg- et vivent sous .vg : la page porte sa
-   propre palette sans toucher à celle des autres pages. L'harmonisation du
-   reste de l'application (barre latérale, boutons) est un pas séparé. */
+   propre palette sans toucher à celle des autres pages. Les tailles de texte,
+   en revanche, viennent de l'échelle de index.css : une page qui redéfinit ses
+   tailles dérive de l'application au premier changement. */
 
 .vg {
-  --vg-ground: var(--c-fond);
   --vg-panel: #ffffff;
   --vg-ink: #0f1c2e;
   --vg-ink-2: #44566e;
@@ -25,7 +25,7 @@
   color: var(--vg-ink);
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
   min-width: 0;
 }
 
@@ -44,53 +44,72 @@
   border-radius: var(--radius);
   box-shadow: var(--carte-ombre);
   padding: var(--carte-padding);
+  transition: border-color var(--transition), box-shadow var(--transition),
+    transform var(--transition);
 }
 
+.vg-panel:hover {
+  border-color: var(--c-bordure-forte);
+  box-shadow: var(--ombre-md);
+  transform: translateY(-2px);
+}
+
+/* `flex-start` plutôt que l'étirement par défaut : les deux cartes d'une
+   rangée n'ont pas la même quantité de contenu, et les étirer à la même
+   hauteur laissait trois cents pixels de blanc au bas de la plus courte.
+   Chacune prend maintenant la hauteur de ce qu'elle a à dire. */
 .vg-rangee {
   display: flex;
   flex-wrap: wrap;
-  gap: 22px;
+  align-items: flex-start;
+  gap: 24px;
 }
 
 .vg-large {
-  flex: 999 1 540px;
+  flex: 999 1 560px;
   min-width: 0;
 }
 
 .vg-etroit {
-  flex: 1 1 320px;
+  flex: 1 1 340px;
   min-width: 0;
 }
 
 .vg h1 {
-  margin: 0 0 6px;
-  font-size: 25px;
+  margin: 0 0 8px;
+  font-size: var(--t-titre);
   font-weight: 600;
   letter-spacing: -0.03em;
-  line-height: 1.15;
+  line-height: var(--interligne-titre);
 }
 
 .vg h2 {
-  margin: 0 0 18px;
-  font-size: 17px;
+  margin: 0 0 20px;
+  font-size: var(--t-sous-titre);
   font-weight: 600;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
+  line-height: var(--interligne-titre);
+}
+
+/* Le titre du bloc est suivi d'un chapeau : la marge du h2 ferait un trou. */
+.vg h2 + .vg-chapeau {
+  margin-top: -8px;
 }
 
 .vg-chapeau {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--t-moyen);
   color: var(--vg-ink-2);
-  max-width: 74ch;
-  line-height: 1.6;
+  max-width: 76ch;
+  line-height: var(--interligne-texte);
 }
 
 .vg-note {
-  margin: 14px 0 0;
-  font-size: 12.5px;
+  margin: 16px 0 0;
+  font-size: var(--t-petit);
   color: var(--vg-ink-3);
-  line-height: 1.6;
-  max-width: 78ch;
+  line-height: var(--interligne-texte);
+  max-width: 82ch;
 }
 
 /* ----------------------------------------------------------- carte héros
@@ -106,9 +125,26 @@
   border: 0;
   border-radius: var(--radius);
   box-shadow: 0 14px 34px rgba(10, 107, 212, 0.26);
-  padding: 30px 32px;
+  padding: 32px 34px;
   color: #ffffff;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Une lueur qui dérive lentement en diagonale. Elle ne porte aucune
+   information : elle fait que la carte principale n'est pas un rectangle mort
+   pendant qu'on parle devant. 18 s, donc invisible comme mouvement. */
+.vg-heros-carte::before {
+  content: "";
+  position: absolute;
+  top: -60%;
+  right: -20%;
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 68%);
+  pointer-events: none;
+  animation: vgDeriver 18s ease-in-out infinite alternate;
 }
 
 .vg-heros-carte .vg-figure,
@@ -120,53 +156,62 @@
    taille et de la graisse, pas d'un bleu pâle qui ne se lirait pas. */
 .vg-heros-carte .vg-libelle {
   color: #ffffff;
-  opacity: 0.88;
+  opacity: 0.9;
 }
 
 .vg-heros-etiquette {
-  font-size: 11px;
-  letter-spacing: 0.18em;
+  font-size: var(--t-etiquette);
+  letter-spacing: 0.17em;
   font-weight: 700;
   color: #ffffff;
-  opacity: 0.88;
+  opacity: 0.9;
   text-transform: uppercase;
+  position: relative;
 }
 
 /* ----------------------------------------------------------- figures */
 
+/* `inline-block` : la figure est rendue par un `<span>` (le composant qui
+   l'anime), et un span en ligne n'a pas de hauteur propre — le libellé qui le
+   suit remontait de quelques pixels. */
 .vg-figure {
+  display: inline-block;
   font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1;
-  font-variant-numeric: proportional-nums;
+  font-variant-numeric: tabular-nums;
+  position: relative;
 }
 
+/* `tabular-nums` sur un chiffre qui défile : sans lui, chaque pas du compteur
+   change la largeur du nombre et la carte tremble pendant toute la montée. */
+
 .vg-heros {
-  font-size: clamp(34px, 5vw, 56px);
+  font-size: var(--t-figure-geante);
 }
 
 .vg-moyen {
-  font-size: 26px;
+  font-size: var(--t-figure);
 }
 
 .vg-libelle {
-  font-size: 12.5px;
+  font-size: var(--t-petit);
   color: var(--vg-ink-3);
-  margin-top: 7px;
+  margin-top: 9px;
 }
 
 .vg-figures {
   display: flex;
   flex-wrap: wrap;
-  gap: 34px;
+  gap: 38px;
   align-items: flex-end;
 }
 
 .vg-figures-petites {
   display: flex;
-  gap: 32px;
+  gap: 36px;
   flex-wrap: wrap;
-  padding-bottom: 4px;
+  padding-bottom: 5px;
 }
 
 /* ----------------------------------------------------------- schéma */
@@ -177,16 +222,59 @@
   overflow-x: auto;
   max-width: 100%;
   min-width: 0;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .vg-schema {
   display: block;
   width: 100%;
-  min-width: 820px;
-  max-height: 380px;
+  min-width: 900px;
+  max-height: 440px;
   font-family: inherit;
 }
+
+/* Les liaisons se tracent au chargement, dans le sens de la lecture : les
+   sources entrent, puis le contrôle, puis l'entrepôt, puis les usages. C'est
+   le seul endroit de l'application où l'animation PORTE une information —
+   l'ordre du mouvement est l'ordre du pipeline.
+
+   Chaque tracé porte `pathLength="1"` dans le SVG : la longueur du chemin est
+   alors normalisée à 1, et le même `stroke-dashoffset` convient à un trait de
+   quarante pixels comme à un rail de trois cents. Sans ça, il faudrait mesurer
+   chaque chemin en JavaScript. */
+.vg-liaison {
+  stroke-dasharray: 1;
+  animation: vgTracer 900ms var(--sortie) backwards;
+}
+
+.vg-liaison-1 { animation-delay: 120ms; }
+.vg-liaison-2 { animation-delay: 320ms; }
+.vg-liaison-3 { animation-delay: 520ms; }
+.vg-liaison-4 { animation-delay: 720ms; }
+
+/* Le chemin principal, entre l'entrepôt et les usages : un pointillé qui
+   avance en permanence. C'est le « flux » du nom de la direction. */
+.vg-flux {
+  stroke-dasharray: 7 7;
+  animation: vgCouler 900ms linear infinite;
+}
+
+/* Le trait rouge vers la quarantaine. Il descend après les autres, pour qu'on
+   le voie partir du contrôle qualité. */
+.vg-rejet {
+  stroke-dasharray: 1;
+  animation: vgTracer 700ms var(--sortie) 900ms backwards;
+}
+
+.vg-boite {
+  animation: vgApparaitre 520ms var(--sortie) backwards;
+}
+
+.vg-boite-source { animation-delay: 60ms; }
+.vg-boite-controle { animation-delay: 300ms; }
+.vg-boite-entrepot { animation-delay: 520ms; }
+.vg-boite-usage { animation-delay: 740ms; }
+.vg-boite-quarantaine { animation-delay: 1100ms; }
 
 /* ----------------------------------------------------------- tableaux */
 
@@ -199,32 +287,40 @@
 }
 
 .vg-defilant .vg-table {
-  min-width: 480px;
+  min-width: 520px;
 }
 
 .vg-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: var(--t-base);
 }
 
 .vg-table th {
   text-align: left;
-  font-size: 11.5px;
+  font-size: var(--t-petit);
   font-weight: 600;
   color: var(--vg-ink-3);
-  padding: 0 0 9px;
+  padding: 0 0 11px;
   border-bottom: 1px solid var(--vg-filet-doux);
 }
 
 .vg-table td {
-  padding: 8px 0;
+  padding: 11px 0;
   color: var(--vg-ink-2);
   vertical-align: middle;
 }
 
 .vg-table tbody tr + tr td {
   border-top: 1px solid var(--vg-filet-doux);
+}
+
+.vg-table tbody tr {
+  transition: background var(--transition);
+}
+
+.vg-table tbody tr:hover td {
+  background: #f7fafe;
 }
 
 .vg-chiffre {
@@ -238,11 +334,16 @@
   font-weight: 600;
 }
 
-/* Une série, une couleur : la longueur de la barre dit déjà le classement. */
+/* Une série, une couleur : la longueur de la barre dit déjà le classement.
+   Elle pousse depuis la gauche au chargement — `scaleX` plutôt que `width`,
+   pour que le navigateur n'ait rien à recalculer et que la largeur finale
+   reste exactement celle que le style inline a posée. */
 .vg-barre {
-  height: 14px;
+  height: 16px;
   border-radius: 0 4px 4px 0;
   background: var(--vg-bleu-pale);
+  transform-origin: left center;
+  animation: vgPousser 800ms var(--sortie) 260ms backwards;
 }
 
 .vg-barre.vg-barre-tete {
@@ -250,7 +351,7 @@
 }
 
 .vg-cell-barre {
-  padding: 8px 14px;
+  padding: 11px 16px;
   width: 100%;
 }
 
@@ -268,31 +369,32 @@
 .vg-alerte-tete {
   display: flex;
   align-items: baseline;
-  gap: 14px;
+  gap: 15px;
   flex-wrap: wrap;
 }
 
 .vg-alerte-nombre {
-  font-size: 44px;
+  font-size: 52px;
   font-weight: 600;
   color: var(--vg-rouge);
   letter-spacing: -0.035em;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .vg-alerte p {
-  margin: 14px 0 0;
-  font-size: 13.5px;
+  margin: 16px 0 0;
+  font-size: var(--t-base);
   color: var(--vg-rouge-ink);
-  line-height: 1.6;
+  line-height: var(--interligne-texte);
 }
 
 /* ----------------------------------------------------------- jauge qualité */
 
 .vg-jauge {
   display: flex;
-  height: 26px;
-  border-radius: 5px;
+  height: 30px;
+  border-radius: 6px;
   overflow: hidden;
   background: var(--vg-vert);
 }
@@ -303,17 +405,19 @@
 
 .vg-jauge-rejet {
   background: var(--vg-rouge);
-  min-width: 1px;
+  min-width: 2px;
+  transform-origin: left center;
+  animation: vgPousser 900ms var(--sortie) 400ms backwards;
 }
 
 .vg-jauge-loupe {
-  height: 18px;
-  border-radius: 4px;
+  height: 20px;
+  border-radius: 5px;
 }
 
 .vg-separateur {
-  margin-top: 20px;
-  padding-top: 20px;
+  margin-top: 22px;
+  padding-top: 22px;
   border-top: 1px solid var(--vg-filet-doux);
 }
 
@@ -322,10 +426,10 @@
 .vg-puce {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  padding: 5px 11px;
-  border-radius: 20px;
+  gap: 8px;
+  font-size: var(--t-petit);
+  padding: 6px 13px;
+  border-radius: 22px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -346,7 +450,7 @@
   gap: 12px;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .vg-entete-bloc h2 {
@@ -357,8 +461,72 @@
 .vg-compteurs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px 16px;
+  gap: 26px 18px;
 }
+
+.vg-pipeline {
+  font-size: var(--t-petit);
+  font-weight: 600;
+  color: var(--vg-ink-3);
+  padding: 16px 0 8px;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.vg-vide {
+  font-size: var(--t-base);
+  color: var(--vg-ink-3);
+  line-height: var(--interligne-texte);
+  margin: 0;
+}
+
+/* ----------------------------------------------------------- mouvements */
+
+@keyframes vgPousser {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes vgTracer {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes vgCouler {
+  to {
+    stroke-dashoffset: -14;
+  }
+}
+
+@keyframes vgApparaitre {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vgDeriver {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-60px, 40px);
+  }
+}
+
+/* ----------------------------------------------------------- responsive */
 
 @media (max-width: 520px) {
   .vg-compteurs {
@@ -366,28 +534,18 @@
   }
 }
 
-.vg-pipeline {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--vg-ink-3);
-  padding: 14px 0 7px;
-}
-
-.vg-vide {
-  font-size: 13.5px;
-  color: var(--vg-ink-3);
-  line-height: 1.6;
-  margin: 0;
-}
-
 @media (max-width: 640px) {
   .vg-panel,
   .vg-alerte {
-    padding: 20px 18px;
+    padding: 22px 18px;
   }
 
   .vg-figures,
   .vg-figures-petites {
-    gap: 22px;
+    gap: 24px;
+  }
+
+  .vg-alerte-nombre {
+    font-size: 42px;
   }
 }
