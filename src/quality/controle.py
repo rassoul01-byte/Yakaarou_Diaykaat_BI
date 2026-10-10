@@ -1,5 +1,5 @@
 """
-Moteur de contrôle qualité des données DataFlow360.
+Moteur de contrôle qualité des données Nataal Retail.
 
 F1.5 - Contrôler la conformité des données avant intégration.
 
@@ -1077,7 +1077,7 @@ def afficher_resultat(resultat):
 def main(argv=None):
     """Point d'entrée du moteur de contrôle. Renvoie le code de sortie."""
 
-    parser = argparse.ArgumentParser(description="Moteur de contrôle qualité DataFlow360")
+    parser = argparse.ArgumentParser(description="Moteur de contrôle qualité Nataal Retail")
 
     parser.add_argument(
         "--source",

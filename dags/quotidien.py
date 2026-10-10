@@ -1,4 +1,4 @@
-"""Workflow quotidien DataFlow360 — contrat : docs/contrats/workflow.md
+"""Workflow quotidien Nataal Retail — contrat : docs/contrats/workflow.md
 
 Chaque tâche lance sa commande par un BashOperator. Une tâche est « factice »
 (elle réussit toujours) tant que son nom n'est pas dans REELLES : on la

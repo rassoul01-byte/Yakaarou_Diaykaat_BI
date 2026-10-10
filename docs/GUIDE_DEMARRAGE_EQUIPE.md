@@ -1,6 +1,6 @@
 # Mettre son poste à jour et faire tourner la plateforme
 
-**GROUPE 2 · DataFlow360**
+**GROUPE 2 · Nataal Retail**
 **Sprint 0 clôturé — étiquette `v0.1` · Sprint 1 en cours**
 
 Ce guide sert à deux choses : remettre un poste au niveau de `develop`, et réaliser la **vérification croisée** de fin de sprint. Un sprint n'est terminé que lorsque les cinq membres obtiennent le même résultat, chacun sur sa propre machine.

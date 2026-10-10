@@ -1,4 +1,6 @@
-# Yakaarou Diaykaat BI — DataFlow360
+# Nataal Retail
+
+Nataal Retail (dépôt Yakaarou_Diaykaat_BI, anciennement DataFlow360)
 
 [![CI](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/ci.yml)
 
@@ -28,7 +30,7 @@ Le premier besoin conditionne les quatre autres : c'est le socle. Les quatre usa
 
 ## Architecture
 
-![Architecture générale de DataFlow360](docs/architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](docs/architecture/architecture_dataflow360.png)
 
 La donnée suit **trois circuits** :
 

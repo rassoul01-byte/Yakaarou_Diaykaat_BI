@@ -45,7 +45,7 @@ async def _cycle_de_vie(_: FastAPI):
 
 
 app = FastAPI(
-    title="DataFlow360 — service référentiel",
+    title="Nataal Retail — service référentiel",
     description="Jours fériés brésiliens et taux de change historiques.",
     version="1.0.0",
     lifespan=_cycle_de_vie,

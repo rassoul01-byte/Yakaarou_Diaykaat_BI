@@ -1,6 +1,6 @@
 # Rôles et responsabilités — GROUPE 2
 
-**Projet :** DataFlow360 — plateforme data d'un e-commerçant
+**Projet :** Nataal Retail — plateforme data d'un e-commerçant
 **Arrêté le :** Sprint 0 — révisé au Sprint 5 (§4.3)
 **Révision :** toute modification est validée en réunion de sprint et reportée dans ce fichier.
 

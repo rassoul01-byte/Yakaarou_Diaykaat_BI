@@ -1,4 +1,4 @@
-/** Client HTTP minimal pour l'API Leeral. */
+/** Client HTTP minimal pour l'API Nataal Retail. */
 
 import type {
   AssistantIn,

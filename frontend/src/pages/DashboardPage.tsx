@@ -174,7 +174,7 @@ export default function DashboardPage() {
   return (
     <div className="vg cascade">
       <header>
-        <h1>Yakaarou Diaykaat BI, en un écran</h1>
+        <h1>Nataal Retail, en un écran</h1>
         <p className="vg-chapeau">
           Les ventes, la qualité des données et l&apos;activité du jour. Chaque chiffre de cette
           page vient d&apos;une vue de l&apos;entrepôt : la page les met en forme, elle n&apos;en

@@ -1,4 +1,4 @@
-# Dossier de conception — DataFlow360
+# Dossier de conception — Nataal Retail
 
 **Projet :** plateforme data d'un e-commerçant — GROUPE 2, Orange Digital Center, promotion 8
 **Dépôt :** <https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI>
@@ -323,7 +323,7 @@ Le détail complet est dans `contrats/zones_stockage.md` et `contrats/zone_brute
 
 ## 6. Architecture générale
 
-![Architecture générale de DataFlow360](architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](architecture/architecture_dataflow360.png)
 
 La plateforme est organisée en **trois circuits** qui ne se mélangent pas, parce qu'ils n'ont pas les mêmes exigences de délai.
 

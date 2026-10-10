@@ -1,6 +1,6 @@
 # Contrat — Table de correspondance des produits
 
-**Projet :** DataFlow360  
+**Projet :** Nataal Retail  
 **Sprint :** Sprint 3  
 **Fonctionnalité :** F1.9 — Table de correspondance des produits  
 **Responsable :** Mouhameth DIOP  

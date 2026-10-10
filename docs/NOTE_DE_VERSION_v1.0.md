@@ -1,6 +1,6 @@
 # Note de version — v1.0
 
-**DataFlow360** · GROUPE 2 · Orange Digital Center, promotion 8
+**Nataal Retail** · GROUPE 2 · Orange Digital Center, promotion 8
 **Version :** v1.0, fin du Sprint 5 — « Intelligence artificielle et finalisation »
 **Précédente :** v0.5 (fin du Sprint 4, 5 octobre 2026)
 
