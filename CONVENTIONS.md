@@ -1,4 +1,4 @@
-# Conventions de Travail de l'Équipe — DataFlow360
+# Conventions de Travail de l'Équipe — Nataal Retail
 
 Ce document définit les règles obligatoires de collaboration sur le dépôt Git. Il garantit la traçabilité du code, évite les conflits et assure l'alignement avec le dossier de conception.
 

@@ -1,6 +1,6 @@
 # Politiques de la boutique
 
-Règles décidées pour le projet DataFlow360 et citées par la foire aux questions (`docs/documentaire/faq.jsonl`, champ `source` de la forme `politique:<nom>`). Ce sont des règles de démonstration, **à valider par l'équipe** : toute réponse de la foire aux questions qui les cite doit leur rester fidèle.
+Règles décidées pour le projet Nataal Retail et citées par la foire aux questions (`docs/documentaire/faq.jsonl`, champ `source` de la forme `politique:<nom>`). Ce sont des règles de démonstration, **à valider par l'équipe** : toute réponse de la foire aux questions qui les cite doit leur rester fidèle.
 
 Dernière mise à jour : 2026-10-04.
 

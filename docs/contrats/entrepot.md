@@ -1,6 +1,6 @@
 # Contrat — Modèle en étoile et chargement de l'entrepôt
 
-**Projet :** DataFlow360
+**Projet :** Nataal Retail
 **Sprint :** Sprint 3
 **Fonctionnalité :** F1.10 — Modèle en étoile et chargement de l'entrepôt
 **Responsable :** Aissata DIALLO · **Relecteur :** Seydina WADE

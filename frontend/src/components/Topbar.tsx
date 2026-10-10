@@ -30,7 +30,7 @@ export default function Topbar({ page, onNavigate, onRecharger, apiOnline }: Pro
             <Activity size={19} />
           </span>
           <span className="marque-nom">
-            Leeral<span> · Yakaarou Diaykaat BI</span>
+            Nataal<span> Retail</span>
           </span>
         </a>
 

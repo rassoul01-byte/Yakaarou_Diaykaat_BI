@@ -1,5 +1,5 @@
 """
-Catalogue des règles de qualité — DataFlow360
+Catalogue des règles de qualité — Nataal Retail
 Livrable F1.5 — Responsable : Seydina WADE
 
 Le catalogue constitue la source de vérité des règles de validation.

@@ -1,4 +1,4 @@
-"""Récupération des données sources de DataFlow360.
+"""Récupération des données sources de Nataal Retail.
 
 Télécharge depuis le Drive de l'équipe le jeu de commandes Olist (archive zip)
 et le catalogue produits Rakuten, les range dans la zone brute, puis vérifie

@@ -1,4 +1,4 @@
-# DataFlow360 — dépendances d'exécution
+# Nataal Retail — dépendances d'exécution
 # GROUPE 2 · Sprint 0 · responsable : Ndeye Penda SARR
 #
 # Règle d'équipe : une dépendance entre dans ce fichier par la demande de fusion

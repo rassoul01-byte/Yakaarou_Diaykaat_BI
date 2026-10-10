@@ -1,5 +1,5 @@
 """
-Schémas Pandera - Contrôle qualité DataFlow360.
+Schémas Pandera - Contrôle qualité Nataal Retail.
 
 F1.5 - Catalogue des règles de validation.
 """

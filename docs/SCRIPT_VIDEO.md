@@ -1,4 +1,4 @@
-# Script de la vidéo explicative — DataFlow360
+# Script de la vidéo explicative — Nataal Retail
 
 **Livrable :** vidéo explicative retraçant l'ensemble du projet, de sa conception jusqu'au résultat final.
 **Durée visée :** 18 minutes, dans la fourchette demandée de 15 à 20.
@@ -32,7 +32,7 @@
 
 **Ce qu'on dit**
 
-- Le nom : DataFlow360. Le groupe : GROUPE 2, promotion 8 du Développement Data à l'Orange Digital Center.
+- Le nom : Nataal Retail [explication du nom à compléter]. Le groupe : GROUPE 2, promotion 8 du Développement Data à l'Orange Digital Center.
 - Les membres, un par un, avec leur périmètre : Bachir DEME (recherche et assistant, Product Owner), Mouhameth DIOP (acquisition et flux, Scrum Master), Ndeye Penda SARR (orchestration, restitution, modèle), Seydina WADE (stockage, qualité, intégration continue), Aissata DIALLO (transformation et intégration, départ au Sprint 3).
 - Le domaine : **e-commerce et distribution**.
 - Le problème métier, en une phrase : *une entreprise de commerce en ligne produit ses données dans des systèmes séparés et de qualité inégale, et ne sait donc ni piloter son activité à temps, ni comprendre le départ de ses clients.*
