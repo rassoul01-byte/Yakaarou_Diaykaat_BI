@@ -290,7 +290,26 @@ services:
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules
-    command: sh -c "npm ci --no-audit --no-fund && npm run dev -- --host 0.0.0.0 --port 5173"
+    # `npm ci` supprime node_modules et réinstalle tout : il tournait à CHAQUE
+    # `docker compose up`, alors que le volume `frontend_node_modules` garde
+    # l'installation d'une fois sur l'autre. Sur un montage Windows, c'est une
+    # à trois minutes avant que Vite écoute — et il n'y a pas de pire moment
+    # pour ça que de relancer la pile pendant une démonstration.
+    #
+    # On réinstalle maintenant si, et seulement si, le verrou a changé : sa
+    # somme est gardée dans node_modules, donc une dépendance ajoutée ou
+    # retirée déclenche bien l'installation, et rien d'autre ne la déclenche.
+    command: >
+      sh -c '
+        somme=$$(md5sum package-lock.json | cut -d" " -f1)
+        if [ "$$(cat node_modules/.verrou 2>/dev/null)" != "$$somme" ]; then
+          echo "verrou modifie, installation des dependances"
+          npm ci --no-audit --no-fund && echo "$$somme" > node_modules/.verrou
+        else
+          echo "dependances a jour, installation sautee"
+        fi
+        npm run dev -- --host 0.0.0.0 --port 5173
+      '
     ports: ["127.0.0.1:${FRONTEND_PORT:-5173}:5173"]
     depends_on: [api]
     networks: [dataflow]

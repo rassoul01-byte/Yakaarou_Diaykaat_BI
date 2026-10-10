@@ -274,3 +274,31 @@ def test_le_perimetre_des_ventes_exclut_toujours_les_commandes_annulees(base_mig
 
     for statut in ("canceled", "unavailable"):
         assert statut in definition, f"{statut} n'est plus exclu de v_ventes_retenues"
+
+
+@pytest.mark.integration
+def test_le_segment_et_le_modele_comptent_les_commandes_au_meme_endroit(base_migree):
+    """`sql/028` a sorti le segment du détour par les variables du modèle.
+
+    Avant, `v_segment_a_retenir` lisait `v_historique_client`, qui calculait
+    seize variables pour n'en rendre que cinq : deux secondes de PostgreSQL
+    pour afficher un seul nombre sur le tableau de bord. Les deux vues lisent
+    maintenant `v_socle_client`.
+
+    Ce qu'on garde ici, c'est la propriété qui compte : le nombre de commandes
+    d'une personne est calculé **une seule fois**. Une réécriture qui
+    redonnerait au segment sa propre expression de `commandes >= 2` ferait
+    échouer ce contrôle avant qu'un écart n'apparaisse entre le chiffre du
+    tableau de bord et celui du dossier.
+    """
+    for vue in ("dwh.v_segment_a_retenir", "dwh.v_historique_client"):
+        definition = _un(base_migree, f"SELECT pg_get_viewdef('{vue}', true)")
+        assert "v_socle_client" in definition, (
+            f"{vue} ne lit plus dwh.v_socle_client : le compte des commandes "
+            f"a été redéfini quelque part, et les deux peuvent diverger"
+        )
+
+    # Et la règle du segment est bien celle du dictionnaire, à la date publiée.
+    segment = _un(base_migree, "SELECT pg_get_viewdef('dwh.v_segment_a_retenir', true)")
+    assert "commandes >= 2" in segment
+    assert "v_date_segment" in segment

@@ -81,7 +81,7 @@ export default function AssistantPage() {
               <Bot size={22} />
             </div>
             <div>
-              <strong>Assistant DataFlow360</strong>
+              <strong>Assistant Leeral</strong>
               <span>Recherche documentaire</span>
             </div>
           </div>
