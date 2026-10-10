@@ -71,6 +71,12 @@ COMMANDES = {
     # deux avancent donc en parallèle — une réindexation lente ne doit pas
     # retarder les chiffres de vente.
     "reindexation": f"{PREFIXE} -m recherche.indexer",
+    # `recherche.indexer` écrase les fiches par leur identifiant, mais ne
+    # supprime jamais celles qui ont disparu de la source : son contrôle de
+    # conformité compare « envoyé » à « en base », deux fois le même nombre.
+    # `recherche.etat` compare l'index à la source et sort 1 si l'un dépasse
+    # l'autre — c'est la seule tâche qui voit un document orphelin.
+    "etat_index": f"{PREFIXE} -m recherche.etat",
     "correspondance": f"{PREFIXE} -m integration.correspondance",
     "chargement": f"{PREFIXE} -m integration.chargement",
     "verification": f"{PREFIXE} -m integration.verifier",
@@ -116,6 +122,7 @@ with DAG(
     rapport_rejet = tache("rapport_rejet")
     transformation = tache("transformation")
     reindexation = tache("reindexation")
+    etat_index = tache("etat_index")
     correspondance = tache("correspondance")
     chargement = tache("chargement")
     verification = tache("verification")
@@ -128,4 +135,5 @@ with DAG(
     [controle_olist, controle_catalogue] >> rapport_rejet
     rapport_rejet >> transformation
     transformation >> [correspondance, reindexation]
+    reindexation >> etat_index
     correspondance >> chargement >> verification >> scores_reachat

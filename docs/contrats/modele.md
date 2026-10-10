@@ -13,19 +13,63 @@ et par date de référence. La réponse observée est `a_rachete` (1 = est reven
 
 ## Découpage temporel — jamais aléatoire
 
+**Le protocole qui porte la décision** (`python -m prediction`, une fenêtre) :
+
 | Rôle | Date de référence | Réponse observée sur |
 |---|---|---|
-| Entraînement | 2017-03-31 | les 180 jours suivants |
-| Évaluation | 2017-09-30 | les 180 jours suivants |
+| Entraînement | 2017-03-31 | `(2017-03-31 ; 2017-09-27]` |
+| Évaluation | 2017-09-30 | `(2017-09-30 ; 2018-03-29]` |
 
-L'entraînement ne voit jamais la période d'évaluation. Un découpage aléatoire
-mélangerait des périodes : le modèle apprendrait ce qu'il doit prédire, et ses
-résultats seraient excellents et faux. Aucune fonction de découpage aléatoire
-n'existe dans le code, et un test le vérifie.
+Les deux fenêtres de réponse ne se recouvrent pas : trois jours les séparent.
+C'est ce protocole, et lui seul, qui fonde le choix de retenir la règle plutôt
+que le modèle.
+
+**Le protocole exploratoire** (`prediction.evaluer_multi`,
+`prediction.comparer_algorithmes`) entraîne au 2017-03-31 et évalue sur les
+autres dates de `dwh.v_dates_reference`, élargie à cinq fenêtres par `sql/021`,
+puis agrège par sommes avec un intervalle de Wilson unique
+(`prediction.statistiques.pooler`).
+
+⚠️ **Deux de ces fenêtres sont contaminées, et leurs résultats ne doivent pas
+être présentés comme une mesure.** Les populations sont strictement emboîtées —
+tout client de l'entraînement se retrouve dans chaque fenêtre postérieure — et
+les fenêtres de réponse se recouvrent :
+
+| Date de référence | Fenêtre de réponse | Recouvrement avec l'entraînement |
+|---|---|---|
+| 2016-12-31 | `(2016-12-31 ; 2017-06-29]` | 90 jours, **et antérieure à l'entraînement** |
+| 2017-03-31 *(entraînement)* | `(2017-03-31 ; 2017-09-27]` | — |
+| 2017-06-30 | `(2017-06-30 ; 2017-12-27]` | **89 jours** |
+| 2017-09-30 | `(2017-09-30 ; 2018-03-29]` | aucun |
+| 2017-12-31 | `(2017-12-31 ; 2018-06-29]` | aucun |
+
+Pour la fenêtre du 2017-06-30, un client sans achat entre mars et juin a une
+étiquette d'entraînement égale à son étiquette d'évaluation, avec des variables
+identiques à un décalage constant de 91 jours près. Un modèle assez souple pour
+retenir un client — une forêt sans profondeur bornée, sur 75 positifs — peut
+l'exploiter. L'intervalle poolé est par ailleurs **trop étroit** : les fenêtres
+partagent leurs clients, donc l'effectif effectif est bien inférieur à la somme
+des ciblés.
+
+**L'entraînement ne voit jamais la réponse de la période d'évaluation** dans le
+protocole mono-fenêtre. Aucune fonction de découpage aléatoire n'existe dans le
+code, et un test le vérifie.
 
 ## Contrat de la vue `dwh.v_historique_client` (livrable 1, Bachir)
 
-Colonnes attendues, dans cet ordre de lecture :
+La vue publie **19 colonnes** depuis `sql/022_features_enrichies.sql`. Le
+modèle n'en lit que **13** : la clé, la date de référence, les 11 variables
+ci-dessous et la réponse (`prediction/donnees.py`, constante `VARIABLES`).
+
+⚠️ **Les six variables ajoutées par `sql/022`** — `ecart_type_intervalles`,
+`ratio_commandes_recentes`, `ecart_type_notes`, `ecart_delai_estime_reel`,
+`velocite_achat`, `part_paiement_credit_card` — **ne sont lues par aucun code**.
+Elles restent en base pour un usage futur ; les ajouter au modèle demande de les
+inscrire dans `VARIABLES`, de refaire l'évaluation et de reprendre ce tableau.
+Un essai les ayant incluses a dégradé le résultat (5,07× → 4,44× au top 250,
+commit `8cf7b2e`), d'où le retour aux variables d'origine.
+
+Colonnes lues par le modèle, dans cet ordre :
 
 | Colonne | Définition (calculée **à la date de référence**, jamais après) |
 |---|---|
@@ -122,6 +166,36 @@ davantage.
 
 ## Limites
 
+- **`proba_retour` n'est pas une probabilité, c'est un score de classement.**
+  Le modèle est entraîné avec `class_weight="balanced"`, qui recalibre sur un
+  *a priori* de 50 % au lieu du taux réel de 1,58 %. Un score de 0,6335 — le
+  seuil du top 250 — ne veut donc pas dire « 63 % de chances de revenir ». Le
+  score sert à ordonner, et c'est ainsi qu'il est utilisé partout : top N,
+  rang, segment. Aucune mesure de calibration n'a été faite.
+- **Le garde-fou `verifier_absence_de_fuite` ne peut pas se déclencher sur les
+  données réelles.** Il teste que `recence_jours` et `anciennete_jours` sont
+  positives ; or la vue filtre `date_achat <= date_reference`, donc elles le
+  sont par construction. C'est un contrôle de cohérence d'un jeu fabriqué, pas
+  une détection de fuite. Le vrai contrôle anti-fuite est
+  `test_scorer.py::test_la_cible_de_la_periode_scoree_n_influence_pas_les_scores`,
+  qui falsifie la réponse et vérifie que les scores ne bougent pas.
+- **Le statut final d'une commande est connu après la date de référence.**
+  `v_commandes_retenues` écarte les commandes annulées ou indisponibles : une
+  commande passée avant la date puis annulée après en est exclue, donc l'avenir
+  modifie les variables passées. Limite assumée, documentée dans `sql/018`.
+- **Les hyperparamètres ont été choisis sur le jeu d'évaluation.** Quatre
+  valeurs de `C` comparées, aucun jeu de validation, aucune validation croisée.
+  La conclusion étant négative — aucun réglage ne bat la règle — le biais ne
+  gonfle pas le résultat publié ; il interdirait en revanche de publier un
+  gain obtenu de cette façon.
+- **Les écarts entre algorithmes ne sont pas significatifs.** 120 comparaisons
+  sur le même jeu sans correction de multiplicité, des intervalles marginaux
+  là où les comparaisons sont appariées, et un classement piloté par le top
+  0,5 % et le top 250 — ce dernier reposant sur 14 retours.
+- **Trois des douze algorithmes comparés n'ont aucun traitement du
+  déséquilibre** (`GradientBoosting`, `AdaBoost`, `Bagging`) : ni `class_weight`
+  ni `sample_weight`. La comparaison mêle donc deux traitements de la classe
+  rare.
 - Le modèle est une régression logistique : il capte des tendances, pas des
   interactions fines entre variables.
 - Il décrit un comportement passé de 2017 ; il ne dit rien d'un client dont

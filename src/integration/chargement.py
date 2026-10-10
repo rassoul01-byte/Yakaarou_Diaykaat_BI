@@ -260,11 +260,16 @@ def charger_dim_date(curseur) -> int:
     curseur.execute(
         """
         INSERT INTO dwh.dim_date
-            (date_id, date, annee, trimestre, mois, semaine_iso, jour, nom_jour, nom_mois)
+            (date_id, date, annee, annee_iso, trimestre, mois, semaine_iso,
+             jour, nom_jour, nom_mois)
         SELECT
             to_char(d, 'YYYYMMDD')::integer,
             d::date,
             EXTRACT(YEAR    FROM d)::integer,
+            -- `semaine_iso` appartient à l'année ISO, pas à l'année civile :
+            -- le 2017-01-01 est en semaine 52 de 2016. Les regrouper ensemble
+            -- mettrait le 1er janvier dans la semaine de Noël (sql/025).
+            EXTRACT(ISOYEAR FROM d)::integer,
             EXTRACT(QUARTER FROM d)::integer,
             EXTRACT(MONTH   FROM d)::integer,
             EXTRACT(WEEK    FROM d)::integer,

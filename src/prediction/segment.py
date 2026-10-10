@@ -50,7 +50,12 @@ def paliers(scores: np.ndarray, verite: np.ndarray, tailles=TAILLES) -> list[Pal
     premiers est celui des cent clients que le modèle juge les plus enclins à
     revenir. On compte ensuite combien sont effectivement revenus.
     """
-    ordre = np.argsort(-np.asarray(scores, dtype=float))
+    # `kind="stable"`, comme `classement._ordre` : sans lui, le tri rapide
+    # départage les ex æquo de façon arbitraire, y compris d'un appel à
+    # l'autre. Les deux lectures du même classement doivent suivre la même
+    # règle, sinon le segment et le tableau de gains ne désignent pas les
+    # mêmes clients.
+    ordre = np.argsort(-np.asarray(scores, dtype=float), kind="stable")
     verite = np.asarray(verite, dtype=int)[ordre]
     classes = np.asarray(scores, dtype=float)[ordre]
     total = len(verite)

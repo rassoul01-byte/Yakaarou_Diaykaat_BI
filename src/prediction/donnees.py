@@ -48,7 +48,15 @@ def charger(dsn: str | None = None) -> pd.DataFrame:
         psycopg2.connect(dsn or load_settings().postgres_dsn) as connexion,
         connexion.cursor() as curseur,
     ):
-        curseur.execute(f"SELECT {colonnes} FROM {TABLE}")
+        # `ORDER BY` explicite : sans lui, PostgreSQL ne garantit aucun ordre.
+        # Or le départage des ex æquo au classement est « l'ordre d'origine »
+        # (classement._ordre, tri stable). Pour un modèle à scores discrets —
+        # un arbre de profondeur 8 produit au plus 256 valeurs distinctes pour
+        # 26 000 clients — le top 250 tombe à l'intérieur d'un paquet d'ex
+        # æquo, et son contenu dépendait de l'ordre de lecture en base.
+        # La promesse « deux entraînements donnent les mêmes chiffres »
+        # (contrats/modele.md) n'était donc pas tenue.
+        curseur.execute(f"SELECT {colonnes} FROM {TABLE} ORDER BY {DATE_REFERENCE}, {CLE}")
         noms = [colonne.name for colonne in curseur.description]
         return pd.DataFrame(curseur.fetchall(), columns=noms)
 

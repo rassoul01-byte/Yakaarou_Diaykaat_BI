@@ -347,7 +347,7 @@ pas.
 | | |
 |---|---|
 | **Définition** | Recherches du journal qui ne ramènent aucune fiche de l'index |
-| **Formule** | `requêtes sans résultat ÷ requêtes distinctes × 100` |
+| **Formule** | `recherches sans résultat ÷ recherches analysées × 100` — pondéré par la **fréquence**, pas par requête distincte : une requête tapée cent fois pèse cent fois. C'est ce que calcule `src/recherche/sans_resultat.py`, et un test le verrouille |
 | **Granularité** | Par requête, classée par fréquence |
 | **Source des données** | `staging.v_requetes_frequentes` et l'index `catalogue` |
 | **Calcul** | `python -m recherche.sans_resultat` |
@@ -419,10 +419,24 @@ sur le trafic simulé** : il mesure les exécutions réelles de la plateforme.
 | | |
 |---|---|
 | **Définition** | Signalement déclenché quand le **nombre d'achats** du jour s'écarte à la baisse de ce qu'on observe habituellement le même jour de la semaine |
-| **Formule** | `achats du jour ÷ moyenne des quatre mêmes jours de semaine précédents × 100` |
-| **Granularité** | Journée en cours |
-| **Source des données** | Compteurs du jour |
+| **Formule** | `achats du jour ÷ moyenne des mêmes jours de semaine précédents × 100` |
+| **Calcul** | `staging.v_alerte_ventes` (`sql/026_verdict_de_l_alerte.sql`), qui publie `niveau_pourcent`, `comparable`, `sous_le_seuil` et `jour_complet`. La règle de midi reste dans `src/compteurs/alerte.py` : elle dépend du moment où l'on pose la question, pas de la donnée |
+| **Granularité** | Journée |
+| **Source des données** | `staging.v_achats_par_jour`, alimentée par `staging.evenements_du_jour` |
+| **Consultation** | `python -m compteurs.surveiller_ventes`, page « Temps réel » du tableau de bord, et `GET /api/indicateurs` |
 | **Seuil d'alerte** | **En dessous de 60 % de la moyenne**, et seulement après 12 h |
+| **Historique minimum** | **2 jours** de référence (`JOURS_MINIMUM`). La fenêtre en couvre jusqu'à 4, mais l'alerte se prononce dès 2 ; le nombre réellement comparé est publié dans `jours_compares` et affiché |
+
+**La fenêtre porte sur les quatre dernières *lignes*, pas les quatre dernières
+semaines.** Si un jour de semaine manque — aucun événement ce jour-là, donc
+aucune ligne — la moyenne remonte plus loin dans le temps sans que
+`jours_compares` le signale. C'est la raison pour laquelle ce compteur est
+affiché à côté du niveau.
+
+**Le seuil n'est écrit qu'une fois**, dans `sql/026`. Un test
+(`test_le_seuil_sql_et_le_seuil_python_sont_le_meme`) interdit que la constante
+Python s'en écarte : deux définitions d'un même indicateur finissent toujours
+par diverger.
 
 **Pourquoi le nombre d'achats et non le chiffre d'affaires.** Les événements ne
 portent aucun montant : il n'existe pas de chiffre d'affaires temps réel.
@@ -440,6 +454,13 @@ celle d'une journée entière : alerter à 9 h reviendrait à alerter tous les j
 qu'une baisse réelle** — un consommateur arrêté fait tomber les compteurs à
 zéro. L'alerte se lit donc toujours **avec le retard du flux** : c'est leur
 lecture conjointe qui distingue un problème technique d'un problème commercial.
+
+**Zéro achat et zéro événement ne sont pas le même cas.** Un jour sans aucun
+événement ne produit **aucune ligne** dans `v_achats_par_jour` : il n'y a alors
+rien à comparer, et l'alerte se taisait au lieu de parler. Depuis `sql/026` et
+`compteurs.alerte.flux_interrompu`, un dernier jour connu trop ancien est
+signalé séparément — « aucun flux depuis N jours » — et fait sortir la commande
+en erreur. Une absence de données n'est pas une absence de chute.
 
 ⚠️ **Sur trafic simulé, cette alerte ne détecte rien de réel.** Ce qu'elle
 démontre, c'est le dispositif : une anomalie fabriquée la déclenche, une journée
@@ -459,7 +480,7 @@ démonstration** — le second est le plus important.
 
 | | |
 |---|---|
-| **Définition** | Score entre 0 et 1 estimant la chance qu'un client passe une nouvelle commande dans les 180 jours suivant la date de référence |
+| **Définition** | **Score de classement** entre 0 et 1, qui ordonne les clients du plus au moins susceptible de passer une nouvelle commande dans les 180 jours. **Ce n'est pas une probabilité** : le modèle est entraîné avec des classes pondérées, qui recalibrent sur un *a priori* de 50 % au lieu du taux réel de 1,58 %. Un score de 0,63 ne signifie pas « 63 % de chances de revenir ». Il ne se lit qu'en rang |
 | **Formule** | Sortie du modèle entraîné selon `docs/contrats/modele.md` |
 | **Granularité** | Un score par client, identifié par `customer_unique_id` |
 | **Source des données** | Historique d'achat par client, calculé sur l'entrepôt (`dwh.v_historique_client`) |
@@ -487,7 +508,7 @@ mauvais modèle.
 | | |
 |---|---|
 | **Définition** | Les clients qui ont passé au moins deux commandes avant la date de référence : ceux qui ont déjà prouvé qu'ils reviennent, et à qui il vaut peut-être la peine de s'adresser |
-| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date de référence la plus récente (2017-09-30) |
+| **Formule** | `commandes >= 2`, colonne `commandes` de `dwh.v_historique_client`, à la date publiée par `dwh.v_date_segment` (**2017-09-30**). Cette date est un choix documenté, pas le maximum des fenêtres d'évaluation : élargir `v_dates_reference` ne déplace plus le segment (`sql/024`) |
 | **Granularité** | Une ligne par client (`customer_unique_id`) avec `date_reference`, `commandes`, `montant_total` et `recence_jours` ; l'effectif total se compte sur la vue |
 | **Source des données** | `dwh.v_historique_client` — le segment n'utilise pas le score du modèle |
 | **Calcul** | `dwh.v_segment_a_retenir` (`sql/019_v_segment_a_retenir.sql`) |

@@ -15,11 +15,13 @@ _REQUETES = {
         ORDER BY jour DESC
         LIMIT %(limite)s
     """,
+    # L'étiquette porte l'année ISO, celle à laquelle la semaine appartient :
+    # « 2016-S52 » pour le 1er janvier 2017, et non « 2017-S52 » (sql/025).
     "semaine": """
-        SELECT annee || '-S' || lpad(semaine_iso::text, 2, '0') AS periode,
+        SELECT annee_iso || '-S' || lpad(semaine_iso::text, 2, '0') AS periode,
                chiffre_affaires, commandes, panier_moyen
         FROM dwh.v_ventes_par_semaine
-        ORDER BY annee DESC, semaine_iso DESC
+        ORDER BY annee_iso DESC, semaine_iso DESC
         LIMIT %(limite)s
     """,
     "mois": """

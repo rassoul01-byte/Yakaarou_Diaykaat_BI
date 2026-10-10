@@ -26,6 +26,13 @@ from indicateurs.lecture import collecter
 
 RACINE = Path(__file__).resolve().parents[2]
 VUES = RACINE / "sql" / "010_vues_indicateurs.sql"
+VUES_ISO = RACINE / "sql" / "025_annee_iso.sql"
+
+# Les deux fichiers sont appliqués dans l'ordre des migrations. `dim_date` est
+# créée SANS `annee_iso` ci-dessous : c'est sql/025 qui ajoute la colonne et la
+# remplit depuis `date`, exactement comme sur la base réelle. Le test couvre
+# donc aussi la reprise des lignes déjà chargées.
+MIGRATIONS = (VUES, VUES_ISO)
 
 ENTREPOT_D_ESSAI = """
 DROP SCHEMA IF EXISTS dwh CASCADE;
@@ -82,7 +89,8 @@ def entrepot(dsn_test):
         cnx.autocommit = True
         with cnx.cursor() as curseur:
             curseur.execute(ENTREPOT_D_ESSAI)
-            curseur.execute(VUES.read_text(encoding="utf-8"))
+            for migration in MIGRATIONS:
+                curseur.execute(migration.read_text(encoding="utf-8"))
     return dsn_test
 
 
@@ -149,6 +157,80 @@ def test_la_somme_des_jours_egale_le_total(entrepot):
 def test_chaque_periode_a_sa_vue(entrepot):
     for periode in ("jour", "semaine", "mois"):
         assert collecter(periode=periode)["series"], f"aucune ligne pour {periode}"
+
+
+# --- La frontière d'année ---------------------------------------------------
+#
+# Il manquait le symétrique des deux tests ci-dessus pour la semaine, et le jeu
+# d'essai principal évite les frontières d'année (mars et avril). Les deux
+# ensemble laissaient passer le défaut : `semaine_iso` était appariée à l'année
+# CIVILE, donc le 2017-01-01 — semaine 52 de l'année ISO 2016 — se rangeait dans
+# « 2017-S52 », avec la semaine de Noël 2017. Voir sql/025.
+
+ENTREPOT_FRONTIERE = """
+DROP SCHEMA IF EXISTS dwh CASCADE;
+CREATE SCHEMA dwh;
+
+CREATE TABLE dwh.dim_date (
+    date_id integer PRIMARY KEY, date date, annee integer, mois integer,
+    semaine_iso integer, jour integer);
+CREATE TABLE dwh.dim_produit (
+    produit_id integer PRIMARY KEY, id_produit_olist text, categorie text,
+    categorie_catalogue text, id_fiche_rakuten text, rattache boolean, langue text);
+CREATE TABLE dwh.dim_vendeur (vendeur_id integer PRIMARY KEY, id_vendeur_olist text);
+CREATE TABLE dwh.dim_client (client_id integer PRIMARY KEY, customer_unique_id text);
+CREATE TABLE dwh.fait_commande (
+    order_id text PRIMARY KEY, client_id integer, date_id integer, statut text,
+    montant_paye numeric(12,2), nombre_paiements integer, a_une_ligne_article boolean);
+CREATE TABLE dwh.fait_ligne_commande (
+    order_id text, order_item_id integer, produit_id integer, vendeur_id integer,
+    date_id integer, prix numeric(10,2), frais_port numeric(10,2), quantite integer DEFAULT 1,
+    PRIMARY KEY (order_id, order_item_id));
+
+-- Les deux dates portent la MÊME semaine ISO 52 et la même année civile 2017.
+-- Seule l'année ISO les sépare : 2016 pour le 1er janvier, 2017 pour le 26 décembre.
+INSERT INTO dwh.dim_date VALUES
+    (20170101, '2017-01-01', 2017,  1, 52,  1),
+    (20171226, '2017-12-26', 2017, 12, 52, 26);
+INSERT INTO dwh.dim_produit VALUES (1, 'p-chaise', 'meubles', 'mobilier', 'f-1', true, 'fr');
+INSERT INTO dwh.dim_vendeur VALUES (1, 'v-1');
+INSERT INTO dwh.dim_client  VALUES (1, 'c-1');
+
+INSERT INTO dwh.fait_commande VALUES
+    ('a1', 1, 20170101, 'delivered',  40.00, 1, true),
+    ('a2', 1, 20171226, 'delivered',  60.00, 1, true);
+INSERT INTO dwh.fait_ligne_commande VALUES
+    ('a1', 1, 1, 1, 20170101, 40.00, 4.00, 1),
+    ('a2', 1, 1, 1, 20171226, 60.00, 6.00, 1);
+"""
+
+
+@pytest.fixture
+def entrepot_frontiere(dsn_test):
+    with psycopg2.connect(dsn_test) as cnx:
+        cnx.autocommit = True
+        with cnx.cursor() as curseur:
+            curseur.execute(ENTREPOT_FRONTIERE)
+            for migration in MIGRATIONS:
+                curseur.execute(migration.read_text(encoding="utf-8"))
+    return dsn_test
+
+
+@pytest.mark.integration
+def test_la_somme_des_semaines_egale_le_total(entrepot_frontiere):
+    donnees = collecter(periode="semaine")
+    somme = sum(float(ligne["chiffre_affaires"]) for ligne in donnees["series"])
+
+    assert somme == float(donnees["totaux"]["chiffre_affaires"]) == 100.00
+
+
+@pytest.mark.integration
+def test_le_premier_janvier_n_est_pas_dans_la_semaine_de_noel(entrepot_frontiere):
+    """Deux semaines distinctes, pas une seule ligne à 100 €."""
+    series = collecter(periode="semaine")["series"]
+    par_periode = {ligne["periode"]: float(ligne["chiffre_affaires"]) for ligne in series}
+
+    assert par_periode == {"2016-S52": 40.00, "2017-S52": 60.00}
 
 
 # --- Classements ------------------------------------------------------------

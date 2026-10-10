@@ -84,8 +84,7 @@ Détail et motifs : `docs/dossier_conception.md`, §2.
 
 - **Assistant** : les zéros « mauvais passage » et « réponse à tort » valent sur le jeu gelé (62 questions), pas sur des questions que personne n'a vues. Deux faux refus connus ; le seuil de réponse est proche d'une erreur connue. Piste de suite : un reranker après la recherche vectorielle.
 - `docs/contrats/assistant.md` et `docs/contrats/passages.md` sont encore au statut « brouillon » : à lever avant de taguer, les seuils étant écrits.
-- **Tableau de bord Power BI** : la page « Qualité » est livrée ; les pages ventes, compteurs du jour (« trafic simulé »), segment à retenir et ancrage restent à finaliser.
-- Le DAG `quotidien` (10 tâches) ne lance ni la prédiction ni l'index des passages : ils se lancent à la main.
+- **Tableau de bord Power BI** : les six pages sont livrées. Le taux de réponses ancrées de la page « Assistant » est une zone de texte, pas une lecture de `staging.v_taux_ancrage_global` ; le verdict de l'alerte, sur la page « Temps réel », est également écrit à côté du tableau, la vue ne publiant pas le niveau. Les deux sont à brancher.
 - Couverture du fichier de correspondance des catégories partielle ; requêtes du générateur d'événements peu réalistes ; prix absent du catalogue.
 - Modèle évalué à une seule date ; ses résultats sont fragiles à quelques points près.
 - « Délai de livraison moyen » et « note moyenne » ne figurent pas encore au dictionnaire des indicateurs.

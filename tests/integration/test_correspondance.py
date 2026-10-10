@@ -1,4 +1,11 @@
-"""Tests unitaires de F1.9 sans connexion PostgreSQL réelle."""
+"""Tests unitaires de F1.9 sans connexion PostgreSQL réelle.
+
+Ces tests étaient marqués `integration` alors qu'ils n'ouvrent aucune
+connexion et tournent en un dixième de seconde. Le marqueur les écartait de
+l'intégration continue (`pytest -m "not integration"`), qui perdait donc toute
+la couverture de la correspondance — y compris le test de déterminisme, qui
+est la garantie centrale de `docs/contrats/correspondance.md`.
+"""
 
 from pathlib import Path
 
@@ -10,8 +17,6 @@ from integration.correspondance import (
     construire_correspondance,
     verifier_mapping,
 )
-
-pytestmark = pytest.mark.integration
 
 
 def test_charger_mapping(tmp_path: Path):
