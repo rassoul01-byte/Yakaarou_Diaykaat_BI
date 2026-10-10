@@ -6,10 +6,20 @@ elle parle, et surtout quand elle se tait.
 """
 
 from datetime import date
+from pathlib import Path
 
 import pytest
 
-from compteurs.alerte import HEURE_MINIMALE, JOURS_MINIMUM, SEUIL_POURCENT, Verdict, evaluer
+from compteurs.alerte import (
+    HEURE_MINIMALE,
+    JOURS_MINIMUM,
+    JOURS_SANS_FLUX_TOLERES,
+    SEUIL_POURCENT,
+    Verdict,
+    dernier_jour_connu,
+    evaluer,
+    flux_interrompu,
+)
 
 
 def verdict(achats=10, habituels=20.0, jours=4, heure=14):
@@ -112,6 +122,73 @@ def test_les_seuils_sont_ceux_du_dictionnaire():
     assert SEUIL_POURCENT == 60.0
     assert HEURE_MINIMALE == 12
     assert JOURS_MINIMUM == 2
+    assert JOURS_SANS_FLUX_TOLERES == 1
+
+
+# --- L'arrondi ne décide pas ------------------------------------------------
+
+
+def test_un_niveau_sous_le_seuil_declenche_meme_si_l_arrondi_le_remonte():
+    """240 / 400,25 = 59,96 %, qui s'arrondit à 60,0 %.
+
+    En comparant la valeur arrondie, `60,0 < 60,0` est faux et l'alerte était
+    perdue. C'est le seuil qui décide, pas l'affichage.
+    """
+    v = verdict(achats=240, habituels=400.25)
+
+    assert v.niveau_pourcent == 60.0, "l'affichage reste arrondi"
+    assert v.niveau_exact < SEUIL_POURCENT
+    assert v.alerte is True
+
+
+def test_un_niveau_exactement_au_seuil_ne_declenche_pas():
+    """La frontière reste stricte : 60 % pile n'est pas une chute."""
+    assert verdict(achats=120, habituels=200.0).alerte is False
+
+
+# --- L'absence de flux n'est pas une absence de chute -----------------------
+
+
+def test_un_flux_a_jour_ne_signale_rien():
+    assert flux_interrompu(date(2026, 9, 7), date(2026, 9, 7)) is None
+    assert flux_interrompu(date(2026, 9, 6), date(2026, 9, 7)) is None
+
+
+def test_un_flux_interrompu_est_signale_avec_son_retard():
+    assert flux_interrompu(date(2026, 9, 4), date(2026, 9, 7)) == 3
+
+
+def test_une_vue_vide_ne_signale_pas_un_flux_interrompu():
+    """Sans aucune ligne, on ne sait pas depuis quand : c'est un autre message."""
+    assert flux_interrompu(None, date(2026, 9, 7)) is None
+    assert dernier_jour_connu([]) is None
+
+
+def test_le_dernier_jour_connu_est_le_plus_recent():
+    recent, ancien = verdict(), Verdict(date(2026, 9, 1), 5, 20.0, 4, 14)
+
+    assert dernier_jour_connu([recent, ancien]) == date(2026, 9, 7)
+
+
+# --- Une seule définition du seuil ------------------------------------------
+
+
+def test_le_seuil_sql_et_le_seuil_python_sont_le_meme():
+    """Deux définitions d'un même indicateur finissent toujours par diverger.
+
+    Le seuil vit dans `sql/026_verdict_de_l_alerte.sql`, pour que la vue puisse
+    publier le verdict et que Power BI n'ait pas à le réécrire. La constante
+    Python porte la même valeur, et ce test interdit qu'elles se séparent.
+    """
+    migration = (
+        Path(__file__).resolve().parents[2] / "sql" / "026_verdict_de_l_alerte.sql"
+    ).read_text(encoding="utf-8")
+
+    assert f"< {SEUIL_POURCENT}" in migration, (
+        f"le seuil de la vue ne vaut plus {SEUIL_POURCENT} ; "
+        "aligner sql/026 et compteurs.alerte.SEUIL_POURCENT"
+    )
+    assert f">= {JOURS_MINIMUM}" in migration
 
 
 # --- La lecture d'une ligne de la vue ---------------------------------------
