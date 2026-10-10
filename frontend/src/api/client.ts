@@ -1,4 +1,4 @@
-/** Client HTTP minimal pour l'API DataFlow360. */
+/** Client HTTP minimal pour l'API Leeral. */
 
 import type {
   AssistantIn,
