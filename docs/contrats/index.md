@@ -97,7 +97,7 @@ Un index d'essai de vingt fiches aux mêmes champs suffit pour développer et te
 
 La tolérance aux fautes de frappe, les filtres de prix, les requêtes sans résultat : **F4.2, F4.3 et F4.5, chez Bachir**. L'index fournit la matière, pas l'intelligence de la recherche.
 
-La réindexation automatique dans Airflow — **F4.6** — appelle la commande décrite ici ; la tâche elle-même est un autre livrable.
+La réindexation automatique dans Airflow — **F4.7** — appelle la commande décrite ici ; la tâche elle-même est un autre livrable. (F4.6 est une autre fonctionnalité : mesurer l'évolution du taux de requêtes sans résultat. Les deux ont été confondues pendant le Sprint 4 ; le backlog fait foi.)
 
 ---
 

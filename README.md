@@ -75,12 +75,12 @@ Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »),
 | Supervision de la chaîne et du flux | Fonctionne | `src/supervision/` | — |
 | Recherche produit | Fonctionne ; pas de filtre de prix (le catalogue n'en contient pas) | `src/recherche/` | `recherche.md`, `index.md` |
 | Service référentiel | Fonctionne | `src/referentiel/` | `referentiel.md` |
-| Orchestration quotidienne | Fonctionne, 12 tâches (dont les scores de ré-achat et l'index des passages) | `dags/quotidien.py` | `workflow.md` |
+| Orchestration quotidienne | Fonctionne, 13 tâches (dont les scores de ré-achat et l'index des passages) | `dags/quotidien.py` | `workflow.md` |
 | Modèle de ré-achat | Fait ; ne bat pas la règle simple, résultat publié tel quel | `src/prediction/` | `modele.md` |
 | Segment à retenir | Fait : vue `dwh.v_segment_a_retenir` | `sql/019_v_segment_a_retenir.sql` | dictionnaire |
 | Base documentaire vectorisée (FAQ) | Fait ; indexée chaque jour par le DAG | `src/documentaire/`, `docs/documentaire/` | `faq.md` (brouillon), `passages.md` |
 | Assistant | Branché sur la recherche vectorielle par défaut ; seuils mesurés sur le jeu gelé (62 questions) | `src/assistant/` | `assistant.md` |
-| Tableau de bord Power BI | Page « Qualité » ; les autres pages restent à construire | `dashboards/ventes.pbix` | dictionnaire |
+| Tableau de bord Power BI | Fait : 6 pages (Ventes, Produits, Temps réel, Qualité, Segment, Assistant) | `dashboards/ventes.pbix`, `docs/captures/` | dictionnaire |
 
 Tous les contrats sont dans [`docs/contrats/`](docs/contrats/).
 
@@ -118,11 +118,13 @@ Le DAG `quotidien` (`dags/quotidien.py`, exécution `@daily`) lance chaque étap
 
 ```
 acquisition ───────────▶ controle_olist ────────┐
-                                                ├──▶ rapport_rejet ──▶ transformation ─┬──▶ correspondance ──▶ chargement ──▶ verification
-acquisition_catalogue ─▶ controle_catalogue ────┘                                      └──▶ reindexation
+                                                ├──▶ rapport_rejet ──▶ transformation ─┬──▶ correspondance ──▶ chargement ──▶ verification ──▶ scores_reachat
+acquisition_catalogue ─▶ controle_catalogue ────┘                                      └──▶ reindexation ──▶ etat_index
+
+indexation_passages        (sans dépendance amont : part en même temps que les acquisitions)
 ```
 
-Un rapport de rejet au-dessus du seuil est un échec métier : la tâche n'est pas rejouée. La réindexation du catalogue avance en parallèle du chargement de l'entrepôt, pour qu'une indexation lente ne retarde pas les chiffres de vente.
+Un rapport de rejet au-dessus du seuil est un échec métier : la tâche n'est pas rejouée. La réindexation du catalogue avance en parallèle du chargement de l'entrepôt, pour qu'une indexation lente ne retarde pas les chiffres de vente, et `etat_index` la contrôle en comparant l'index à la zone intermédiaire.
 
 Deux tâches complètent la chaîne : `indexation_passages` (vérifie puis indexe la FAQ, sans dépendance amont) et `scores_reachat` (écrit tous les scores dans `data/scores_reachat.csv`, après la `verification` de l'entrepôt). L'entraînement et l'évaluation du modèle (`python -m prediction`) restent lancés à la main.
 
@@ -209,7 +211,7 @@ Qui fait quoi, qui décide quoi et qui supplée qui : voir [`docs/ROLES.md`](doc
 
 ```
 Yakaarou_Diaykaat_BI/
-├── .github/workflows/       intégration continue (ci.yml : ruff format, ruff check, pytest)
+├── .github/workflows/       intégration continue (ci.yml : ruff, pytest, puis tsc et build du frontend)
 ├── dags/                    workflow Airflow (quotidien.py)
 ├── dashboards/              tableau de bord Power BI (ventes.pbix)
 ├── data/                    données locales — jamais versionnées
@@ -221,6 +223,12 @@ Yakaarou_Diaykaat_BI/
 │   ├── airflow/             image d'Airflow (avec l'environnement Python du projet)
 │   ├── app/                 image du conteneur de travail et du service référentiel
 │   └── postgres/init/       création des bases et des schémas au premier démarrage
+├── frontend/                application web React + TypeScript (Vite) — 3 pages
+│   └── src/
+│       ├── pages/           vue générale, recherche, assistant
+│       ├── components/      barre du haut, squelettes de chargement, bouton de reprise
+│       ├── api/             client HTTP de l'API
+│       └── types/           miroir TypeScript des schémas Pydantic
 ├── docs/
 │   ├── architecture/        schéma d'architecture
 │   ├── captures/            captures du tableau de bord
@@ -340,7 +348,7 @@ docker compose ps
 | elasticsearch, kafka | `healthy` ou `running` |
 | airflow-init | **`exited (0)`** |
 | airflow-webserver | `healthy` |
-| airflow-scheduler, referentiel, app | `running` |
+| airflow-scheduler, referentiel, app, api, frontend | `running` |
 
 **`airflow-init` arrêté avec le code 0 est le comportement attendu** : ce service prépare la base d'Airflow puis s'arrête. Le code 0 signifie qu'il a réussi.
 
@@ -421,6 +429,10 @@ Tous les tests doivent passer. Les tests marqués `integration` sont ignorés pa
 | MongoDB | `localhost:27017` |
 | Kafka | `localhost:29092` |
 | Service référentiel | http://localhost:8010 |
+| API de démonstration | http://localhost:8001 — documentation interactive sur `/docs` |
+| Application web | http://localhost:5173 — vue générale, recherche, assistant |
+
+Au premier démarrage, le service `frontend` installe ses dépendances : comptez une à deux minutes avant que l'application réponde. **Le port 5173 n'est pas un détail** : c'est la seule origine autorisée par le CORS de l'API (`src/api/main.py`). En changer impose d'ajouter la nouvelle origine à `allow_origins`.
 
 Si vous avez changé un port dans `.env`, utilisez le vôtre. Les identifiants sont ceux de votre fichier `.env`. Power BI se connecte à PostgreSQL avec le compte de lecture `POWERBI_UTILISATEUR`, dont le mot de passe est `POWERBI_MOTDEPASSE`.
 
