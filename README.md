@@ -386,6 +386,14 @@ Chaque script peut être relancé sans dommage. `alimenter_referentiel.py` est l
 
 ### 7. Lancer la chaîne quotidienne
 
+**Après chaque `git pull`, et avant de lancer le DAG**, appliquez les nouvelles migrations :
+
+```bash
+docker compose exec app python scripts/appliquer_sql.py
+```
+
+Le code est monté dans les conteneurs : il est à jour dès le `git pull`, mais le schéma de la base ne l'est qu'une fois les migrations appliquées. Le DAG ne les applique pas lui-même. Le script ne rejoue jamais une migration déjà enregistrée.
+
 Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Pour dérouler les mêmes étapes à la main :
 
 ```bash
@@ -481,6 +489,12 @@ Un réglage système doit être augmenté sur la machine hôte. La procédure es
 
 **L'assistant ou `documentaire.indexer` échoue en parlant d'Elasticsearch.**
 L'assistant utilise la recherche vectorielle par défaut : Elasticsearch doit être démarré et les passages indexés (`python -m documentaire.indexer`). Pour travailler hors ligne, lancez-le avec `ASSISTANT_RETROUVEUR=depannage`.
+
+**Une tâche du DAG échoue avec `column "…" of relation "…" does not exist` (ou `relation "…" does not exist`).**
+Le code a été mis à jour par un `git pull`, mais pas le schéma de la base : une migration n'a pas été appliquée. C'est arrivé le 2026-10-10 à la tâche `chargement` (colonne `annee_iso`). Appliquez les migrations, puis relancez la tâche en échec :
+```bash
+docker compose exec app python scripts/appliquer_sql.py
+```
 
 Pour afficher les journaux d'un service : `docker compose logs --tail 30 <service>`.
 
