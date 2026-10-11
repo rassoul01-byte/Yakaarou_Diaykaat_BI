@@ -175,7 +175,7 @@ Aucun périmètre n'est étanche.
 
 - **Bachir est au départ des deux chaînes** (variables, puis assistant) : s'il prend du retard sur les variables, tout s'arrête. Mesure : il livre les variables en premier, en trois jours maximum, et alerte immédiatement si elles ne sont pas livrées au jour 4.
 - **Ndeye Penda est à l'arrivée des deux** (modèle, segment, tableau de bord) : si elle prend du retard, rien ne se termine. Mesure : elle avance sur un jeu fabriqué aux mêmes colonnes et sur la documentation, qui ne dépendent de personne ; le branchement est la dernière étape.
-- **La tâche de priorité P3 F3.6 est désormais dans le périmètre de Ndeye Penda** et reste désignée comme abandonnable si le calendrier se tend. Le modèle est volontairement simple, avec bascule possible vers une règle documentée.
+- **La tâche de priorité P3 F3.6 est désormais dans le périmètre de Ndeye Penda.** Désignée comme abandonnable si le calendrier se tendait, elle a été livrée. La bascule prévue vers une règle documentée a eu lieu : le segment à retenir applique la règle « au moins deux commandes », le modèle ne la battant pas (`docs/contrats/modele.md`, écart E6 du dossier de conception).
 - **La documentation n'est pas sacrifiée** : elle est dans le sprint, et la dernière semaine lui est réservée.
 
 Ces dispositions sont arrêtées à froid, pour ne pas avoir à les décider dans l'urgence. Un départ en cours de projet s'explique : il est consigné ici et dans le dossier de conception, il ne se découvre pas à la soutenance.
