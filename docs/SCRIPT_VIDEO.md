@@ -127,7 +127,7 @@
 
 **Docker** *(Bachir)* — onze services, versions épinglées, chaque port publié sur l'adresse locale uniquement.
 
-**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 940 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 85 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
+**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 948 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 85 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
 
 ---
 

@@ -64,7 +64,7 @@ Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui
 
 ## État actuel
 
-Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10).
+Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10). La version 1.1, de clôture, rassemble les PR #142 à #147 (voir [`docs/NOTE_DE_VERSION_v1.1.md`](docs/NOTE_DE_VERSION_v1.1.md)).
 
 | Usage | État | Code | Contrat |
 |---|---|---|---|
@@ -559,7 +559,7 @@ Plusieurs modules ont leur propre `README.md` : `src/acquisition/`, `src/common/
 | Sprint 2 | Qualité et transformation | Terminé |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | Terminé |
 | Sprint 4 | Temps réel, recherche et supervision | Terminé (tag `v0.5`) |
-| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.0`) |
+| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.1`) |
 
 ---
 

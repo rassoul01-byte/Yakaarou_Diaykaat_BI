@@ -705,7 +705,7 @@ L'intégration continue tourne sur **GitHub Actions**, déclenchée à chaque en
 
 Deux garde-fous complètent ce travail : un **contrôle statique** qui rejoue l'historique des vues sans base (`tests/quality/test_migrations_vues.py`), et un test qui lance **la vraie commande de migration** sur une base jetable (`tests/integration/test_migrations_sur_base_reelle.py`).
 
-**État de la suite à la clôture :** 808 tests unitaires, 85 tests d'intégration PostgreSQL en CI, 47 tests d'intégration restants hors CI (37 exigent Elasticsearch, 3 Kafka, 7 une base PostgreSQL préparée : base `boutique` chargée ou création d'un compte) — c'est la dette qui subsiste (§25).
+**État de la suite à la clôture :** 816 tests unitaires, 85 tests d'intégration PostgreSQL en CI, 47 tests d'intégration restants hors CI (37 exigent Elasticsearch, 3 Kafka, 7 une base PostgreSQL préparée : base `boutique` chargée ou création d'un compte) — c'est la dette qui subsiste (§25).
 
 **Règles de contribution** (`CONVENTIONS.md`) : une branche par fonctionnalité, nommée d'après son code de backlog (`feat/F1.1-collecte-commandes-olist`), une demande de fusion relue par un membre d'un **autre** périmètre, et une tâche n'est close que lorsqu'elle est testée, relue, fusionnée et documentée.
 
