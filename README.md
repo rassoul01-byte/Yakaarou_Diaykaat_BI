@@ -145,7 +145,8 @@ surveiller_ventes ──▶ surveiller_flux      (all_done : part même si les v
 
 - `surveiller_ventes` (`compteurs.surveiller_ventes --jours 1`) juge **la journée en cours** ; les jours passés restent visibles dans l'alerte de la vue générale et par la commande lancée à la main. Il ne fait que lire.
 - `surveiller_flux` (`supervision.surveiller_flux`) ajoute un relevé du retard de chaque groupe Kafka dans `staging.retard_flux`, et signale un lecteur dont le retard grandit trois relevés de suite.
-- Une alerte fait échouer la tâche, sans reprise : un lancement rouge est un verdict, pas une panne. C'est pourquoi le DAG est en pause tant qu'on ne l'active pas.
+- Une alerte fait échouer la tâche, sans reprise : une tâche rouge est un verdict, pas une panne. C'est pourquoi le DAG est en pause tant qu'on ne l'active pas.
+- Le lancement, lui, est jugé sur sa dernière tâche, `surveiller_flux` : il reste vert quand seule `surveiller_ventes` alerte. Le verdict sur les ventes se lit sur la case de cette tâche.
 
 ### Recherche produit
 
@@ -413,7 +414,7 @@ docker compose exec app python scripts/appliquer_sql.py
 
 Le code est monté dans les conteneurs : il est à jour dès le `git pull`, mais le schéma de la base ne l'est qu'une fois les migrations appliquées. Le DAG ne les applique pas lui-même. Le script ne rejoue jamais une migration déjà enregistrée.
 
-Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Le DAG `supervision` reste en pause : ne l'activez que lorsque le flux d'événements tourne, sinon chaque lancement horaire sera rouge. Pour dérouler les mêmes étapes à la main :
+Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Le DAG `supervision` reste en pause : ne l'activez que lorsque le flux d'événements tourne, sinon sa tâche `surveiller_ventes` sera rouge à chaque lancement horaire. Pour dérouler les mêmes étapes à la main :
 
 ```bash
 docker compose exec app python -m acquisition

@@ -5,9 +5,10 @@ Deux tâches, chaque heure :
 - `surveiller_ventes` lance `compteurs.surveiller_ventes --jours 1`. La
   supervision horaire juge **la journée en cours** : sans `--jours 1`, le module
   signale toute journée en chute de ses dix derniers jours, et une seule chute
-  passée laisserait chaque lancement rouge pendant dix jours. Les jours passés
-  restent signalés par l'alerte de la vue générale (`/api/indicateurs`, dix
-  derniers jours) et par `python -m compteurs.surveiller_ventes` lancé à la main.
+  passée laisserait la tâche rouge à chaque lancement pendant dix jours. Les
+  jours passés restent signalés par l'alerte de la vue générale
+  (`/api/indicateurs`, dix derniers jours) et par
+  `python -m compteurs.surveiller_ventes` lancé à la main.
 - `surveiller_flux` lance `supervision.surveiller_flux`, qui ajoute un relevé du
   retard de chaque groupe Kafka dans `staging.retard_flux`.
 
@@ -17,6 +18,9 @@ plus des relevés, qui fausseraient la tendance qu'il surveille.
 
 `surveiller_flux` part même si les ventes sont en alerte (`all_done`) : une chute
 des ventes ne doit pas masquer un consommateur arrêté, souvent sa cause.
+Conséquence : Airflow jugeant un lancement sur sa dernière tâche, le lancement
+reste vert quand seule `surveiller_ventes` alerte. Le verdict sur les ventes se
+lit sur la case de cette tâche.
 
 Le DAG est en pause à sa création : il ne tourne qu'une fois activé dans Airflow.
 """
