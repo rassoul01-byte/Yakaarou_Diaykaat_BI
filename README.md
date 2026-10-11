@@ -58,13 +58,13 @@ La donnée suit **trois circuits** :
 | Conteneurisation | Docker Compose |
 | Intégration continue | GitHub Actions (ruff, pytest) |
 
-Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé seront consignés dans le dossier de conception, en cours de rédaction.
+Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé sont consignés dans le dossier de conception (§23).
 
 ---
 
 ## État actuel
 
-Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »), en phase de clôture. Les Sprints 0 à 4 sont terminés.
+Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10).
 
 | Usage | État | Code | Contrat |
 |---|---|---|---|
@@ -188,10 +188,15 @@ python -m assistant.evaluer                              # évalue sur le jeu de
 - Le jeu de questions (`tests/assistant/jeu_de_questions.jsonl`, 62 questions dont les dix questions pièges de Seydina) est **gelé** depuis le 2026-10-07 (empreinte dans `tests/assistant/jeu_de_questions.gel.json`).
 - Les seuils de l'assistant (0,84 / 0,20 / 0,00) ont été mesurés sur ce jeu gelé : 0 mauvais passage et 0 réponse à tort **sur ce jeu**, ce qui n'est pas une garantie au-delà (limites au §6 de [`assistant.md`](docs/contrats/assistant.md)). Taux de réponses ancrées relevé le 2026-10-08 : 100 % (62/62), voir le dictionnaire des indicateurs. Les seuils de dépannage (0,35 / 0,18 / 0,12) ne servent qu'au retrouveur TF-IDF hors ligne.
 
-### Reste à faire pour clore le Sprint 5
+### Clôture du Sprint 5
 
-- Construire les pages manquantes du tableau de bord (ventes, compteurs du jour, segment, ancrage).
-- Rédiger le dossier de conception, puis publier la version 1.0 : fusion de `develop` dans `main` et tag `v1.0`.
+Le Sprint 5 est terminé.
+
+- Le tableau de bord compte ses six pages : Ventes, Produits, Temps réel, Qualité, Segment, Assistant (captures dans [`docs/captures/`](docs/captures/)).
+- Le dossier de conception est rédigé : [`docs/dossier_conception.md`](docs/dossier_conception.md).
+- La version 1.0 est publiée le 2026-10-10 : `develop` fusionnée dans `main`, tag `v1.0`.
+
+Ce qui reste assumé est consigné dans la dette technique du dossier de conception (§25).
 
 ---
 
@@ -536,7 +541,7 @@ Plusieurs modules ont leur propre `README.md` : `src/acquisition/`, `src/common/
 | Sprint 2 | Qualité et transformation | Terminé |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | Terminé |
 | Sprint 4 | Temps réel, recherche et supervision | Terminé (tag `v0.5`) |
-| Sprint 5 | Intelligence artificielle et finalisation | En cours — voir « Reste à faire pour clore le Sprint 5 » (jeu gelé, seuils et taux d'ancrage faits) |
+| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.0`) |
 
 ---
 
