@@ -15,7 +15,8 @@ name: CI
 # n'étaient visibles que sur une vraie base. Il couvre le chargement de
 # l'entrepôt, l'historisation SCD2, les indicateurs et les migrations elles-mêmes.
 #
-# Restent hors CI les tests qui exigent Elasticsearch, Kafka ou MinIO : c'est
+# Restent hors CI les tests qui exigent Elasticsearch, Kafka ou une base
+# PostgreSQL préparée (base `boutique` chargée, création d'un compte) : c'est
 # la dette qui subsiste, inscrite au dossier de conception.
 on:
   push:
