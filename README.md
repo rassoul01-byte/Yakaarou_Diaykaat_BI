@@ -74,7 +74,7 @@ Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »),
 | Intégration et entrepôt `dwh` | Fonctionne | `src/integration/`, `sql/007_entrepot.sql` | `correspondance.md`, `entrepot.md` |
 | Indicateurs de ventes | Fonctionne | `src/indicateurs/`, `sql/010_vues_indicateurs.sql` | `docs/dictionnaire_indicateurs.md` |
 | Flux d'événements et compteurs du jour | Fonctionne ; trafic **simulé**, aucun montant | `src/generateur/`, `src/compteurs/` | `evenements.md` |
-| Supervision de la chaîne et du flux | Fonctionne | `src/supervision/` | — |
+| Supervision de la chaîne et du flux | Fonctionne ; DAG horaire `supervision`, en pause par défaut | `src/supervision/`, `dags/supervision.py` | — |
 | Recherche produit | Fonctionne ; pas de filtre de prix (le catalogue n'en contient pas) | `src/recherche/` | `recherche.md`, `index.md` |
 | Service référentiel | Fonctionne | `src/referentiel/` | `referentiel.md` |
 | Orchestration quotidienne | Fonctionne, 13 tâches (dont les scores de ré-achat et l'index des passages) | `dags/quotidien.py` | `workflow.md` |
@@ -116,6 +116,13 @@ data/sources/  ──python -m acquisition [--source rakuten]──▶  data/raw
 
 ### Workflow Airflow
 
+Airflow porte **deux DAG** :
+
+| DAG | Fichier | Exécution | Rôle | Au démarrage |
+|---|---|---|---|---|
+| `quotidien` | `dags/quotidien.py` | `@daily` | chaîne par lots, de l'acquisition à l'entrepôt | à activer dans Airflow |
+| `supervision` | `dags/supervision.py` | `@hourly` | alerte sur les ventes du jour, puis retard du flux Kafka | **en pause** (`is_paused_upon_creation`), à activer dans Airflow |
+
 Le DAG `quotidien` (`dags/quotidien.py`, exécution `@daily`) lance chaque étape par une commande `python -m ...` dans un environnement Python séparé. Le seuil de rejet se règle par une variable Airflow : `airflow variables set seuil_rejet 5`.
 
 ```
@@ -129,6 +136,17 @@ indexation_passages        (sans dépendance amont : part en même temps que les
 Un rapport de rejet au-dessus du seuil est un échec métier : la tâche n'est pas rejouée. La réindexation du catalogue avance en parallèle du chargement de l'entrepôt, pour qu'une indexation lente ne retarde pas les chiffres de vente, et `etat_index` la contrôle en comparant l'index à la zone intermédiaire.
 
 Deux tâches complètent la chaîne : `indexation_passages` (vérifie puis indexe la FAQ, sans dépendance amont) et `scores_reachat` (écrit tous les scores dans `data/scores_reachat.csv`, après la `verification` de l'entrepôt). L'entraînement et l'évaluation du modèle (`python -m prediction`) restent lancés à la main.
+
+Le DAG `supervision` lance chaque heure deux tâches :
+
+```
+surveiller_ventes ──▶ surveiller_flux      (all_done : part même si les ventes sont en alerte)
+```
+
+- `surveiller_ventes` (`compteurs.surveiller_ventes --jours 1`) juge **la journée en cours** ; les jours passés restent visibles dans l'alerte de la vue générale et par la commande lancée à la main. Il ne fait que lire.
+- `surveiller_flux` (`supervision.surveiller_flux`) ajoute un relevé du retard de chaque groupe Kafka dans `staging.retard_flux`, et signale un lecteur dont le retard grandit trois relevés de suite.
+- Une alerte fait échouer la tâche, sans reprise : une tâche rouge est un verdict, pas une panne. C'est pourquoi le DAG est en pause tant qu'on ne l'active pas.
+- Le lancement, lui, est jugé sur sa dernière tâche, `surveiller_flux` : il reste vert quand seule `surveiller_ventes` alerte. Le verdict sur les ventes se lit sur la case de cette tâche.
 
 ### Recherche produit
 
@@ -214,7 +232,7 @@ Qui fait quoi, qui décide quoi et qui supplée qui : voir [`docs/ROLES.md`](doc
 ```
 Yakaarou_Diaykaat_BI/
 ├── .github/workflows/       intégration continue (ci.yml : ruff, pytest, puis tsc et build du frontend)
-├── dags/                    workflow Airflow (quotidien.py)
+├── dags/                    workflows Airflow (quotidien.py, supervision.py)
 ├── dashboards/              tableau de bord Power BI (ventes.pbix)
 ├── data/                    données locales — jamais versionnées
 │   ├── sources/             fichiers livrés par les sources (Olist, Rakuten)
@@ -396,7 +414,7 @@ docker compose exec app python scripts/appliquer_sql.py
 
 Le code est monté dans les conteneurs : il est à jour dès le `git pull`, mais le schéma de la base ne l'est qu'une fois les migrations appliquées. Le DAG ne les applique pas lui-même. Le script ne rejoue jamais une migration déjà enregistrée.
 
-Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Pour dérouler les mêmes étapes à la main :
+Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Le DAG `supervision` reste en pause : ne l'activez que lorsque le flux d'événements tourne, sinon sa tâche `surveiller_ventes` sera rouge à chaque lancement horaire. Pour dérouler les mêmes étapes à la main :
 
 ```bash
 docker compose exec app python -m acquisition
