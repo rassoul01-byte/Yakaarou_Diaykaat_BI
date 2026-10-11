@@ -158,7 +158,7 @@ Sur quarante-quatre fonctionnalités, **quatorze ont changé de mains** en cours
 |---|---|
 | **Équilibrage de charge dans un sprint** — un périmètre concentrait trop de livrables d'un coup | F1.6, F1.11, F6.5 (Sprint 2) ; F1.9 (Sprint 3) |
 | **Contrainte matérielle ou de compétence** | F2.1 à F2.3 et F2.6 (Power BI ne tourne que sous Windows) ; F6.1 |
-| **Départ d'Aissata DIALLO au Sprint 3**, et un livrable non réalisé par son porteur | F1.4, F3.1, F3.2 à F3.6 |
+| **Absence d'Aissata DIALLO depuis le Sprint 3**, et un livrable non réalisé par son porteur | F1.4, F3.1, F3.2 à F3.6 |
 
 **La règle appliquée à chaque fois** : le responsable de fond au backlog ne change pas, seule la charge du sprint est partagée, et c'est le responsable de fond qui relit la demande de fusion. C'est ce qui a permis de ne jamais vider un périmètre tout en absorbant les à-coups.
 
@@ -725,7 +725,7 @@ Cinq membres au départ, quatre à l'arrivée. Le détail fait foi dans [`ROLES.
 | **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements |
 | **Ndeye Penda SARR** | Conception et documentation | Orchestration, restitution décisionnelle, modèle de ré-achat |
 | **Seydina WADE** | — | Stockage, qualité des données, base documentaire, intégration continue |
-| **Aissata DIALLO** | — *(a quitté le projet au Sprint 3)* | Transformation et intégration |
+| **Aissata DIALLO** | Relectrice à distance depuis le Sprint 3 | Transformation et intégration |
 
 **Les rôles de conduite s'ajoutent au périmètre technique, ils ne le remplacent pas** : le Product Owner et le Scrum Master développent au même titre que les autres.
 
@@ -849,7 +849,7 @@ Les deux journées les plus denses du projet sont le **7 octobre (61 contributio
 | Ndeye Penda SARR | 168 |
 | Bachir DEME | 75 |
 | Seydina WADE | 61 |
-| Aissata DIALLO | 17 *(départ au Sprint 3)* |
+| Aissata DIALLO | 17 *(absente depuis le Sprint 3)* |
 | Mouhameth DIOP | 12 |
 
 Ces chiffres se reproduisent par `git shortlog -sne --all` et évoluent à chaque contribution.
@@ -911,7 +911,7 @@ Cet échange a un mérite inattendu : **décider ce qu'on compte est un travail 
 
 **F6.1, l'orchestration, passe à SW** : les modules que le workflow appelle sont pour l'essentiel les siens, et la base de métadonnées d'Airflow vit dans son schéma.
 
-**Le Sprint 3 est le pivot du projet.** Avant lui, la donnée est contrôlée mais pas consolidée ; après lui, les quatre usages ont une base commune à lire. C'est aussi le sprint où **Aissata DIALLO a quitté le projet**, en plein milieu du livrable le plus structurant.
+**Le Sprint 3 est le pivot du projet.** Avant lui, la donnée est contrôlée mais pas consolidée ; après lui, les quatre usages ont une base commune à lire. C'est aussi le sprint depuis lequel **Aissata DIALLO ne peut plus être présente**, en plein milieu du livrable le plus structurant.
 
 ### 21.5 Sprint 4 — Temps réel, recherche et supervision
 
@@ -927,7 +927,7 @@ Livrables : compteurs et journal des requêtes (MD), index et source MongoDB (AD
 
 Livrables : variables du modèle (BD), modèle de ré-achat (NPS), base vectorisée (SW), assistant (BD), segment et tableau final (NPS).
 
-**Ce que le départ d'Aissata DIALLO change.** Deux livrables sont redistribués : l'historique d'achat (F3.1) vers Bachir DEME, le modèle (F3.2 à F3.6) vers Ndeye Penda SARR. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
+**Ce que l'absence d'Aissata DIALLO change.** Deux livrables sont redistribués : l'historique d'achat (F3.1) vers Bachir DEME, le modèle (F3.2 à F3.6) vers Ndeye Penda SARR. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
 
 ```
 Bachir (variables) ──────► Ndeye Penda (modèle) ──┐
@@ -953,7 +953,7 @@ Après la révision du Sprint 5. Le détail et les motifs sont dans [`ROLES.md`]
 | **Bachir DEME** | Composition des conteneurs, recherche et filtres, historique d'achat, chaîne complète de l'assistant | F3.1, F4.2, F4.3, F4.5, F4.7, F5.3 à F5.6, F6.4 | **10** |
 | **Seydina WADE** | Zones de stockage, règles de validation, quarantaine, taux de rejet, base documentaire, intégration continue | F1.4, F1.5, F1.6, F1.11, F5.1, F5.2, F6.5 | **7** |
 | **Mouhameth DIOP** | Chargement par lots, générateur d'événements, rejeu chronologique, bus, consommateur, compteurs, journal des recherches | F1.1, F1.2, F1.3, F2.4, F2.5, F4.4 | **6** |
-| **Aissata DIALLO** | Normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue — *livrés avant son départ* | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | **6** |
+| **Aissata DIALLO** | Normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue — *crédités à son nom* | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | **6** |
 
 ### 22.2 Deux rééquilibrages, et pourquoi
 
@@ -963,10 +963,10 @@ Après la révision du Sprint 5. Le détail et les motifs sont dans [`ROLES.md`]
 
 | Code | Livrable | De → vers | Cause |
 |---|---|---|---|
-| F3.1 | Historique d'achat et variables du modèle | Aissata DIALLO → Bachir DEME | Départ en cours de projet. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs du Sprint 3 |
+| F3.1 | Historique d'achat et variables du modèle | Aissata DIALLO → Bachir DEME | Absence depuis le Sprint 3. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs du Sprint 3 |
 | F3.2 à F3.6 | Modèle de ré-achat | Mouhameth DIOP → Ndeye Penda SARR | Livrable non réalisé par son porteur prévu. Elle tient le dictionnaire des indicateurs : elle est la mieux placée pour mesurer le modèle honnêtement |
 
-**Le départ d'Aissata DIALLO.** Il est consigné ici et dans `ROLES.md` — il ne se découvre pas à la soutenance. Ce qu'elle avait livré avant de partir reste crédité à son nom. **Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.**
+Depuis le Sprint 3, Aissata ne peut plus être présente. Elle a continué à relire et approuver les demandes de fusion à distance ; son développement a été repris par l'équipe. Cette situation est consignée ici et dans `ROLES.md` — elle ne se découvre pas à la soutenance. Ce qu'elle a livré reste crédité à son nom. **Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.**
 
 ### 22.3 Le point de vigilance, et la mesure prise
 
@@ -988,7 +988,7 @@ Ces dispositions ont été prises **avant** le sprint, pour ne pas avoir à les 
 | Bachir DEME | **19** | 14 | **10** |
 | Ndeye Penda SARR | — | 11 | **16** |
 | Seydina WADE | — | 7 | 7 |
-| Aissata DIALLO | — | 7 | 6 *(livrées avant son départ)* |
+| Aissata DIALLO | — | 7 | 6 *(créditées à son nom)* |
 | Mouhameth DIOP | — | 6 | 6 |
 
 La charge la plus lourde a changé de personne en cours de projet : elle était sur le Product Owner à la conception, elle est sur la responsable de la documentation à l'arrivée. Les deux fois, le déséquilibre a été **constaté, écrit et traité**, et non subi.
@@ -1019,7 +1019,7 @@ Le risque qui s'est réalisé est celui qui avait été anticipé comme « accep
 | E4 | Compteurs du jour avec chiffre d'affaires | **Compteurs d'activité, sans aucun montant** | Un événement d'achat ne porte pas de prix : un chiffre d'affaires en temps réel serait un montant inventé | `sql/015_compteurs_du_jour.sql`, `evenements.md` |
 | E5 | Recherche avec filtre de prix | **Filtre de prix abandonné** ; la commande refuse `--prix-min` et `--prix-max` avec un message | Le catalogue ne contient aucun prix, et le lien produit ↔ fiche étant arbitraire (E2), en tirer un prix inventerait un montant | `recherche.md` |
 | E6 | Modèle de ré-achat comme base du segment à retenir | **Segment = règle « au moins deux commandes »** ; le modèle reste livré comme résultat négatif | À volume égal (711 clients), la règle retrouve 32 retours, le modèle 18 | §16.1, `modele.md` |
-| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** : F3.1 vers Bachir DEME, F3.2 à F3.6 vers Ndeye Penda SARR | F3.1 : départ d'Aissata DIALLO. F3.2 à F3.6 : livrable non réalisé par son porteur prévu, Mouhameth DIOP | §22.2, `ROLES.md` §4.3 |
+| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** : F3.1 vers Bachir DEME, F3.2 à F3.6 vers Ndeye Penda SARR | F3.1 : absence d'Aissata DIALLO depuis le Sprint 3. F3.2 à F3.6 : livrable non réalisé par son porteur prévu, Mouhameth DIOP | §22.2, `ROLES.md` §4.3 |
 
 **Note sur E1 — pourquoi Pandera plutôt que Great Expectations.** La décision a été prise aux jours 1 et 2 du Sprint 2, pour deux raisons.
 

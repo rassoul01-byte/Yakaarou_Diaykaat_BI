@@ -16,7 +16,7 @@ Ce document fixe qui fait quoi et qui décide quoi. Il complète la section cons
 | **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements | `acquisition/`, `generateur/`, `compteurs/` |
 | **Ndeye Penda SARR** | Conception et documentation | Orchestration, restitution décisionnelle et modèle de ré-achat | `dags/`, `common/`, `prediction/`, `dashboards/` |
 | **Seydina WADE** | — | Stockage, qualité des données, base documentaire et intégration continue | `quality/`, `documentaire/`, `.github/workflows/` |
-| **Aissata DIALLO** (a quitté le projet, §4.3) | — | Transformation et intégration | `transformation/`, `integration/` |
+| **Aissata DIALLO** | Relectrice à distance depuis le Sprint 3 (§4.3) | Transformation et intégration | `transformation/`, `integration/` |
 
 Les rôles de conduite s'ajoutent au périmètre technique, ils ne le remplacent pas. Bachir et Mouhameth développent au même titre que les autres.
 
@@ -78,7 +78,7 @@ Cette règle sert la contribution de chacun plutôt qu'elle ne la limite : si to
 | **Bachir DEME** | Composition des conteneurs, recherche en texte libre et filtres, historique d'achat par client, analyse de sentiment, chaîne complète de l'assistant | F3.1, F4.2, F4.3, F4.5, F4.7, F5.3, F5.4, F5.5, F5.6, F6.4 | 10 |
 | **Ndeye Penda SARR** | Orchestration quotidienne et reprises, dictionnaire des indicateurs, tableau de bord, alertes, journalisation des exécutions, modèle de prédiction du ré-achat | F2.1, F2.2, F2.3, F2.6, F2.7, F3.2, F3.3, F3.4, F3.5, F3.6, F3.7, F4.6, F5.7, F6.1, F6.2, F6.3 | 16 |
 | **Seydina WADE** | Zones de stockage et leurs schémas, règles de validation, quarantaine, taux de rejet, base documentaire, intégration continue et tests automatisés | F1.4, F1.5, F1.6, F1.11, F5.1, F5.2, F6.5 | 7 |
-| **Aissata DIALLO** (a quitté le projet) | Normalisation, décodage du balisage, détection de langue, déduplication, correspondance des produits, schéma en étoile, indexation du catalogue — livrés avant son départ | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | 6 |
+| **Aissata DIALLO — Transformation et intégration · Relectrice à distance depuis le Sprint 3** | Normalisation, décodage du balisage, détection de langue, déduplication, correspondance des produits, schéma en étoile, indexation du catalogue — crédités à son nom | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | 6 |
 | **Mouhameth DIOP** | Chargement par lots, générateur d'événements, rejeu chronologique, bus d'événements, consommateur, compteurs du jour, journal des recherches | F1.1, F1.2, F1.3, F2.4, F2.5, F4.4 | 6 |
 
 **Tâche partagée (livrée) :** la rédaction de la foire aux questions (F5.1) est confiée à Seydina WADE et Aissata DIALLO. Elle est délibérément confiée à deux membres qui ne développent pas l'assistant, pour qu'elle ne dépende pas du calendrier de Bachir.
@@ -109,18 +109,18 @@ Répartition finale : Bachir 14, Ndeye Penda 11, Seydina 7, Aissata 7, Mouhameth
 
 ### 4.3 Révision du Sprint 5
 
-Aissata DIALLO a quitté le projet au Sprint 3 : Ndeye Penda SARR a repris sa part des Sprints 3 et 4. Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
+Aissata DIALLO est absente depuis le Sprint 3, relectrice à distance : Ndeye Penda SARR a repris sa part des Sprints 3 et 4. Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
 
 | Code | Fonctionnalité | De → vers | Motif |
 |---|---|---|---|
-| F3.1 | Historique d'achat par client et variables du modèle | Aissata DIALLO → Bachir DEME | Départ d'Aissata DIALLO en cours de projet. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs de ventes du Sprint 3 |
+| F3.1 | Historique d'achat par client et variables du modèle | Aissata DIALLO → Bachir DEME | Absence d'Aissata DIALLO depuis le Sprint 3. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs de ventes du Sprint 3 |
 | F3.2 à F3.6 | Modèle de ré-achat : entraînement, rééquilibrage, évaluation | Mouhameth DIOP → Ndeye Penda SARR | Le livrable, attribué à Bachir dans la version précédente de ce fichier, était prévu pour Mouhameth DIOP à la répartition du Sprint 5. Il n'a pas été réalisé par lui ; Ndeye Penda SARR l'a repris et réalisé. Elle tient le dictionnaire des indicateurs : elle est la mieux placée pour mesurer le modèle honnêtement |
 
 Mouhameth DIOP reste membre de l'équipe et Scrum Master ; seule sa part du modèle de ré-achat est concernée.
 
 **Conséquence.** Quatre personnes livrent le périmètre de cinq. Les deux chaînes du Sprint 5 ne sont plus parallèles : Bachir DEME est au départ des deux (variables, puis assistant) et Ndeye Penda SARR à l'arrivée des deux (modèle, segment, tableau de bord). Voir le point de vigilance du §9.
 
-Répartition après révision : Ndeye Penda 16, Bachir 10, Seydina 7, Mouhameth 6, Aissata 6 (livrées avant son départ).
+Répartition après révision : Ndeye Penda 16, Bachir 10, Seydina 7, Mouhameth 6, Aissata 6 (créditées à son nom).
 
 ---
 
@@ -143,7 +143,7 @@ En cas de désaccord persistant, la décision est prise à la réunion de sprint
 
 ## 6. Suppléance
 
-Il n'y a pas de suppléant désigné. Aissata DIALLO, suppléante de deux périmètres au Sprint 0, a quitté le projet au Sprint 3. La relecture croisée du §7 (une demande de fusion est relue par un membre d'un autre périmètre) reste en vigueur.
+Il n'y a pas de suppléant désigné. Aissata DIALLO, suppléante de deux périmètres au Sprint 0, est absente depuis le Sprint 3, relectrice à distance. La relecture croisée du §7 (une demande de fusion est relue par un membre d'un autre périmètre) reste en vigueur.
 
 ---
 
@@ -178,4 +178,4 @@ Aucun périmètre n'est étanche.
 - **La tâche de priorité P3 F3.6 est désormais dans le périmètre de Ndeye Penda.** Désignée comme abandonnable si le calendrier se tendait, elle a été livrée. La bascule prévue vers une règle documentée a eu lieu : le segment à retenir applique la règle « au moins deux commandes », le modèle ne la battant pas (`docs/contrats/modele.md`, écart E6 du dossier de conception).
 - **La documentation n'est pas sacrifiée** : elle est dans le sprint, et la dernière semaine lui est réservée.
 
-Ces dispositions sont arrêtées à froid, pour ne pas avoir à les décider dans l'urgence. Un départ en cours de projet s'explique : il est consigné ici et dans le dossier de conception, il ne se découvre pas à la soutenance.
+Ces dispositions sont arrêtées à froid, pour ne pas avoir à les décider dans l'urgence. Une absence en cours de projet s'explique : elle est consignée ici et dans le dossier de conception, elle ne se découvre pas à la soutenance.
