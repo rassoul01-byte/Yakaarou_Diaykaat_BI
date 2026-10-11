@@ -559,7 +559,7 @@ Plusieurs modules ont leur propre `README.md` : `src/acquisition/`, `src/common/
 | Sprint 2 | Qualité et transformation | Terminé |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | Terminé |
 | Sprint 4 | Temps réel, recherche et supervision | Terminé (tag `v0.5`) |
-| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.0`) |
+| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.1`) |
 
 ---
 
