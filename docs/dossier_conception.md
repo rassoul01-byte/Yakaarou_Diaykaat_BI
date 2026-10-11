@@ -189,7 +189,7 @@ C'est une exigence structurante du projet, et non une conséquence : une platefo
 | **SQL** | Base opérationnelle `boutique` — commandes, clients, articles, paiements, vendeurs | Mouhameth DIOP | Sprint 1 |
 | **Temps réel** | Générateur et bus d'événements de navigation | Bachir DEME *(générateur)*, Ndeye Penda SARR *(bus)* | Sprint 1 |
 | **API** | Service référentiel : jours fériés et taux de change | Ndeye Penda SARR | Sprint 3 |
-| **NoSQL** | Catalogue produits servi depuis MongoDB | Aissata DIALLO | Sprint 4 |
+| **NoSQL** | Catalogue produits servi depuis MongoDB | Ndeye Penda SARR | Sprint 4 |
 | **Fichiers historiques** | Exports d'avis clients | Seydina WADE | Sprint 4 |
 
 Les cinq sont livrées à la fin du Sprint 4. Cette exigence ne se rattrape pas en fin de projet : le Sprint 5 est déjà le plus chargé.
