@@ -698,14 +698,14 @@ L'intégration continue tourne sur **GitHub Actions**, déclenchée à chaque en
 | Travail | Ce qu'il exécute | Pourquoi séparé |
 |---|---|---|
 | `controle` | `ruff format --check`, `ruff check`, `pytest -m "not integration"` | Les étapes rapides d'abord : on échoue avant de lancer les tests |
-| `integration-postgres` | Initialisation de la base, `scripts/appliquer_sql.py`, puis 82 tests d'intégration sur un service PostgreSQL 16 | Une erreur de migration n'est visible que sur une vraie base |
+| `integration-postgres` | Initialisation de la base, `scripts/appliquer_sql.py`, puis 85 tests d'intégration sur un service PostgreSQL 16 | Une erreur de migration n'est visible que sur une vraie base |
 | `frontend` | `npm ci`, `npx tsc --noEmit`, `npm run build` | Une erreur TypeScript ne doit pas masquer un test en échec |
 
 **Pourquoi le travail `integration-postgres` existe.** Il a été ajouté le 10 octobre 2026, après que quatre défauts de migration ont atteint la base du projet **alors que la suite de tests était verte** : `CREATE OR REPLACE VIEW` n'autorise que l'ajout de colonnes en fin de liste, et une colonne déclarée dans le chargement mais absente du schéma cassait tout entrepôt bâti à neuf. Aucun de ces défauts n'était visible sans base de données.
 
 Deux garde-fous complètent ce travail : un **contrôle statique** qui rejoue l'historique des vues sans base (`tests/quality/test_migrations_vues.py`), et un test qui lance **la vraie commande de migration** sur une base jetable (`tests/integration/test_migrations_sur_base_reelle.py`).
 
-**État de la suite à la clôture :** 808 tests unitaires, 82 tests d'intégration PostgreSQL en CI, 42 tests d'intégration restants hors CI (Elasticsearch, Kafka, MinIO) — c'est la dette qui subsiste (§25).
+**État de la suite à la clôture :** 808 tests unitaires, 85 tests d'intégration PostgreSQL en CI, 47 tests d'intégration restants hors CI (37 exigent Elasticsearch, 3 Kafka, 7 une base PostgreSQL préparée : base `boutique` chargée ou création d'un compte) — c'est la dette qui subsiste (§25).
 
 **Règles de contribution** (`CONVENTIONS.md`) : une branche par fonctionnalité, nommée d'après son code de backlog (`feat/F1.1-collecte-commandes-olist`), une demande de fusion relue par un membre d'un **autre** périmètre, et une tâche n'est close que lorsqu'elle est testée, relue, fusionnée et documentée.
 
@@ -829,7 +829,7 @@ Ces vingt-cinq jours ne couvrent que la **réalisation**. Le travail de concepti
 | Conséquence | Ce qu'on y voit |
 |---|---|
 | La voie par lots est orchestrée ; **la voie continue et la supervision ne le sont pas** | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent, les cinq commandes du flux et de la surveillance restent manuelles |
-| **42 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
+| **47 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
 | La **pertinence de la recherche n'est pas mesurée** | Construire un jeu de jugements demande du temps calme ; il n'y en a pas eu |
 
 **Ce que l'historique du dépôt confirme.** Relevé le 10 octobre 2026 : **333 contributions sur 22 jours actifs**, pour 25 jours calendaires. Trois jours seulement sans aucune contribution — les 18, 19 et 20 septembre, un vendredi et le week-end qui suit, juste après la clôture du Sprint 0.
@@ -1062,7 +1062,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 | Les rejets du flux d'événements ne sont **jamais persistés** | Ils partent sur `navigation.rebut`, 30 jours de rétention, sans consommateur : zéro ligne du flux en quarantaine | Assumée, `zones_stockage.md` |
 | La pertinence de la recherche produits n'est **pas mesurée** | 6 cas de non-régression et une latence ; ni rappel, ni précision@k, ni jeu de jugements | Assumée |
 | Le seuil de rejet se calcule sur un dénominateur **toutes tables confondues** | Avec ~1,5 M de lignes lues, franchir 5 % exigerait ~75 000 rejets : le garde-fou ne peut pas se déclencher | Assumée |
-| **42 tests d'intégration hors CI** (Elasticsearch, Kafka, MinIO) | Ils ne tournent qu'en local. *Les 82 tests PostgreSQL sont entrés en CI le 10 octobre* | Réduite, reste partielle |
+| **47 tests d'intégration hors CI** (Elasticsearch, Kafka, base PostgreSQL préparée) | Ils ne tournent qu'en local. *Les 85 tests PostgreSQL tournent en CI depuis le 10 octobre* | Réduite, reste partielle |
 | Le backlog vivait **uniquement sur Trello** | Les libellés des besoins n'étaient retrouvables nulle part dans le dépôt : les codes y étaient cités, jamais définis | **Corrigée** : les 44 figurent au §2.2 |
 | Deux documents emploient **F4.6 pour la réindexation**, que le backlog nomme F4.7 | Ambiguïté sur ce qui a été livré sous ce code | **À corriger** dans `contrats/index.md` et la fiche du Sprint 4 |
 | `sql/001` et le Sprint 1 emploient **F1.6 pour les zones de stockage**, que le backlog nomme F1.4 | Même nature : un code réutilisé pour deux choses | **À corriger** |
