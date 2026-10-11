@@ -165,7 +165,7 @@ Aucun périmètre n'est étanche.
 
 - **La revue de code est croisée** : personne ne relit uniquement son propre domaine.
 - **Git, Docker et les conventions d'équipe** ne sont le périmètre de personne : chacun les applique sur sa propre brique.
-- **Une séance de restitution mutuelle** est organisée avant la soutenance. Chaque membre présent y présente son périmètre. Les livrables repris en cours de projet sont présentés par ceux qui les ont repris : Bachir DEME pour F3.1 (attribuée à Aissata DIALLO), Ndeye Penda SARR pour F3.2 à F3.6 (attribués à Mouhameth DIOP). Le périmètre d'Aissata DIALLO, y compris ce qu'elle a livré, est présenté par Ndeye Penda SARR, qui a repris son développement (§4.3). Le jury pose ses questions au hasard, pas au spécialiste.
+- **Une séance de restitution mutuelle** est organisée avant la soutenance. Chaque membre présent y présente son périmètre, afin que tous puissent expliquer l'ensemble de la plateforme. Les livrables repris en cours de projet sont présentés par ceux qui les ont repris : Bachir DEME pour F3.1 (attribuée à Aissata DIALLO), Ndeye Penda SARR pour F3.2 à F3.6 (attribués à Mouhameth DIOP). Le périmètre d'Aissata DIALLO est présenté par Ndeye Penda SARR, qui a repris son développement (§4.3), sauf la correspondance des produits (F1.9), présentée par Mouhameth DIOP, qui l'a réalisée. Le jury pose ses questions au hasard, pas au spécialiste.
 
 ---
 
