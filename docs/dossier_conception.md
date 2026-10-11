@@ -717,7 +717,7 @@ Deux garde-fous complètent ce travail : un **contrôle statique** qui rejoue l'
 
 ## 19. Organisation de l'équipe
 
-Cinq membres au départ, quatre à l'arrivée. Le détail fait foi dans [`ROLES.md`](ROLES.md) ; voici ce qui structure le fonctionnement.
+Cinq membres au départ ; quatre présents à l'arrivée, Aissata DIALLO relisant à distance. Le détail fait foi dans [`ROLES.md`](ROLES.md) ; voici ce qui structure le fonctionnement.
 
 | Membre | Rôle de conduite | Périmètre technique |
 |---|---|---|
