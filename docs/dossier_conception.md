@@ -927,7 +927,7 @@ Livrables : compteurs et journal des requêtes (MD), index et source MongoDB (AD
 
 Livrables : variables du modèle (BD), modèle de ré-achat (NPS), base vectorisée (SW), assistant (BD), segment et tableau final (NPS).
 
-**Ce que l'absence d'Aissata DIALLO change.** Deux livrables sont redistribués : l'historique d'achat (F3.1) vers Bachir DEME, le modèle (F3.2 à F3.6) vers Ndeye Penda SARR. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
+**Ce qui change au Sprint 5.** Deux livrables sont redistribués, pour deux raisons distinctes : l'historique d'achat (F3.1) passe à Bachir DEME, conséquence de l'absence d'Aissata DIALLO ; le modèle (F3.2 à F3.6) passe à Ndeye Penda SARR, le livrable n'ayant pas été réalisé par son porteur prévu, Mouhameth DIOP. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
 
 ```
 Bachir (variables) ──────► Ndeye Penda (modèle) ──┐
