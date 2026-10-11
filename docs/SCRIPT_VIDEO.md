@@ -33,7 +33,7 @@
 **Ce qu'on dit**
 
 - Le nom : Nataal Retail [explication du nom à compléter]. Le groupe : GROUPE 2, promotion 8 du Développement Data à l'Orange Digital Center.
-- Les membres, un par un, avec leur périmètre : Bachir DEME (recherche et assistant, Product Owner), Mouhameth DIOP (acquisition et flux, Scrum Master), Ndeye Penda SARR (orchestration, restitution, modèle), Seydina WADE (stockage, qualité, intégration continue), Aissata DIALLO (transformation et intégration, départ au Sprint 3).
+- Les membres, un par un, avec leur périmètre : Bachir DEME (recherche et assistant, Product Owner), Mouhameth DIOP (acquisition et flux, Scrum Master), Ndeye Penda SARR (orchestration, restitution, modèle), Seydina WADE (stockage, qualité, intégration continue), Aissata DIALLO (transformation et intégration, relectrice à distance depuis le Sprint 3).
 - Le domaine : **e-commerce et distribution**.
 - Le problème métier, en une phrase : *une entreprise de commerce en ligne produit ses données dans des systèmes séparés et de qualité inégale, et ne sait donc ni piloter son activité à temps, ni comprendre le départ de ses clients.*
 - L'objectif de la solution : **construire sa plateforme de données** — collecter, contrôler, consolider, puis exposer à travers quatre usages.
