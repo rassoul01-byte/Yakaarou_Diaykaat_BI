@@ -87,7 +87,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 | F1.7 | Normaliser les formats : dates, montants, libellés de catégories, casse et accents | P1 | AD | AD | S2 | Livré |
 | F1.8 | Dédupliquer les enregistrements sur des clés métier explicites | P1 | AD | AD | S2 | Livré |
 | F1.9 | Construire et appliquer la table de correspondance entre produits vendus et fiches du catalogue | P1 | AD | **MD** | S3 | Livré |
-| F1.10 | Alimenter le référentiel analytique selon un modèle en schéma en étoile | P1 | AD | AD | S3 | Livré |
+| F1.10 | Alimenter le référentiel analytique selon un modèle en schéma en étoile | P1 | AD | AD, **NPS** | S3 | Livré |
 | F1.11 | Calculer et exposer le taux de rejet par source et par règle de qualité | P2 | SW | **NPS** | S2 | Livré |
 
 **F2 — Piloter l'activité en quasi temps réel**
@@ -118,7 +118,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 
 | Code | Fonctionnalité attendue | Prio | Prévu | Réalisé par | Sprint | État |
 |---|---|---|---|---|---|---|
-| F4.1 | Indexer le catalogue produits nettoyé | P2 | AD | AD | S4 | Livré |
+| F4.1 | Indexer le catalogue produits nettoyé | P2 | AD | **NPS** | S4 | Livré |
 | F4.2 | Recherche en texte libre tolérante aux fautes de frappe et aux accents | P2 | BD | BD | S4 | Livré |
 | F4.3 | Proposer des filtres par catégorie et par gamme de prix | P2 | BD | BD | S4 | Livré **sans le filtre de prix** (§23, E5) |
 | F4.4 | Journaliser chaque requête de recherche et le nombre de résultats retournés | P2 | MD | MD | S4 | Livré |
@@ -132,7 +132,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 
 | Code | Fonctionnalité attendue | Prio | Prévu | Réalisé par | Sprint | État |
 |---|---|---|---|---|---|---|
-| F5.1 | Rédiger la foire aux questions : 30 à 50 questions-réponses en cinq thèmes | P2 | SW, AD | SW, AD | S4 | Livré |
+| F5.1 | Rédiger la foire aux questions : 30 à 50 questions-réponses en cinq thèmes | P2 | SW, AD | SW | S4 | Livré |
 | F5.2 | Constituer la base documentaire en associant la FAQ aux fiches produits | P2 | SW | SW | S5 | Livré *(FAQ seule ; voir §25)* |
 | F5.3 | Vectoriser et indexer cette base documentaire | P2 | BD | BD | S5 | Livré |
 | F5.4 | Retrouver les passages pertinents pour une question posée en langage naturel | P2 | BD | BD | S5 | Livré |

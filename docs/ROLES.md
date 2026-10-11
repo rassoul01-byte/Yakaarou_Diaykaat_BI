@@ -81,7 +81,7 @@ Cette règle sert la contribution de chacun plutôt qu'elle ne la limite : si to
 | **Aissata DIALLO — Transformation et intégration · Relectrice à distance depuis le Sprint 3** | Normalisation, décodage du balisage, détection de langue, déduplication, correspondance des produits, schéma en étoile, indexation du catalogue — crédités à son nom | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | 6 |
 | **Mouhameth DIOP** | Chargement par lots, générateur d'événements, rejeu chronologique, bus d'événements, consommateur, compteurs du jour, journal des recherches | F1.1, F1.2, F1.3, F2.4, F2.5, F4.4 | 6 |
 
-**Tâche partagée (livrée) :** la rédaction de la foire aux questions (F5.1) est confiée à Seydina WADE et Aissata DIALLO. Elle est délibérément confiée à deux membres qui ne développent pas l'assistant, pour qu'elle ne dépende pas du calendrier de Bachir.
+**Tâche partagée (livrée) :** la rédaction de la foire aux questions (F5.1) est confiée à Seydina WADE et Aissata DIALLO ; Seydina WADE l'a rédigée. Elle est délibérément confiée à deux membres qui ne développent pas l'assistant, pour qu'elle ne dépende pas du calendrier de Bachir.
 
 ### 4.1 Rééquilibrage effectué en conception
 
@@ -109,7 +109,7 @@ Répartition finale : Bachir 14, Ndeye Penda 11, Seydina 7, Aissata 7, Mouhameth
 
 ### 4.3 Révision du Sprint 5
 
-Aissata DIALLO est absente depuis le Sprint 3, relectrice à distance : Ndeye Penda SARR a repris sa part des Sprints 3 et 4. Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
+Aissata DIALLO est absente depuis le Sprint 3, relectrice à distance : Ndeye Penda SARR a repris l'essentiel de sa part des Sprints 3 et 4 : le chargement de l'entrepôt (F1.10) et l'indexation du catalogue (F4.1) ; Mouhameth DIOP a réalisé la correspondance des produits (F1.9). Au Sprint 5, deux livrables changent de responsable. Les tableaux du §4 donnent la répartition après cette révision ; les sections 4.1 et 4.2 restent l'historique de la conception.
 
 | Code | Fonctionnalité | De → vers | Motif |
 |---|---|---|---|
