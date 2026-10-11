@@ -64,7 +64,7 @@ Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui
 
 ## État actuel
 
-Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10).
+Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10). La version 1.1, de clôture, rassemble les PR #142 à #147 (voir [`docs/NOTE_DE_VERSION_v1.1.md`](docs/NOTE_DE_VERSION_v1.1.md)).
 
 | Usage | État | Code | Contrat |
 |---|---|---|---|
