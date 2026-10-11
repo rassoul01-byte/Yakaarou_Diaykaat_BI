@@ -127,7 +127,7 @@
 
 **Docker** *(Bachir)* — onze services, versions épinglées, chaque port publié sur l'adresse locale uniquement.
 
-**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 890 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 82 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
+**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 940 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 85 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
 
 ---
 
@@ -178,5 +178,5 @@ Chacun parle de **son** périmètre : c'est ce qui rend la vidéo crédible, et 
 ## Trois choses à ne pas faire
 
 1. **Ne pas lire les slides.** La caméra montre la slide, la voix ajoute ce qui n'y est pas écrit — le pourquoi.
-2. **Ne pas masquer un échec.** Le résultat négatif du modèle et les 42 tests hors CI sont dans la vidéo, dits par nous. Un jury qui les découvre seul les compte double.
+2. **Ne pas masquer un échec.** Le résultat négatif du modèle et les 47 tests hors CI sont dans la vidéo, dits par nous. Un jury qui les découvre seul les compte double.
 3. **Ne pas enregistrer la démonstration en direct sans filet.** Faire une prise de secours des quatre séquences, écran par écran, avant la prise finale.
