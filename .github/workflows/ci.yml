@@ -2,13 +2,11 @@ name: CI
 
 # Déclenchée à chaque envoi sur une branche et à chaque demande de fusion vers develop.
 #
-# Deux travaux indépendants, qui échouent séparément : le back (forme, analyse
-# statique, tests) et le front (types, construction). Les séparer évite qu'une
+# Trois travaux indépendants, qui échouent séparément : le back (forme, analyse
+# statique, tests), le front (types, construction) et les tests d'intégration
+# qui n'ont besoin que de PostgreSQL. Séparer le back et le front évite qu'une
 # erreur TypeScript masque un test en échec, et chacun ne s'installe que ce qu'il
 # lui faut.
-#
-# Trois travaux indépendants : le back, le front, et les tests d'intégration
-# qui n'ont besoin que de PostgreSQL.
 #
 # Ce troisième travail a été ajouté le 2026-10-10, après que quatre défauts de
 # migration ont atteint la base du projet alors que la suite était verte : ils
