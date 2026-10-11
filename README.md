@@ -30,7 +30,7 @@ Le premier besoin conditionne les quatre autres : c'est le socle. Les quatre usa
 
 ## Architecture
 
-![Architecture générale de Nataal Retail](docs/architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](docs/architecture/architecture_nataal_retail.png)
 
 La donnée suit **trois circuits** :
 
@@ -58,7 +58,7 @@ La donnée suit **trois circuits** :
 | Conteneurisation | Docker Compose |
 | Intégration continue | GitHub Actions (ruff, pytest) |
 
-Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé sont consignés dans le dossier de conception (§23).
+Le schéma ci-dessus est l'**architecture livrée** (v1.1.1). L'architecture conçue au départ reste dans le dossier de conception (§6). Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé sont consignés dans le dossier de conception (§23).
 
 ---
 

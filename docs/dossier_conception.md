@@ -323,7 +323,13 @@ Le détail complet est dans `contrats/zones_stockage.md` et `contrats/zone_brute
 
 ## 6. Architecture générale
 
-![Architecture générale de Nataal Retail](architecture/architecture_dataflow360.png)
+![Architecture conçue au Sprint 0 (nom d'origine DataFlow360)](architecture/architecture_dataflow360.png)
+
+*Architecture conçue (Sprint 0)*
+
+![Architecture livrée de Nataal Retail (v1.1.1)](architecture/architecture_nataal_retail.png)
+
+*Architecture livrée (v1.1.1)*
 
 La plateforme est organisée en **trois circuits** qui ne se mélangent pas, parce qu'ils n'ont pas les mêmes exigences de délai.
 
