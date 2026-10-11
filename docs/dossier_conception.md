@@ -1019,7 +1019,7 @@ Le risque qui s'est réalisé est celui qui avait été anticipé comme « accep
 | E4 | Compteurs du jour avec chiffre d'affaires | **Compteurs d'activité, sans aucun montant** | Un événement d'achat ne porte pas de prix : un chiffre d'affaires en temps réel serait un montant inventé | `sql/015_compteurs_du_jour.sql`, `evenements.md` |
 | E5 | Recherche avec filtre de prix | **Filtre de prix abandonné** ; la commande refuse `--prix-min` et `--prix-max` avec un message | Le catalogue ne contient aucun prix, et le lien produit ↔ fiche étant arbitraire (E2), en tirer un prix inventerait un montant | `recherche.md` |
 | E6 | Modèle de ré-achat comme base du segment à retenir | **Segment = règle « au moins deux commandes »** ; le modèle reste livré comme résultat négatif | À volume égal (711 clients), la règle retrouve 32 retours, le modèle 18 | §16.1, `modele.md` |
-| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** | Départ d'Aissata DIALLO ; livrable du modèle repris par Ndeye Penda SARR | §22.2, `ROLES.md` §4.3 |
+| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** : F3.1 vers Bachir DEME, F3.2 à F3.6 vers Ndeye Penda SARR | F3.1 : départ d'Aissata DIALLO. F3.2 à F3.6 : livrable non réalisé par son porteur prévu, Mouhameth DIOP | §22.2, `ROLES.md` §4.3 |
 
 **Note sur E1 — pourquoi Pandera plutôt que Great Expectations.** La décision a été prise aux jours 1 et 2 du Sprint 2, pour deux raisons.
 
