@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1600" viewBox="0 0 1440 1600">
+<defs><marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0A6BD4"/></marker><marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1E8449"/></marker><marker id="ad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#64748B"/></marker></defs>
+<rect width="1440" height="1600" fill="#FFFFFF"/>
+<text x="720.0" y="52" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="34" fill="#0F1C2E" font-weight="700" text-anchor="middle">NATAAL RETAIL — ARCHITECTURE GÉNÉRALE</text>
+<text x="720.0" y="86" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#64748B" font-weight="400" text-anchor="middle">Plateforme data d&#x27;un e-commerçant · GROUPE 2 · architecture livrée (v1.1.1)</text>
+<rect x="158" y="112" width="1124" height="158" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="152" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="272.0" y="188.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Base boutique</text>
+<text x="272.0" y="210.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">SQL · PostgreSQL</text>
+<text x="272.0" y="230.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">commandes, clients</text>
+<rect x="394" y="152" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="496.0" y="188.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Service référentiel</text>
+<text x="496.0" y="210.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">API · FastAPI</text>
+<text x="496.0" y="230.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">fériés, taux de change</text>
+<rect x="618" y="152" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="720.0" y="188.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Catalogue produits</text>
+<text x="720.0" y="210.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">NoSQL · MongoDB</text>
+<text x="720.0" y="230.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">84 916 fiches</text>
+<rect x="842" y="152" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="944.0" y="188.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Avis clients</text>
+<text x="944.0" y="210.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Fichiers · CSV</text>
+<text x="944.0" y="230.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">99 224 avis</text>
+<rect x="1066" y="152" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#1E8449" stroke-width="1.6"/>
+<text x="1168.0" y="188.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Générateur de clics</text>
+<text x="1168.0" y="210.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Temps réel · simulé</text>
+<text x="1168.0" y="230.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">navigation</text>
+<rect x="158" y="282" width="1124" height="140" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="322" width="876" height="82" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="608.0" y="359.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Chargement par lots</text>
+<text x="608.0" y="381.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Python · pandas · copie horodatée avec manifeste</text>
+<rect x="1066" y="322" width="204" height="82" rx="10" fill="#FFFFFF" stroke="#1E8449" stroke-width="1.6"/>
+<text x="1168.0" y="359.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Bus d&#x27;événements</text>
+<text x="1168.0" y="381.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Kafka · contrat v1</text>
+<polyline points="272.0,252 272.0,320" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="496.0,252 496.0,320" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="720.0,252 720.0,320" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="944.0,252 944.0,320" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="1168.0,252 1168.0,320" fill="none" stroke="#1E8449" stroke-width="2.2" marker-end="url(#ag)"/>
+<rect x="158" y="434" width="1124" height="112" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="468" width="1040" height="62" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="690.0" y="505.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Zone brute — volume Docker : donnée telle que reçue, immuable, empreintes SHA-256, rejouable</text>
+<polyline points="618,404 618,466" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="1126,404 1126,466" fill="none" stroke="#1E8449" stroke-width="2.2" marker-end="url(#ag)"/>
+<text x="1134" y="444" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="13" fill="#1E8449" font-weight="400" text-anchor="start" font-style="italic">archivage horaire</text>
+<rect x="158" y="558" width="1124" height="136" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="596" width="620" height="82" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="480.0" y="633.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Règles de validation · Pandera</text>
+<text x="480.0" y="655.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">bloquante · non bloquante · silencieuse</text>
+<rect x="830" y="596" width="220" height="82" rx="10" fill="#FFFFFF" stroke="#E63946" stroke-width="1.6"/>
+<text x="940.0" y="633.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Quarantaine</text>
+<text x="940.0" y="655.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">rejets tracés, jamais purgée</text>
+<polyline points="480,530 480,594" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="790,637 828,637" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<rect x="158" y="706" width="1124" height="136" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="744" width="420" height="82" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="380.0" y="781.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Transformation</text>
+<text x="380.0" y="803.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">normalisation · décodage · langue · déduplication</text>
+<rect x="630" y="744" width="420" height="82" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="840.0" y="781.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">Intégration</text>
+<text x="840.0" y="803.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">correspondance par catégorie · vérification</text>
+<polyline points="380,678 380,742" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="590,785 628,785" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<rect x="158" y="854" width="1124" height="168" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="892" width="300" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="320.0" y="928.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Entrepôt</text>
+<text x="320.0" y="950.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">PostgreSQL · 2 faits, 4 dimensions</text>
+<text x="320.0" y="970.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">historisation SCD2</text>
+<rect x="490" y="892" width="270" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="625.0" y="928.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Index du catalogue</text>
+<text x="625.0" y="950.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Elasticsearch</text>
+<text x="625.0" y="970.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">tolérant aux fautes</text>
+<rect x="780" y="892" width="270" height="100" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="915.0" y="928.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Index de la FAQ</text>
+<text x="915.0" y="950.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Elasticsearch · vecteurs</text>
+<text x="915.0" y="970.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">FAQ rédigée par l&#x27;équipe</text>
+<rect x="1066" y="892" width="204" height="100" rx="10" fill="#FFFFFF" stroke="#1E8449" stroke-width="1.6"/>
+<text x="1168.0" y="928.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Compteurs du jour</text>
+<text x="1168.0" y="950.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">consommateur Kafka</text>
+<text x="1168.0" y="970.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">→ PostgreSQL</text>
+<polyline points="840,826 840,860 320,860 320,890" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="500,826 500,870 625,870 625,890" fill="none" stroke="#64748B" stroke-width="2.2" stroke-dasharray="7,5" marker-end="url(#ad)"/>
+<polyline points="915,870 915,890" fill="none" stroke="#64748B" stroke-width="2.2" stroke-dasharray="7,5" marker-end="url(#ad)"/>
+<polyline points="1240,404 1240,890" fill="none" stroke="#1E8449" stroke-width="2.2" marker-end="url(#ag)"/>
+<text x="1258" y="700" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="13" fill="#1E8449" font-weight="400" text-anchor="middle" font-style="italic" transform="rotate(90 1258 700)">ne passe pas par l&#x27;entrepôt</text>
+<rect x="158" y="1034" width="1124" height="214" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="1072" width="250" height="96" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="295.0" y="1106.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Tableau de bord</text>
+<text x="295.0" y="1128.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Power BI · lecture seule</text>
+<text x="295.0" y="1148.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">6 pages</text>
+<rect x="440" y="1072" width="250" height="96" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="565.0" y="1106.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Modèle de ré-achat</text>
+<text x="565.0" y="1128.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">régression logistique</text>
+<text x="565.0" y="1148.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">résultat négatif publié</text>
+<rect x="710" y="1072" width="260" height="96" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="840.0" y="1106.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Recherche produit</text>
+<text x="840.0" y="1128.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">Elasticsearch</text>
+<text x="840.0" y="1148.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">fautes de frappe, catégorie</text>
+<rect x="990" y="1072" width="280" height="96" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="1130.0" y="1106.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="18" fill="#0F1C2E" font-weight="700" text-anchor="middle">Assistant</text>
+<text x="1130.0" y="1128.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">sélectionne et cite</text>
+<text x="1130.0" y="1148.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">sans génération de texte</text>
+<rect x="710" y="1184" width="560" height="52" rx="10" fill="#E7F0FD" stroke="#4CA7F8" stroke-width="1.6"/>
+<text x="990.0" y="1216.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#0F1C2E" font-weight="700" text-anchor="middle">API FastAPI · application web React</text>
+<polyline points="290,992 290,1070" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="400,992 400,1040 565,1040 565,1070" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="625,992 625,1030 840,1030 840,1070" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="915,992 915,1022 1130,1022 1130,1070" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="1106,992 1106,1012 385,1012 385,1070" fill="none" stroke="#1E8449" stroke-width="2.2" marker-end="url(#ag)"/>
+<rect x="158" y="1260" width="1124" height="132" rx="6" fill="#F5F8FD" stroke="#DCE6F4" stroke-width="1"/>
+<rect x="170" y="1298" width="250" height="78" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="295.0" y="1333.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#0F1C2E" font-weight="700" text-anchor="middle">Alerte sur les ventes</text>
+<text x="295.0" y="1355.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">chute vs habitude du jour</text>
+<rect x="440" y="1298" width="250" height="78" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="565.0" y="1333.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#0F1C2E" font-weight="700" text-anchor="middle">Segment à retenir</text>
+<text x="565.0" y="1355.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">règle ≥ 2 commandes · 711</text>
+<rect x="710" y="1298" width="260" height="78" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="840.0" y="1333.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#0F1C2E" font-weight="700" text-anchor="middle">Requêtes sans résultat</text>
+<text x="840.0" y="1355.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">identifiées dans le journal</text>
+<rect x="990" y="1298" width="280" height="78" rx="10" fill="#FFFFFF" stroke="#0852A3" stroke-width="1.6"/>
+<text x="1130.0" y="1333.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="17" fill="#0F1C2E" font-weight="700" text-anchor="middle">Réponses citées ou refusées</text>
+<text x="1130.0" y="1355.0" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle">taux de réponses ancrées</text>
+<polyline points="250,1168 250,1296" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="350,1168 350,1265 565,1265 565,1296" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="840,1236 840,1296" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<polyline points="1130,1236 1130,1296" fill="none" stroke="#0A6BD4" stroke-width="2.2" marker-end="url(#ab)"/>
+<text x="170" y="134" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">1 — SOURCES</text>
+<text x="170" y="304" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">2 — ACQUISITION</text>
+<text x="170" y="456" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">3 — STOCKAGE BRUT</text>
+<text x="170" y="580" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">4 — CONTRÔLE QUALITÉ</text>
+<text x="170" y="728" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">5 — TRANSFORMATION ET INTÉGRATION</text>
+<text x="170" y="876" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">6 — STOCKAGE EXPLOITABLE</text>
+<text x="170" y="1056" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">7 — EXPLOITATION</text>
+<text x="170" y="1282" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#0A6BD4" font-weight="700" stroke="#F5F8FD" stroke-width="7" paint-order="stroke" stroke-linejoin="round">8 — RÉSULTATS ET DÉCISION</text>
+<rect x="20" y="282" width="122" height="966" rx="12" fill="#FFFFFF" stroke="#D9A300" stroke-width="2"/>
+<text x="70" y="765" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#D9A300" font-weight="700" text-anchor="middle" transform="rotate(-90 70 765)">ORCHESTRATION</text>
+<text x="104" y="765" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle" transform="rotate(-90 104 765)">Airflow · DAG quotidien (13 tâches) · DAG supervision (chaque heure) · voie continue hors Airflow</text>
+<rect x="1298" y="282" width="122" height="966" rx="12" fill="#FFFFFF" stroke="#1E8449" stroke-width="2"/>
+<text x="1348" y="765" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="24" fill="#1E8449" font-weight="700" text-anchor="middle" transform="rotate(90 1348 765)">SUPERVISION</text>
+<text x="1382" y="765" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="14" fill="#44566E" font-weight="400" text-anchor="middle" transform="rotate(90 1382 765)">journal des exécutions · retard du flux · alerte sur les ventes · taux de rejet</text>
+<rect x="20" y="1410" width="1400" height="96" rx="12" fill="#F5F8FD" stroke="#0852A3" stroke-width="1.6"/>
+<line x1="720" y1="1426" x2="720" y2="1490" stroke="#DCE6F4" stroke-width="2"/>
+<text x="370" y="1448" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">CONTENEURISATION</text>
+<text x="370" y="1478" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#44566E" font-weight="400" text-anchor="middle">Docker Compose · 11 services · une commande pour tout démarrer</text>
+<text x="1070" y="1448" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="19" fill="#0F1C2E" font-weight="700" text-anchor="middle">INTÉGRATION CONTINUE</text>
+<text x="1070" y="1478" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#44566E" font-weight="400" text-anchor="middle">GitHub Actions · 3 travaux : contrôle, intégration PostgreSQL, front</text>
+<line x1="300" y1="1550" x2="360" y2="1550" stroke="#0A6BD4" stroke-width="2.5"/>
+<text x="372" y="1555" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#44566E" font-weight="400" text-anchor="start">voie par lots (quotidien)</text>
+<line x1="640" y1="1550" x2="700" y2="1550" stroke="#1E8449" stroke-width="2.5"/>
+<text x="712" y="1555" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#44566E" font-weight="400" text-anchor="start">voie continue (au fil de l&#x27;eau)</text>
+<line x1="990" y1="1550" x2="1050" y2="1550" stroke="#64748B" stroke-width="2.5" stroke-dasharray="7,5"/>
+<text x="1062" y="1555" font-family="Carlito, Calibri, 'Segoe UI', Arial, sans-serif" font-size="15" fill="#44566E" font-weight="400" text-anchor="start">indexation</text>
+</svg>

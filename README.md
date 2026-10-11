@@ -30,7 +30,7 @@ Le premier besoin conditionne les quatre autres : c'est le socle. Les quatre usa
 
 ## Architecture
 
-![Architecture générale de Nataal Retail](docs/architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](docs/architecture/architecture_nataal_retail.png)
 
 La donnée suit **trois circuits** :
 
