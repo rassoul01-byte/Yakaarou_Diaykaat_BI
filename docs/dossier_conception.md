@@ -828,7 +828,7 @@ Ces vingt-cinq jours ne couvrent que la **réalisation**. Le travail de concepti
 
 | Conséquence | Ce qu'on y voit |
 |---|---|
-| La voie par lots est orchestrée ; **la voie continue et la supervision ne le sont pas** | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent, les cinq commandes du flux et de la surveillance restent manuelles |
+| La voie par lots et la surveillance sont orchestrées ; **la voie continue ne l'est pas** | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent depuis le début ; la surveillance (`compteurs.surveiller_ventes`, puis `supervision.surveiller_flux`) n'est orchestrée qu'après la version 1.0, par le DAG horaire `supervision`, en pause à sa création ; trois commandes restent manuelles (`compteurs`, `supervision`, `zone_brute`) |
 | **47 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
 | La **pertinence de la recherche n'est pas mesurée** | Construire un jeu de jugements demande du temps calme ; il n'y en a pas eu |
 
@@ -1058,7 +1058,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 
 | Dette | Conséquence | Statut |
 |---|---|---|
-| **La voie continue et la supervision ne sont pas orchestrées.** La voie par lots l'est : le DAG `quotidien` enchaîne ses 13 tâches | Cinq commandes restent manuelles — `compteurs`, `compteurs.surveiller_ventes`, `supervision`, `supervision.surveiller_flux`, `zone_brute`. **Personne n'est prévenu automatiquement d'une chute des ventes** | Assumée |
+| **La voie continue n'est pas orchestrée.** La voie par lots l'est (DAG `quotidien`, 13 tâches), la surveillance aussi : le DAG horaire `supervision` lance `compteurs.surveiller_ventes` puis `supervision.surveiller_flux`. Il est **en pause à sa création** et ne tourne qu'une fois activé | Trois commandes restent manuelles — `compteurs`, `supervision`, `zone_brute`. Tant que le DAG `supervision` n'est pas activé, **personne n'est prévenu automatiquement d'une chute des ventes** ; activé, une alerte rend sa tâche rouge dans Airflow, sans autre notification | Réduite, reste partielle |
 | Les rejets du flux d'événements ne sont **jamais persistés** | Ils partent sur `navigation.rebut`, 30 jours de rétention, sans consommateur : zéro ligne du flux en quarantaine | Assumée, `zones_stockage.md` |
 | La pertinence de la recherche produits n'est **pas mesurée** | 6 cas de non-régression et une latence ; ni rappel, ni précision@k, ni jeu de jugements | Assumée |
 | Le seuil de rejet se calcule sur un dénominateur **toutes tables confondues** | Avec ~1,5 M de lignes lues, franchir 5 % exigerait ~75 000 rejets : le garde-fou ne peut pas se déclencher | Assumée |
