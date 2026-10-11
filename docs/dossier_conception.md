@@ -1071,7 +1071,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 | Prix absent du catalogue | Pas de filtre de prix, pas de montant en temps réel (E4, E5) | Assumée, §23 |
 | « Délai de livraison moyen » et « note moyenne » absents du dictionnaire | Variables utilisées par le modèle, non publiées comme indicateurs | Inscrits en dette, à valider par le Product Owner |
 | Modèle évalué à **une seule date**, 75 retours à l'entraînement | Écarts de quelques points fragiles | Limite écrite dans `modele.md` |
-| Tableau de bord : deux chiffres écrits en dur | Le taux d'ancrage de la page « Assistant » et le verdict de l'alerte ne bougeront pas au rafraîchissement | **À brancher avant la démonstration** |
+| Tableau de bord : deux chiffres écrits en dur | Le taux d'ancrage de la page « Assistant » et le verdict de l'alerte ne bougeront pas au rafraîchissement | **Corrigée** : le taux d'ancrage lit `staging.v_taux_ancrage_global`, le verdict lit `staging.v_alerte_ventes` |
 | La base documentaire (F5.2) devait associer la FAQ **aux fiches produits** | Seule la FAQ est vectorisée ; l'assistant ne répond sur aucun produit | Assumée. Le périmètre de l'assistant est la FAQ, et il le dit |
 
 ---
