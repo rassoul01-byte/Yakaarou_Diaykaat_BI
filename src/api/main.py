@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import assistant, indicateurs, recherche
 
-app = FastAPI(title="DataFlow360 API", version="1.0")
+app = FastAPI(title="Nataal Retail API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,

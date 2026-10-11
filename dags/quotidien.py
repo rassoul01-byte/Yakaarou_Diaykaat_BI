@@ -1,4 +1,4 @@
-"""Workflow quotidien DataFlow360 — contrat : docs/contrats/workflow.md
+"""Workflow quotidien Nataal Retail — contrat : docs/contrats/workflow.md
 
 Chaque tâche lance sa commande par un BashOperator. Une tâche est « factice »
 (elle réussit toujours) tant que son nom n'est pas dans REELLES : on la
@@ -15,8 +15,8 @@ from airflow.operators.bash import BashOperator
 PY = "/home/airflow/venv-projet/bin/python"
 PREFIXE = f"cd /opt/airflow && {PY}"
 
-# Seuil de rejet lu dans une variable Airflow, 5 par défaut :
-#   airflow variables set seuil_rejet 0.05
+# Seuil de rejet lu dans une variable Airflow, en pourcentage, 5 par défaut :
+#   airflow variables set seuil_rejet 5
 SEUIL = "{{ var.value.get('seuil_rejet', '5') }}"
 
 

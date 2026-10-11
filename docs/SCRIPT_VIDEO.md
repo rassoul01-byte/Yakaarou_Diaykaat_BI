@@ -1,4 +1,4 @@
-# Script de la vidéo explicative — DataFlow360
+# Script de la vidéo explicative — Nataal Retail
 
 **Livrable :** vidéo explicative retraçant l'ensemble du projet, de sa conception jusqu'au résultat final.
 **Durée visée :** 18 minutes, dans la fourchette demandée de 15 à 20.
@@ -32,8 +32,8 @@
 
 **Ce qu'on dit**
 
-- Le nom : DataFlow360. Le groupe : GROUPE 2, promotion 8 du Développement Data à l'Orange Digital Center.
-- Les membres, un par un, avec leur périmètre : Bachir DEME (recherche et assistant, Product Owner), Mouhameth DIOP (acquisition et flux, Scrum Master), Ndeye Penda SARR (orchestration, restitution, modèle), Seydina WADE (stockage, qualité, intégration continue), Aissata DIALLO (transformation et intégration, départ au Sprint 3).
+- Le nom : Nataal Retail [explication du nom à compléter]. Le groupe : GROUPE 2, promotion 8 du Développement Data à l'Orange Digital Center.
+- Les membres, un par un, avec leur périmètre : Bachir DEME (recherche et assistant, Product Owner), Mouhameth DIOP (acquisition et flux, Scrum Master), Ndeye Penda SARR (orchestration, restitution, modèle), Seydina WADE (stockage, qualité, intégration continue), Aissata DIALLO (transformation et intégration, relectrice à distance depuis le Sprint 3).
 - Le domaine : **e-commerce et distribution**.
 - Le problème métier, en une phrase : *une entreprise de commerce en ligne produit ses données dans des systèmes séparés et de qualité inégale, et ne sait donc ni piloter son activité à temps, ni comprendre le départ de ses clients.*
 - L'objectif de la solution : **construire sa plateforme de données** — collecter, contrôler, consolider, puis exposer à travers quatre usages.
@@ -127,7 +127,7 @@
 
 **Docker** *(Bachir)* — onze services, versions épinglées, chaque port publié sur l'adresse locale uniquement.
 
-**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 890 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 82 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
+**CI/CD et tests** *(Bachir)* — trois travaux indépendants, 948 tests. Raconter l'histoire du troisième travail : *quatre défauts de migration ont atteint notre base alors que la suite était verte, parce qu'aucun test ne touchait une vraie base. Nous avons ajouté 85 tests d'intégration PostgreSQL à la chaîne, et deux garde-fous sur les migrations.*
 
 ---
 
@@ -178,5 +178,5 @@ Chacun parle de **son** périmètre : c'est ce qui rend la vidéo crédible, et 
 ## Trois choses à ne pas faire
 
 1. **Ne pas lire les slides.** La caméra montre la slide, la voix ajoute ce qui n'y est pas écrit — le pourquoi.
-2. **Ne pas masquer un échec.** Le résultat négatif du modèle et les 42 tests hors CI sont dans la vidéo, dits par nous. Un jury qui les découvre seul les compte double.
+2. **Ne pas masquer un échec.** Le résultat négatif du modèle et les 47 tests hors CI sont dans la vidéo, dits par nous. Un jury qui les découvre seul les compte double.
 3. **Ne pas enregistrer la démonstration en direct sans filet.** Faire une prise de secours des quatre séquences, écran par écran, avant la prise finale.

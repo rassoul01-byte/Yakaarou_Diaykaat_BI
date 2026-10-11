@@ -1,4 +1,4 @@
-# Dossier de conception — DataFlow360
+# Dossier de conception — Nataal Retail
 
 **Projet :** plateforme data d'un e-commerçant — GROUPE 2, Orange Digital Center, promotion 8
 **Dépôt :** <https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI>
@@ -87,7 +87,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 | F1.7 | Normaliser les formats : dates, montants, libellés de catégories, casse et accents | P1 | AD | AD | S2 | Livré |
 | F1.8 | Dédupliquer les enregistrements sur des clés métier explicites | P1 | AD | AD | S2 | Livré |
 | F1.9 | Construire et appliquer la table de correspondance entre produits vendus et fiches du catalogue | P1 | AD | **MD** | S3 | Livré |
-| F1.10 | Alimenter le référentiel analytique selon un modèle en schéma en étoile | P1 | AD | AD | S3 | Livré |
+| F1.10 | Alimenter le référentiel analytique selon un modèle en schéma en étoile | P1 | AD | AD, **NPS** | S3 | Livré |
 | F1.11 | Calculer et exposer le taux de rejet par source et par règle de qualité | P2 | SW | **NPS** | S2 | Livré |
 
 **F2 — Piloter l'activité en quasi temps réel**
@@ -118,7 +118,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 
 | Code | Fonctionnalité attendue | Prio | Prévu | Réalisé par | Sprint | État |
 |---|---|---|---|---|---|---|
-| F4.1 | Indexer le catalogue produits nettoyé | P2 | AD | AD | S4 | Livré |
+| F4.1 | Indexer le catalogue produits nettoyé | P2 | AD | **NPS** | S4 | Livré |
 | F4.2 | Recherche en texte libre tolérante aux fautes de frappe et aux accents | P2 | BD | BD | S4 | Livré |
 | F4.3 | Proposer des filtres par catégorie et par gamme de prix | P2 | BD | BD | S4 | Livré **sans le filtre de prix** (§23, E5) |
 | F4.4 | Journaliser chaque requête de recherche et le nombre de résultats retournés | P2 | MD | MD | S4 | Livré |
@@ -132,7 +132,7 @@ Les libellés sont ceux arrêtés en conception (Partie 2, §5). La colonne « R
 
 | Code | Fonctionnalité attendue | Prio | Prévu | Réalisé par | Sprint | État |
 |---|---|---|---|---|---|---|
-| F5.1 | Rédiger la foire aux questions : 30 à 50 questions-réponses en cinq thèmes | P2 | SW, AD | SW, AD | S4 | Livré |
+| F5.1 | Rédiger la foire aux questions : 30 à 50 questions-réponses en cinq thèmes | P2 | SW, AD | SW | S4 | Livré |
 | F5.2 | Constituer la base documentaire en associant la FAQ aux fiches produits | P2 | SW | SW | S5 | Livré *(FAQ seule ; voir §25)* |
 | F5.3 | Vectoriser et indexer cette base documentaire | P2 | BD | BD | S5 | Livré |
 | F5.4 | Retrouver les passages pertinents pour une question posée en langage naturel | P2 | BD | BD | S5 | Livré |
@@ -158,7 +158,7 @@ Sur quarante-quatre fonctionnalités, **quatorze ont changé de mains** en cours
 |---|---|
 | **Équilibrage de charge dans un sprint** — un périmètre concentrait trop de livrables d'un coup | F1.6, F1.11, F6.5 (Sprint 2) ; F1.9 (Sprint 3) |
 | **Contrainte matérielle ou de compétence** | F2.1 à F2.3 et F2.6 (Power BI ne tourne que sous Windows) ; F6.1 |
-| **Départ d'Aissata DIALLO au Sprint 3**, et un livrable non réalisé par son porteur | F1.4, F3.1, F3.2 à F3.6 |
+| **Absence d'Aissata DIALLO depuis le Sprint 3**, et un livrable non réalisé par son porteur | F1.4, F3.1, F3.2 à F3.6 |
 
 **La règle appliquée à chaque fois** : le responsable de fond au backlog ne change pas, seule la charge du sprint est partagée, et c'est le responsable de fond qui relit la demande de fusion. C'est ce qui a permis de ne jamais vider un périmètre tout en absorbant les à-coups.
 
@@ -189,7 +189,7 @@ C'est une exigence structurante du projet, et non une conséquence : une platefo
 | **SQL** | Base opérationnelle `boutique` — commandes, clients, articles, paiements, vendeurs | Mouhameth DIOP | Sprint 1 |
 | **Temps réel** | Générateur et bus d'événements de navigation | Bachir DEME *(générateur)*, Ndeye Penda SARR *(bus)* | Sprint 1 |
 | **API** | Service référentiel : jours fériés et taux de change | Ndeye Penda SARR | Sprint 3 |
-| **NoSQL** | Catalogue produits servi depuis MongoDB | Aissata DIALLO | Sprint 4 |
+| **NoSQL** | Catalogue produits servi depuis MongoDB | Ndeye Penda SARR | Sprint 4 |
 | **Fichiers historiques** | Exports d'avis clients | Seydina WADE | Sprint 4 |
 
 Les cinq sont livrées à la fin du Sprint 4. Cette exigence ne se rattrape pas en fin de projet : le Sprint 5 est déjà le plus chargé.
@@ -323,7 +323,7 @@ Le détail complet est dans `contrats/zones_stockage.md` et `contrats/zone_brute
 
 ## 6. Architecture générale
 
-![Architecture générale de DataFlow360](architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](architecture/architecture_dataflow360.png)
 
 La plateforme est organisée en **trois circuits** qui ne se mélangent pas, parce qu'ils n'ont pas les mêmes exigences de délai.
 
@@ -557,7 +557,7 @@ Trois niveaux de surveillance, chacun avec sa commande.
 
 Quatre corrections récentes des vues de supervision méritent d'être citées, parce qu'elles disent ce qu'est une vue de supervision juste : un statut NULL compte désormais comme un échec (une panne brutale n'écrit pas son statut) ; le volume par jour est calculé en UTC et ne dépend plus du fuseau de la session qui interroge ; les exécutions à égalité d'horodatage sont départagées de la même façon partout. Voir `sql/027_supervision_corrections.sql`.
 
-**Ce qui n'est pas surveillé automatiquement.** Les trois niveaux ci-dessus fonctionnent et sont testés, mais **aucun n'est déclenché par l'orchestrateur** : ils se lancent à la main. La conséquence est concrète — personne n'est prévenu d'une chute des ventes ou d'un retard du flux ; l'alerte n'est calculée que si quelqu'un tape la commande (§15 et §25).
+**Ce qui est surveillé automatiquement, et ce qui ne l'est pas.** Les trois niveaux ci-dessus fonctionnent et sont testés. Deux sont déclenchés chaque heure par le DAG `supervision` : la chute des ventes, sur la journée en cours (`--jours 1`), puis le retard du flux. Ce DAG est **en pause à sa création** : tant qu'il n'est pas activé, rien ne tourne. Activé, une alerte rend sa tâche rouge dans Airflow, sans autre notification. Le journal des exécutions (`python -m supervision`) reste lancé à la main (§15 et §25).
 
 ---
 
@@ -585,21 +585,21 @@ Trois décisions d'orchestration :
 
 La distinction est nette, et il vaut mieux l'énoncer que la laisser deviner.
 
-| | Orchestré par le DAG `quotidien` | Lancé à la main |
+| | Orchestré (DAG `quotidien`, sauf mention) | Lancé à la main |
 |---|---|---|
 | **Voie par lots** | Acquisition, contrôle, rapport de rejet, transformation, correspondance, chargement, vérification | — |
 | **Voie documentaire** | Réindexation du catalogue et son contrôle `etat_index`, indexation des passages | — |
 | **Prédiction** | `scores_reachat`, après la vérification | **Entraînement et évaluation** (`python -m prediction`) |
 | **Voie continue** | — | `compteurs` (consommation du bus), `zone_brute` (archivage horaire) |
-| **Supervision** | — | `supervision`, `supervision.surveiller_flux`, `compteurs.surveiller_ventes` |
+| **Supervision** | `compteurs.surveiller_ventes --jours 1` puis `supervision.surveiller_flux`, chaque heure, par le DAG `supervision` (en pause à sa création) | `supervision` (journal des exécutions) |
 
-**Un seul fichier dans `dags/`** : `quotidien.py`. Les cinq commandes de droite fonctionnent et sont testées, mais rien ne les déclenche.
+**Deux fichiers dans `dags/`** : `quotidien.py` et `supervision.py`. Hors entraînement du modèle, manuel par choix, trois commandes de droite restent manuelles : `compteurs`, `zone_brute` et `supervision`. Elles fonctionnent et sont testées, mais rien ne les déclenche.
 
 Deux choix volontaires et une dette dans ce tableau :
 
 - *Volontaire* — l'entraînement du modèle reste manuel : un réentraînement quotidien sans surveillance humaine n'aurait pas de sens pour un modèle dont le résultat est négatif.
 - *Volontaire* — la voie continue ne traverse pas ce DAG : elle tourne en permanence, pas une fois par jour. L'orchestrer demanderait un second DAG à la minute, ou un service résident.
-- *Dette* — **la supervision et l'alerte, elles, devraient être déclenchées** et ne le sont pas. C'est la ligne la plus visible du §25 : l'alerte sur chute des ventes existe, fonctionne, est testée — et ne se calcule que si quelqu'un la demande.
+- *Dette* — **la surveillance n'est orchestrée qu'à moitié** : le DAG `supervision` est **en pause à sa création**, et une fois activé, une alerte ne se voit que par sa tâche rouge dans Airflow, sans autre notification. C'est la ligne la plus visible du §25.
 
 ---
 
@@ -698,14 +698,14 @@ L'intégration continue tourne sur **GitHub Actions**, déclenchée à chaque en
 | Travail | Ce qu'il exécute | Pourquoi séparé |
 |---|---|---|
 | `controle` | `ruff format --check`, `ruff check`, `pytest -m "not integration"` | Les étapes rapides d'abord : on échoue avant de lancer les tests |
-| `integration-postgres` | Initialisation de la base, `scripts/appliquer_sql.py`, puis 82 tests d'intégration sur un service PostgreSQL 16 | Une erreur de migration n'est visible que sur une vraie base |
+| `integration-postgres` | Initialisation de la base, `scripts/appliquer_sql.py`, puis 85 tests d'intégration sur un service PostgreSQL 16 | Une erreur de migration n'est visible que sur une vraie base |
 | `frontend` | `npm ci`, `npx tsc --noEmit`, `npm run build` | Une erreur TypeScript ne doit pas masquer un test en échec |
 
 **Pourquoi le travail `integration-postgres` existe.** Il a été ajouté le 10 octobre 2026, après que quatre défauts de migration ont atteint la base du projet **alors que la suite de tests était verte** : `CREATE OR REPLACE VIEW` n'autorise que l'ajout de colonnes en fin de liste, et une colonne déclarée dans le chargement mais absente du schéma cassait tout entrepôt bâti à neuf. Aucun de ces défauts n'était visible sans base de données.
 
 Deux garde-fous complètent ce travail : un **contrôle statique** qui rejoue l'historique des vues sans base (`tests/quality/test_migrations_vues.py`), et un test qui lance **la vraie commande de migration** sur une base jetable (`tests/integration/test_migrations_sur_base_reelle.py`).
 
-**État de la suite à la clôture :** 808 tests unitaires, 82 tests d'intégration PostgreSQL en CI, 42 tests d'intégration restants hors CI (Elasticsearch, Kafka, MinIO) — c'est la dette qui subsiste (§25).
+**État de la suite à la clôture :** 816 tests unitaires, 85 tests d'intégration PostgreSQL en CI, 47 tests d'intégration restants hors CI (37 exigent Elasticsearch, 3 Kafka, 7 une base PostgreSQL préparée : base `boutique` chargée ou création d'un compte) — c'est la dette qui subsiste (§25).
 
 **Règles de contribution** (`CONVENTIONS.md`) : une branche par fonctionnalité, nommée d'après son code de backlog (`feat/F1.1-collecte-commandes-olist`), une demande de fusion relue par un membre d'un **autre** périmètre, et une tâche n'est close que lorsqu'elle est testée, relue, fusionnée et documentée.
 
@@ -717,7 +717,7 @@ Deux garde-fous complètent ce travail : un **contrôle statique** qui rejoue l'
 
 ## 19. Organisation de l'équipe
 
-Cinq membres au départ, quatre à l'arrivée. Le détail fait foi dans [`ROLES.md`](ROLES.md) ; voici ce qui structure le fonctionnement.
+Cinq membres au départ ; quatre présents à l'arrivée, Aissata DIALLO relisant à distance. Le détail fait foi dans [`ROLES.md`](ROLES.md) ; voici ce qui structure le fonctionnement.
 
 | Membre | Rôle de conduite | Périmètre technique |
 |---|---|---|
@@ -725,7 +725,7 @@ Cinq membres au départ, quatre à l'arrivée. Le détail fait foi dans [`ROLES.
 | **Mouhameth DIOP** | Scrum Master | Acquisition et flux d'événements |
 | **Ndeye Penda SARR** | Conception et documentation | Orchestration, restitution décisionnelle, modèle de ré-achat |
 | **Seydina WADE** | — | Stockage, qualité des données, base documentaire, intégration continue |
-| **Aissata DIALLO** | — *(a quitté le projet au Sprint 3)* | Transformation et intégration |
+| **Aissata DIALLO** | Relectrice à distance depuis le Sprint 3 | Transformation et intégration |
 
 **Les rôles de conduite s'ajoutent au périmètre technique, ils ne le remplacent pas** : le Product Owner et le Scrum Master développent au même titre que les autres.
 
@@ -828,8 +828,8 @@ Ces vingt-cinq jours ne couvrent que la **réalisation**. Le travail de concepti
 
 | Conséquence | Ce qu'on y voit |
 |---|---|
-| La voie par lots est orchestrée ; **la voie continue et la supervision ne le sont pas** | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent, les cinq commandes du flux et de la surveillance restent manuelles |
-| **42 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
+| La voie par lots et la surveillance sont orchestrées. La voie continue ne l'est pas : prévue au départ, puis reportée ; à l'analyse, ce report est devenu un choix, car des consommateurs qui tournent en continu n'ont pas à être lancés par un ordonnanceur par lots (§15.1). | L'automatisation du second plan a été la première chose repoussée : les treize tâches quotidiennes existent depuis le début ; la surveillance (`compteurs.surveiller_ventes`, puis `supervision.surveiller_flux`) n'est orchestrée qu'après la version 1.0, par le DAG horaire `supervision`, en pause à sa création ; trois commandes restent manuelles (`compteurs`, `supervision`, `zone_brute`) |
+| **47 tests d'intégration hors CI**, et aucun avant le 10 octobre | Monter des services dans l'intégration continue coûte une demi-journée qu'aucun sprint de trois jours n'avait |
 | La **pertinence de la recherche n'est pas mesurée** | Construire un jeu de jugements demande du temps calme ; il n'y en a pas eu |
 
 **Ce que l'historique du dépôt confirme.** Relevé le 10 octobre 2026 : **333 contributions sur 22 jours actifs**, pour 25 jours calendaires. Trois jours seulement sans aucune contribution — les 18, 19 et 20 septembre, un vendredi et le week-end qui suit, juste après la clôture du Sprint 0.
@@ -849,7 +849,7 @@ Les deux journées les plus denses du projet sont le **7 octobre (61 contributio
 | Ndeye Penda SARR | 168 |
 | Bachir DEME | 75 |
 | Seydina WADE | 61 |
-| Aissata DIALLO | 17 *(départ au Sprint 3)* |
+| Aissata DIALLO | 17 *(absente depuis le Sprint 3)* |
 | Mouhameth DIOP | 12 |
 
 Ces chiffres se reproduisent par `git shortlog -sne --all` et évoluent à chaque contribution.
@@ -911,7 +911,7 @@ Cet échange a un mérite inattendu : **décider ce qu'on compte est un travail 
 
 **F6.1, l'orchestration, passe à SW** : les modules que le workflow appelle sont pour l'essentiel les siens, et la base de métadonnées d'Airflow vit dans son schéma.
 
-**Le Sprint 3 est le pivot du projet.** Avant lui, la donnée est contrôlée mais pas consolidée ; après lui, les quatre usages ont une base commune à lire. C'est aussi le sprint où **Aissata DIALLO a quitté le projet**, en plein milieu du livrable le plus structurant.
+**Le Sprint 3 est le pivot du projet.** Avant lui, la donnée est contrôlée mais pas consolidée ; après lui, les quatre usages ont une base commune à lire. C'est aussi le sprint depuis lequel **Aissata DIALLO ne peut plus être présente**, en plein milieu du livrable le plus structurant.
 
 ### 21.5 Sprint 4 — Temps réel, recherche et supervision
 
@@ -927,7 +927,7 @@ Livrables : compteurs et journal des requêtes (MD), index et source MongoDB (AD
 
 Livrables : variables du modèle (BD), modèle de ré-achat (NPS), base vectorisée (SW), assistant (BD), segment et tableau final (NPS).
 
-**Ce que le départ d'Aissata DIALLO change.** Deux livrables sont redistribués : l'historique d'achat (F3.1) vers Bachir DEME, le modèle (F3.2 à F3.6) vers Ndeye Penda SARR. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
+**Ce qui change au Sprint 5.** Deux livrables sont redistribués, pour deux raisons distinctes : l'historique d'achat (F3.1) passe à Bachir DEME, conséquence de l'absence d'Aissata DIALLO ; le modèle (F3.2 à F3.6) passe à Ndeye Penda SARR, le livrable n'ayant pas été réalisé par son porteur prévu, Mouhameth DIOP. La conséquence n'est pas seulement une charge déplacée : **les deux chaînes du sprint, parallèles à l'origine, se croisent désormais.**
 
 ```
 Bachir (variables) ──────► Ndeye Penda (modèle) ──┐
@@ -953,7 +953,7 @@ Après la révision du Sprint 5. Le détail et les motifs sont dans [`ROLES.md`]
 | **Bachir DEME** | Composition des conteneurs, recherche et filtres, historique d'achat, chaîne complète de l'assistant | F3.1, F4.2, F4.3, F4.5, F4.7, F5.3 à F5.6, F6.4 | **10** |
 | **Seydina WADE** | Zones de stockage, règles de validation, quarantaine, taux de rejet, base documentaire, intégration continue | F1.4, F1.5, F1.6, F1.11, F5.1, F5.2, F6.5 | **7** |
 | **Mouhameth DIOP** | Chargement par lots, générateur d'événements, rejeu chronologique, bus, consommateur, compteurs, journal des recherches | F1.1, F1.2, F1.3, F2.4, F2.5, F4.4 | **6** |
-| **Aissata DIALLO** | Normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue — *livrés avant son départ* | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | **6** |
+| **Aissata DIALLO** | Normalisation, décodage, langue, déduplication, correspondance, schéma en étoile, indexation du catalogue — *crédités à son nom* | F1.7, F1.8, F1.9, F1.10, F4.1, F5.1 | **6** |
 
 ### 22.2 Deux rééquilibrages, et pourquoi
 
@@ -963,10 +963,10 @@ Après la révision du Sprint 5. Le détail et les motifs sont dans [`ROLES.md`]
 
 | Code | Livrable | De → vers | Cause |
 |---|---|---|---|
-| F3.1 | Historique d'achat et variables du modèle | Aissata DIALLO → Bachir DEME | Départ en cours de projet. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs du Sprint 3 |
+| F3.1 | Historique d'achat et variables du modèle | Aissata DIALLO → Bachir DEME | Absence depuis le Sprint 3. Les variables se calculent sur l'entrepôt, que Bachir connaît par ses indicateurs du Sprint 3 |
 | F3.2 à F3.6 | Modèle de ré-achat | Mouhameth DIOP → Ndeye Penda SARR | Livrable non réalisé par son porteur prévu. Elle tient le dictionnaire des indicateurs : elle est la mieux placée pour mesurer le modèle honnêtement |
 
-**Le départ d'Aissata DIALLO.** Il est consigné ici et dans `ROLES.md` — il ne se découvre pas à la soutenance. Ce qu'elle avait livré avant de partir reste crédité à son nom. **Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.**
+Depuis le Sprint 3, Aissata ne peut plus être présente. Elle a continué à relire et approuver les demandes de fusion à distance ; son développement a été repris par l'équipe. Cette situation est consignée ici et dans `ROLES.md` — elle ne se découvre pas à la soutenance. Ce qu'elle a livré reste crédité à son nom. **Quatre personnes livrent le périmètre de cinq : c'est un argument, pas une faiblesse.**
 
 ### 22.3 Le point de vigilance, et la mesure prise
 
@@ -988,7 +988,7 @@ Ces dispositions ont été prises **avant** le sprint, pour ne pas avoir à les 
 | Bachir DEME | **19** | 14 | **10** |
 | Ndeye Penda SARR | — | 11 | **16** |
 | Seydina WADE | — | 7 | 7 |
-| Aissata DIALLO | — | 7 | 6 *(livrées avant son départ)* |
+| Aissata DIALLO | — | 7 | 6 *(créditées à son nom)* |
 | Mouhameth DIOP | — | 6 | 6 |
 
 La charge la plus lourde a changé de personne en cours de projet : elle était sur le Product Owner à la conception, elle est sur la responsable de la documentation à l'arrivée. Les deux fois, le déséquilibre a été **constaté, écrit et traité**, et non subi.
@@ -1019,7 +1019,7 @@ Le risque qui s'est réalisé est celui qui avait été anticipé comme « accep
 | E4 | Compteurs du jour avec chiffre d'affaires | **Compteurs d'activité, sans aucun montant** | Un événement d'achat ne porte pas de prix : un chiffre d'affaires en temps réel serait un montant inventé | `sql/015_compteurs_du_jour.sql`, `evenements.md` |
 | E5 | Recherche avec filtre de prix | **Filtre de prix abandonné** ; la commande refuse `--prix-min` et `--prix-max` avec un message | Le catalogue ne contient aucun prix, et le lien produit ↔ fiche étant arbitraire (E2), en tirer un prix inventerait un montant | `recherche.md` |
 | E6 | Modèle de ré-achat comme base du segment à retenir | **Segment = règle « au moins deux commandes »** ; le modèle reste livré comme résultat négatif | À volume égal (711 clients), la règle retrouve 32 retours, le modèle 18 | §16.1, `modele.md` |
-| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** | Départ d'Aissata DIALLO ; livrable du modèle repris par Ndeye Penda SARR | §22.2, `ROLES.md` §4.3 |
+| E7 | Responsabilités du Sprint 5 telles que prévues | **Deux livrables déplacés** : F3.1 vers Bachir DEME, F3.2 à F3.6 vers Ndeye Penda SARR | F3.1 : absence d'Aissata DIALLO depuis le Sprint 3. F3.2 à F3.6 : livrable non réalisé par son porteur prévu, Mouhameth DIOP | §22.2, `ROLES.md` §4.3 |
 
 **Note sur E1 — pourquoi Pandera plutôt que Great Expectations.** La décision a été prise aux jours 1 et 2 du Sprint 2, pour deux raisons.
 
@@ -1058,11 +1058,11 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 
 | Dette | Conséquence | Statut |
 |---|---|---|
-| **La voie continue et la supervision ne sont pas orchestrées.** La voie par lots l'est : le DAG `quotidien` enchaîne ses 13 tâches | Cinq commandes restent manuelles — `compteurs`, `compteurs.surveiller_ventes`, `supervision`, `supervision.surveiller_flux`, `zone_brute`. **Personne n'est prévenu automatiquement d'une chute des ventes** | Assumée |
+| **La surveillance n'est orchestrée qu'à moitié.** Le DAG horaire `supervision` lance `compteurs.surveiller_ventes` puis `supervision.surveiller_flux`, mais il est **en pause à sa création** et ne tourne qu'une fois activé | Le journal des exécutions (`supervision`) reste lancé à la main ; la voie continue (`compteurs`, `zone_brute`) aussi, par choix d'architecture (§15.1). Tant que le DAG `supervision` n'est pas activé, **personne n'est prévenu automatiquement d'une chute des ventes** ; activé, une alerte rend sa tâche rouge dans Airflow, sans autre notification | Réduite, reste partielle |
 | Les rejets du flux d'événements ne sont **jamais persistés** | Ils partent sur `navigation.rebut`, 30 jours de rétention, sans consommateur : zéro ligne du flux en quarantaine | Assumée, `zones_stockage.md` |
 | La pertinence de la recherche produits n'est **pas mesurée** | 6 cas de non-régression et une latence ; ni rappel, ni précision@k, ni jeu de jugements | Assumée |
 | Le seuil de rejet se calcule sur un dénominateur **toutes tables confondues** | Avec ~1,5 M de lignes lues, franchir 5 % exigerait ~75 000 rejets : le garde-fou ne peut pas se déclencher | Assumée |
-| **42 tests d'intégration hors CI** (Elasticsearch, Kafka, MinIO) | Ils ne tournent qu'en local. *Les 82 tests PostgreSQL sont entrés en CI le 10 octobre* | Réduite, reste partielle |
+| **47 tests d'intégration hors CI** (Elasticsearch, Kafka, base PostgreSQL préparée) | Ils ne tournent qu'en local. *Les 85 tests PostgreSQL tournent en CI depuis le 10 octobre* | Réduite, reste partielle |
 | Le backlog vivait **uniquement sur Trello** | Les libellés des besoins n'étaient retrouvables nulle part dans le dépôt : les codes y étaient cités, jamais définis | **Corrigée** : les 44 figurent au §2.2 |
 | Deux documents emploient **F4.6 pour la réindexation**, que le backlog nomme F4.7 | Ambiguïté sur ce qui a été livré sous ce code | **À corriger** dans `contrats/index.md` et la fiche du Sprint 4 |
 | `sql/001` et le Sprint 1 emploient **F1.6 pour les zones de stockage**, que le backlog nomme F1.4 | Même nature : un code réutilisé pour deux choses | **À corriger** |
@@ -1071,7 +1071,7 @@ Ce qui reste est noté, pas corrigé : le Sprint 5 n'ajoute aucune amélioration
 | Prix absent du catalogue | Pas de filtre de prix, pas de montant en temps réel (E4, E5) | Assumée, §23 |
 | « Délai de livraison moyen » et « note moyenne » absents du dictionnaire | Variables utilisées par le modèle, non publiées comme indicateurs | Inscrits en dette, à valider par le Product Owner |
 | Modèle évalué à **une seule date**, 75 retours à l'entraînement | Écarts de quelques points fragiles | Limite écrite dans `modele.md` |
-| Tableau de bord : deux chiffres écrits en dur | Le taux d'ancrage de la page « Assistant » et le verdict de l'alerte ne bougeront pas au rafraîchissement | **À brancher avant la démonstration** |
+| Tableau de bord : deux chiffres écrits en dur | Le taux d'ancrage de la page « Assistant » et le verdict de l'alerte ne bougeront pas au rafraîchissement | **Corrigée** : le taux d'ancrage lit `staging.v_taux_ancrage_global`, le verdict lit `staging.v_alerte_ventes` |
 | La base documentaire (F5.2) devait associer la FAQ **aux fiches produits** | Seule la FAQ est vectorisée ; l'assistant ne répond sur aucun produit | Assumée. Le périmètre de l'assistant est la FAQ, et il le dit |
 
 ---

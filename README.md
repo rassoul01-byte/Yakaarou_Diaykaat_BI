@@ -1,4 +1,6 @@
-# Yakaarou Diaykaat BI — DataFlow360
+# Nataal Retail
+
+Nataal Retail (dépôt Yakaarou_Diaykaat_BI, anciennement DataFlow360)
 
 [![CI](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/rassoul01-byte/Yakaarou_Diaykaat_BI/actions/workflows/ci.yml)
 
@@ -28,7 +30,7 @@ Le premier besoin conditionne les quatre autres : c'est le socle. Les quatre usa
 
 ## Architecture
 
-![Architecture générale de DataFlow360](docs/architecture/architecture_dataflow360.png)
+![Architecture générale de Nataal Retail](docs/architecture/architecture_dataflow360.png)
 
 La donnée suit **trois circuits** :
 
@@ -56,13 +58,13 @@ La donnée suit **trois circuits** :
 | Conteneurisation | Docker Compose |
 | Intégration continue | GitHub Actions (ruff, pytest) |
 
-Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé seront consignés dans le dossier de conception, en cours de rédaction.
+Le schéma ci-dessus est l'**architecture cible**. Ce qui fonctionne aujourd'hui est décrit dans la section suivante. Les écarts entre le prévu et le réalisé sont consignés dans le dossier de conception (§23).
 
 ---
 
 ## État actuel
 
-Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »), en phase de clôture. Les Sprints 0 à 4 sont terminés.
+Les six sprints (0 à 5) sont terminés. La version 1.0 est publiée (tag `v1.0`, 2026-10-10). La version 1.1, de clôture, rassemble les PR #142 à #147 (voir [`docs/NOTE_DE_VERSION_v1.1.md`](docs/NOTE_DE_VERSION_v1.1.md)).
 
 | Usage | État | Code | Contrat |
 |---|---|---|---|
@@ -72,7 +74,7 @@ Le projet est au **Sprint 5** (« Intelligence artificielle et finalisation »),
 | Intégration et entrepôt `dwh` | Fonctionne | `src/integration/`, `sql/007_entrepot.sql` | `correspondance.md`, `entrepot.md` |
 | Indicateurs de ventes | Fonctionne | `src/indicateurs/`, `sql/010_vues_indicateurs.sql` | `docs/dictionnaire_indicateurs.md` |
 | Flux d'événements et compteurs du jour | Fonctionne ; trafic **simulé**, aucun montant | `src/generateur/`, `src/compteurs/` | `evenements.md` |
-| Supervision de la chaîne et du flux | Fonctionne | `src/supervision/` | — |
+| Supervision de la chaîne et du flux | Fonctionne ; DAG horaire `supervision`, en pause par défaut | `src/supervision/`, `dags/supervision.py` | — |
 | Recherche produit | Fonctionne ; pas de filtre de prix (le catalogue n'en contient pas) | `src/recherche/` | `recherche.md`, `index.md` |
 | Service référentiel | Fonctionne | `src/referentiel/` | `referentiel.md` |
 | Orchestration quotidienne | Fonctionne, 13 tâches (dont les scores de ré-achat et l'index des passages) | `dags/quotidien.py` | `workflow.md` |
@@ -114,6 +116,13 @@ data/sources/  ──python -m acquisition [--source rakuten]──▶  data/raw
 
 ### Workflow Airflow
 
+Airflow porte **deux DAG** :
+
+| DAG | Fichier | Exécution | Rôle | Au démarrage |
+|---|---|---|---|---|
+| `quotidien` | `dags/quotidien.py` | `@daily` | chaîne par lots, de l'acquisition à l'entrepôt | à activer dans Airflow |
+| `supervision` | `dags/supervision.py` | `@hourly` | alerte sur les ventes du jour, puis retard du flux Kafka | **en pause** (`is_paused_upon_creation`), à activer dans Airflow |
+
 Le DAG `quotidien` (`dags/quotidien.py`, exécution `@daily`) lance chaque étape par une commande `python -m ...` dans un environnement Python séparé. Le seuil de rejet se règle par une variable Airflow : `airflow variables set seuil_rejet 5`.
 
 ```
@@ -127,6 +136,17 @@ indexation_passages        (sans dépendance amont : part en même temps que les
 Un rapport de rejet au-dessus du seuil est un échec métier : la tâche n'est pas rejouée. La réindexation du catalogue avance en parallèle du chargement de l'entrepôt, pour qu'une indexation lente ne retarde pas les chiffres de vente, et `etat_index` la contrôle en comparant l'index à la zone intermédiaire.
 
 Deux tâches complètent la chaîne : `indexation_passages` (vérifie puis indexe la FAQ, sans dépendance amont) et `scores_reachat` (écrit tous les scores dans `data/scores_reachat.csv`, après la `verification` de l'entrepôt). L'entraînement et l'évaluation du modèle (`python -m prediction`) restent lancés à la main.
+
+Le DAG `supervision` lance chaque heure deux tâches :
+
+```
+surveiller_ventes ──▶ surveiller_flux      (all_done : part même si les ventes sont en alerte)
+```
+
+- `surveiller_ventes` (`compteurs.surveiller_ventes --jours 1`) juge **la journée en cours** ; les jours passés restent visibles dans l'alerte de la vue générale et par la commande lancée à la main. Il ne fait que lire.
+- `surveiller_flux` (`supervision.surveiller_flux`) ajoute un relevé du retard de chaque groupe Kafka dans `staging.retard_flux`, et signale un lecteur dont le retard grandit trois relevés de suite.
+- Une alerte fait échouer la tâche, sans reprise : une tâche rouge est un verdict, pas une panne. C'est pourquoi le DAG est en pause tant qu'on ne l'active pas.
+- Le lancement, lui, est jugé sur sa dernière tâche, `surveiller_flux` : il reste vert quand seule `surveiller_ventes` alerte. Le verdict sur les ventes se lit sur la case de cette tâche.
 
 ### Recherche produit
 
@@ -186,10 +206,15 @@ python -m assistant.evaluer                              # évalue sur le jeu de
 - Le jeu de questions (`tests/assistant/jeu_de_questions.jsonl`, 62 questions dont les dix questions pièges de Seydina) est **gelé** depuis le 2026-10-07 (empreinte dans `tests/assistant/jeu_de_questions.gel.json`).
 - Les seuils de l'assistant (0,84 / 0,20 / 0,00) ont été mesurés sur ce jeu gelé : 0 mauvais passage et 0 réponse à tort **sur ce jeu**, ce qui n'est pas une garantie au-delà (limites au §6 de [`assistant.md`](docs/contrats/assistant.md)). Taux de réponses ancrées relevé le 2026-10-08 : 100 % (62/62), voir le dictionnaire des indicateurs. Les seuils de dépannage (0,35 / 0,18 / 0,12) ne servent qu'au retrouveur TF-IDF hors ligne.
 
-### Reste à faire pour clore le Sprint 5
+### Clôture du Sprint 5
 
-- Construire les pages manquantes du tableau de bord (ventes, compteurs du jour, segment, ancrage).
-- Rédiger le dossier de conception, puis publier la version 1.0 : fusion de `develop` dans `main` et tag `v1.0`.
+Le Sprint 5 est terminé.
+
+- Le tableau de bord compte ses six pages : Ventes, Produits, Temps réel, Qualité, Segment, Assistant (captures dans [`docs/captures/`](docs/captures/)).
+- Le dossier de conception est rédigé : [`docs/dossier_conception.md`](docs/dossier_conception.md).
+- La version 1.0 est publiée le 2026-10-10 : `develop` fusionnée dans `main`, tag `v1.0`.
+
+Ce qui reste assumé est consigné dans la dette technique du dossier de conception (§25).
 
 ---
 
@@ -212,7 +237,7 @@ Qui fait quoi, qui décide quoi et qui supplée qui : voir [`docs/ROLES.md`](doc
 ```
 Yakaarou_Diaykaat_BI/
 ├── .github/workflows/       intégration continue (ci.yml : ruff, pytest, puis tsc et build du frontend)
-├── dags/                    workflow Airflow (quotidien.py)
+├── dags/                    workflows Airflow (quotidien.py, supervision.py)
 ├── dashboards/              tableau de bord Power BI (ventes.pbix)
 ├── data/                    données locales — jamais versionnées
 │   ├── sources/             fichiers livrés par les sources (Olist, Rakuten)
@@ -308,13 +333,13 @@ Si PostgreSQL ou MongoDB sont déjà installés sur votre ordinateur, ils occupe
 Sous **Windows**, dans PowerShell :
 
 ```powershell
-netstat -ano | findstr ":5432 :27017 :9200 :8080 :29092 :8010"
+netstat -ano | findstr ":5432 :27017 :9200 :8080 :29092 :8010 :8001 :5173"
 ```
 
 Sous **Linux** ou **macOS** :
 
 ```bash
-ss -ltn | grep -E ':(5432|27017|9200|8080|29092|8010)\b'
+ss -ltn | grep -E ':(5432|27017|9200|8080|29092|8010|8001|5173)\b'
 ```
 
 Chaque ligne affichée correspond à un port déjà pris. Changez-le **dans votre `.env`**, jamais dans `docker-compose.yml` :
@@ -327,6 +352,8 @@ Chaque ligne affichée correspond à un port déjà pris. Changez-le **dans votr
 | 9200 | `ES_PORT=9201` |
 | 29092 | `KAFKA_PORT=29093` |
 | 8010 | `REFERENTIEL_PORT=8011` (à ajouter dans `.env`) |
+
+Les ports **8001** (API) et **5173** (application web) ne se changent pas dans `.env` : 8001 est fixé dans `docker-compose.yml`, et 5173 est la seule origine autorisée par le CORS de l'API. S'ils sont pris, libérez-les.
 
 Sous Windows, modifiez `.env` avec VS Code plutôt qu'avec une commande PowerShell, qui peut changer l'encodage du fichier.
 
@@ -384,7 +411,15 @@ Chaque script peut être relancé sans dommage. `alimenter_referentiel.py` est l
 
 ### 7. Lancer la chaîne quotidienne
 
-Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Pour dérouler les mêmes étapes à la main :
+**Après chaque `git pull`, et avant de lancer le DAG**, appliquez les nouvelles migrations :
+
+```bash
+docker compose exec app python scripts/appliquer_sql.py
+```
+
+Le code est monté dans les conteneurs : il est à jour dès le `git pull`, mais le schéma de la base ne l'est qu'une fois les migrations appliquées. Le DAG ne les applique pas lui-même. Le script ne rejoue jamais une migration déjà enregistrée.
+
+Dans Airflow (http://localhost:8080), activez le DAG `quotidien` et lancez-le. Le DAG `supervision` reste en pause : ne l'activez que lorsque le flux d'événements tourne, sinon sa tâche `surveiller_ventes` sera rouge à chaque lancement horaire. Pour dérouler les mêmes étapes à la main :
 
 ```bash
 docker compose exec app python -m acquisition
@@ -402,7 +437,7 @@ docker compose exec app python -m integration.verifier
 
 L'identifiant d'ingestion `<id>` est celui du dossier le plus récent de `data/raw/lots/<source>/`, ou celui que `python -m zone_brute lister` affiche.
 
-La base documentaire de l'assistant ne fait pas partie du DAG. Pour l'alimenter :
+La base documentaire de l'assistant est alimentée chaque jour par la tâche `indexation_passages` du DAG. Pour l'alimenter à la main :
 
 ```bash
 docker compose exec app python -m documentaire.verifier
@@ -480,6 +515,12 @@ Un réglage système doit être augmenté sur la machine hôte. La procédure es
 **L'assistant ou `documentaire.indexer` échoue en parlant d'Elasticsearch.**
 L'assistant utilise la recherche vectorielle par défaut : Elasticsearch doit être démarré et les passages indexés (`python -m documentaire.indexer`). Pour travailler hors ligne, lancez-le avec `ASSISTANT_RETROUVEUR=depannage`.
 
+**Une tâche du DAG échoue avec `column "…" of relation "…" does not exist` (ou `relation "…" does not exist`).**
+Le code a été mis à jour par un `git pull`, mais pas le schéma de la base : une migration n'a pas été appliquée. C'est arrivé le 2026-10-10 à la tâche `chargement` (colonne `annee_iso`). Appliquez les migrations, puis relancez la tâche en échec :
+```bash
+docker compose exec app python scripts/appliquer_sql.py
+```
+
 Pour afficher les journaux d'un service : `docker compose logs --tail 30 <service>`.
 
 ---
@@ -518,7 +559,7 @@ Plusieurs modules ont leur propre `README.md` : `src/acquisition/`, `src/common/
 | Sprint 2 | Qualité et transformation | Terminé |
 | Sprint 3 | Intégration, entrepôt et premiers indicateurs | Terminé |
 | Sprint 4 | Temps réel, recherche et supervision | Terminé (tag `v0.5`) |
-| Sprint 5 | Intelligence artificielle et finalisation | En cours — voir « Reste à faire pour clore le Sprint 5 » (jeu gelé, seuils et taux d'ancrage faits) |
+| Sprint 5 | Intelligence artificielle et finalisation | Terminé (tag `v1.1`) |
 
 ---
 

@@ -1,6 +1,6 @@
 # Dictionnaire des indicateurs
 
-**GROUPE 2 · DataFlow360**
+**GROUPE 2 · Nataal Retail**
 **Responsable : Ndeye Penda SARR**
 
 Ce document est la **référence unique** de tout chiffre présenté par la

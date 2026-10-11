@@ -1,4 +1,4 @@
-# DataFlow360 — conteneur de travail
+# Nataal Retail — conteneur de travail
 # Construit à partir des fichiers de dépendances du dépôt.
 # Le code n'est pas copié : il est monté par docker-compose, ce qui évite
 # de reconstruire l'image à chaque modification.

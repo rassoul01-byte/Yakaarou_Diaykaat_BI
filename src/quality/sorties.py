@@ -1,4 +1,4 @@
-"""Copie d'audit en CSV du contrôle qualité DataFlow360.
+"""Copie d'audit en CSV du contrôle qualité Nataal Retail.
 
 Ces fichiers ne sont PAS la zone intermédiaire : la seule vérité est
 PostgreSQL (staging.<tables>, quarantaine.rejets, staging.execution_log),
