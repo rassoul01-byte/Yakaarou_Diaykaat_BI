@@ -557,7 +557,7 @@ Trois niveaux de surveillance, chacun avec sa commande.
 
 Quatre corrections récentes des vues de supervision méritent d'être citées, parce qu'elles disent ce qu'est une vue de supervision juste : un statut NULL compte désormais comme un échec (une panne brutale n'écrit pas son statut) ; le volume par jour est calculé en UTC et ne dépend plus du fuseau de la session qui interroge ; les exécutions à égalité d'horodatage sont départagées de la même façon partout. Voir `sql/027_supervision_corrections.sql`.
 
-**Ce qui n'est pas surveillé automatiquement.** Les trois niveaux ci-dessus fonctionnent et sont testés, mais **aucun n'est déclenché par l'orchestrateur** : ils se lancent à la main. La conséquence est concrète — personne n'est prévenu d'une chute des ventes ou d'un retard du flux ; l'alerte n'est calculée que si quelqu'un tape la commande (§15 et §25).
+**Ce qui est surveillé automatiquement, et ce qui ne l'est pas.** Les trois niveaux ci-dessus fonctionnent et sont testés. Deux sont déclenchés chaque heure par le DAG `supervision` : la chute des ventes, sur la journée en cours (`--jours 1`), puis le retard du flux. Ce DAG est **en pause à sa création** : tant qu'il n'est pas activé, rien ne tourne. Activé, une alerte rend sa tâche rouge dans Airflow, sans autre notification. Le journal des exécutions (`python -m supervision`) reste lancé à la main (§15 et §25).
 
 ---
 
@@ -585,21 +585,21 @@ Trois décisions d'orchestration :
 
 La distinction est nette, et il vaut mieux l'énoncer que la laisser deviner.
 
-| | Orchestré par le DAG `quotidien` | Lancé à la main |
+| | Orchestré (DAG `quotidien`, sauf mention) | Lancé à la main |
 |---|---|---|
 | **Voie par lots** | Acquisition, contrôle, rapport de rejet, transformation, correspondance, chargement, vérification | — |
 | **Voie documentaire** | Réindexation du catalogue et son contrôle `etat_index`, indexation des passages | — |
 | **Prédiction** | `scores_reachat`, après la vérification | **Entraînement et évaluation** (`python -m prediction`) |
 | **Voie continue** | — | `compteurs` (consommation du bus), `zone_brute` (archivage horaire) |
-| **Supervision** | — | `supervision`, `supervision.surveiller_flux`, `compteurs.surveiller_ventes` |
+| **Supervision** | `compteurs.surveiller_ventes --jours 1` puis `supervision.surveiller_flux`, chaque heure, par le DAG `supervision` (en pause à sa création) | `supervision` (journal des exécutions) |
 
-**Un seul fichier dans `dags/`** : `quotidien.py`. Les cinq commandes de droite fonctionnent et sont testées, mais rien ne les déclenche.
+**Deux fichiers dans `dags/`** : `quotidien.py` et `supervision.py`. Hors entraînement du modèle, manuel par choix, trois commandes de droite restent manuelles : `compteurs`, `zone_brute` et `supervision`. Elles fonctionnent et sont testées, mais rien ne les déclenche.
 
 Deux choix volontaires et une dette dans ce tableau :
 
 - *Volontaire* — l'entraînement du modèle reste manuel : un réentraînement quotidien sans surveillance humaine n'aurait pas de sens pour un modèle dont le résultat est négatif.
 - *Volontaire* — la voie continue ne traverse pas ce DAG : elle tourne en permanence, pas une fois par jour. L'orchestrer demanderait un second DAG à la minute, ou un service résident.
-- *Dette* — **la supervision et l'alerte, elles, devraient être déclenchées** et ne le sont pas. C'est la ligne la plus visible du §25 : l'alerte sur chute des ventes existe, fonctionne, est testée — et ne se calcule que si quelqu'un la demande.
+- *Dette* — **la voie continue n'est pas orchestrée**, et la surveillance ne l'est qu'à moitié : le DAG `supervision` est **en pause à sa création**, et une fois activé, une alerte ne se voit que par sa tâche rouge dans Airflow, sans autre notification. C'est la ligne la plus visible du §25.
 
 ---
 
